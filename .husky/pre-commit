@@ -1,0 +1,9 @@
+
+
+echo "⏳ Running strict TypeScript compiling..."
+npx tsc --noEmit || { echo "❌ TypeScript compilation failed. Commit aborted."; exit 1; }
+
+echo "⏳ Running ESLint code formatting..."
+npx lint-staged || { echo "❌ Linting failed. Commit aborted."; exit 1; }
+
+echo "✅ All checks passed!"

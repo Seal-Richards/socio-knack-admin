@@ -3,93 +3,108 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Brand: FFFFFF */
-    --background: 0 0% 100%;
-    /* Brand: 17110A (Dark Warm Black) */
-    --foreground: 27 41% 6.5%;
+	:root {
+		/* Background: White */
+		--background: 0 0% 100%;
+		/* Foreground: Black Normal */
+		--foreground: 0 0% 15%;
 
-    /* Brand: FFFFFF */
-    --card: 0 0% 100%;
-    --card-foreground: 27 41% 6.5%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 27 41% 6.5%;
- 
-    /* Brand: FDB900 (Yellow) */
-    --primary: 44 100% 49.6%;
-    /* Text on Primary should be dark */
-    --primary-foreground: 27 41% 6.5%;
- 
-    /* Brand: 43A149 (Green) */
-    --secondary: 124 41% 45%;
-    --secondary-foreground: 0 0% 100%;
- 
-    /* Brand: F2EADD (Beige/Muted) */
-    --muted: 38 42% 93%;
-    --muted-foreground: 27 10% 40%;
- 
-    /* Brand: F58A20 (Orange) */
-    --accent: 29 91% 54%;
-    --accent-foreground: 0 0% 100%;
- 
-    /* Brand: BE3628 (Red) */
-    --destructive: 5 65% 45%;
-    --destructive-foreground: 0 0% 100%;
+		--card: 0 0% 100%;
+		--card-foreground: 0 0% 15%;
 
-    /* Brand: E1E1E1 */
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    /* Brand: FDB900 */
-    --ring: 44 100% 49.6%;
- 
-    --radius: 0.5rem;
-  }
- 
-  .dark {
-    /* Brand: 080808 (Deep Black) */
-    --background: 0 0% 3%;
-    /* Brand: FFFBF1 (Off White) */
-    --foreground: 43 50% 97%;
- 
-    /* Brand: 171716 */
-    --card: 60 2% 9%;
-    --card-foreground: 43 50% 97%;
- 
-    --popover: 60 2% 9%;
-    --popover-foreground: 43 50% 97%;
- 
-    /* Brand: FDB900 (Yellow stays distinct) */
-    --primary: 44 100% 49.6%;
-    --primary-foreground: 27 41% 6.5%;
- 
-    /* Brand: 43A149 */
-    --secondary: 124 41% 45%;
-    --secondary-foreground: 0 0% 100%;
- 
-    /* Brand: 1E1E1E */
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 60%;
- 
-    --accent: 29 91% 54%;
-    --accent-foreground: 0 0% 100%;
- 
-    /* Brand: 902520 (Darker Red) */
-    --destructive: 2 64% 35%;
-    --destructive-foreground: 0 0% 100%;
- 
-    /* Brand: 423E39 */
-    --border: 34 8% 24%;
-    --input: 34 8% 24%;
-    --ring: 44 100% 49.6%;
-  }
+		--popover: 0 0% 100%;
+		--popover-foreground: 0 0% 15%;
+
+		/* Primary: Blue */
+		--primary: 235 60% 44%;
+		--primary-foreground: 0 0% 100%;
+
+		/* Secondary: Dark Blue */
+		--secondary: 219 66% 37%;
+		--secondary-foreground: 0 0% 100%;
+
+		/* Muted: Gray Normal */
+		--muted: 0 0% 92%;
+		/* Muted Foreground: Gray Dark active */
+		--muted-foreground: 0 0% 42%;
+
+		/* Accent: Yellow */
+		--accent: 43 79% 49%;
+		--accent-foreground: 0 0% 100%;
+
+		--destructive: 0 84% 60%;
+		--destructive-foreground: 0 0% 100%;
+
+		/* Border: Gray Normal */
+		--border: 0 0% 92%;
+		--input: 0 0% 92%;
+		--ring: 235 60% 44%;
+
+		--radius: 0.5rem;
+	}
+
+	.dark {
+		--background: 0 0% 8%;
+		--foreground: 0 0% 92%;
+
+		--card: 0 0% 11%;
+		--card-foreground: 0 0% 92%;
+
+		--popover: 0 0% 11%;
+		--popover-foreground: 0 0% 92%;
+
+		--primary: 235 60% 44%;
+		--primary-foreground: 0 0% 100%;
+
+		--secondary: 219 66% 37%;
+		--secondary-foreground: 0 0% 100%;
+
+		--muted: 0 0% 15%;
+		--muted-foreground: 0 0% 65%;
+
+		--accent: 43 79% 49%;
+		--accent-foreground: 0 0% 100%;
+
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 0 0% 100%;
+
+		--border: 0 0% 15%;
+		--input: 0 0% 15%;
+		--ring: 235 60% 44%;
+	}
 }
- 
+
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground font-sans;
-  }
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground font-sans;
+	}
+
+	/* Typography scale */
+	h1,
+	.h1 {
+		@apply text-[45px] font-bold md:text-[65px];
+	}
+	h2,
+	.h2 {
+		@apply text-[35px] font-bold md:text-[55px];
+	}
+	h3,
+	.h3 {
+		@apply text-[25px] font-bold md:text-[45px];
+	}
+	h4,
+	.h4 {
+		@apply text-[18px] font-normal md:text-[35px] md:font-semibold;
+	}
+	h5,
+	.h5 {
+		@apply text-[16px] font-normal md:text-[26px] md:font-semibold;
+	}
+	p,
+	.p {
+		@apply text-[16px] font-normal md:text-[16px];
+	}
 }
