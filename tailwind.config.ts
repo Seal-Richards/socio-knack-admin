@@ -1,5 +1,7 @@
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
+import forms from "@tailwindcss/forms";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
 	// Using "class" strategy ensures dark mode is never active
@@ -167,7 +169,7 @@ const config: Config = {
 			},
 		},
 	},
-	plugins: [require("@tailwindcss/forms"), require("tailwindcss-animate")],
+	plugins: [forms, tailwindcssAnimate],
 };
 
 export default config;

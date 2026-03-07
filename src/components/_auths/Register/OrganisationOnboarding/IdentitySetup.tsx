@@ -17,7 +17,7 @@ export default function IdentitySetup({
 	totalSteps: number;
 }) {
 	const [showPassword, setShowPassword] = useState(false);
-	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [showConfirmPassword] = useState(false);
 
 	return (
 		<div className="flex w-full flex-col items-center justify-center">

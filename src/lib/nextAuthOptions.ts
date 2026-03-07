@@ -1,9 +1,10 @@
 // src/lib/nextAuthOptions.ts
-import type { NextAuthConfig } from "next-auth";
+import type { NextAuthConfig, DefaultSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
+
 import env from "@src/env";
-import { DefaultSession } from "next-auth";
+import "next-auth/jwt";
 
 declare module "next-auth" {
 	interface User {
@@ -17,8 +18,6 @@ declare module "next-auth" {
 		} & DefaultSession["user"];
 	}
 }
-
-import { JWT } from "next-auth/jwt";
 
 declare module "next-auth/jwt" {
 	interface JWT {
@@ -43,7 +42,20 @@ export const nextAuthOptions: NextAuthConfig = {
 			},
 			async authorize(credentials) {
 				try {
-					let data;
+					interface BackendResponse {
+						success: boolean;
+						message?: string;
+						token?: string;
+						user?: {
+							_id?: string;
+							id?: string;
+							name?: string;
+							email?: string;
+							role?: string;
+						};
+					}
+
+					let data: BackendResponse;
 
 					// --- CASE 1: VERIFY OTP (Admin) ---
 					if (
@@ -51,7 +63,7 @@ export const nextAuthOptions: NextAuthConfig = {
 						credentials?.otp &&
 						credentials?.email
 					) {
-						const response = await axios.post(
+						const response = await axios.post<BackendResponse>(
 							`${env.NEXT_PUBLIC_ADMIN_API_BASE_URL}/auth/verify-otp`,
 							{ email: credentials.email, otp: credentials.otp },
 						);
@@ -59,7 +71,7 @@ export const nextAuthOptions: NextAuthConfig = {
 					}
 					// --- CASE 2: STANDARD LOGIN (or initial Admin check) ---
 					else if (credentials?.email && credentials?.password) {
-						const response = await axios.post(
+						const response = await axios.post<BackendResponse>(
 							`${env.NEXT_PUBLIC_ADMIN_API_BASE_URL}/auth/login`,
 							{ email: credentials.email, password: credentials.password },
 						);
@@ -68,7 +80,7 @@ export const nextAuthOptions: NextAuthConfig = {
 						throw new Error("Missing credentials");
 					}
 
-					if (!data.success) throw new Error(data.message || "Login failed");
+					if (!data.success) throw new Error(data.message ?? "Login failed");
 
 					// NOTE: If the backend says "requireOtp", authorize() will technically succeed
 					// if we return an object, but we won't have a token.
@@ -81,14 +93,18 @@ export const nextAuthOptions: NextAuthConfig = {
 					}
 
 					return {
-						id: data.user?._id || data.user?.id,
+						id: data.user?._id || data.user?.id || "",
 						name: data.user?.name,
 						email: data.user?.email,
 						role: data.user?.role,
 						backendToken: data.token,
 					};
-				} catch (error: any) {
-					console.error("Auth Error:", error?.response?.data || error.message);
+				} catch (error) {
+					if (axios.isAxiosError(error)) {
+						console.error("Auth Error:", error.response?.data ?? error.message);
+					} else {
+						console.error("Auth Error:", (error as Error).message);
+					}
 					return null;
 				}
 			},
@@ -96,19 +112,27 @@ export const nextAuthOptions: NextAuthConfig = {
 	],
 	callbacks: {
 		async jwt({ token, user }) {
+			// Spread token and safely add properties without reassigning parameter
 			if (user) {
-				token.backendToken = (user as any).backendToken;
-				token.role = (user as any).role;
+				const u = user as { role?: string; backendToken?: string };
+				return {
+					...token,
+					backendToken: u.backendToken,
+					role: u.role,
+				};
 			}
 			return token;
 		},
 		async session({ session, token }) {
-			session.user = {
-				...session.user,
-				role: token.role as string,
-				backendToken: token.backendToken as string,
+			// Return a clean session object spreading previous state
+			return {
+				...session,
+				user: {
+					...session.user,
+					role: token.role,
+					backendToken: token.backendToken,
+				},
 			};
-			return session;
 		},
 	},
 	pages: { signIn: "/login" },

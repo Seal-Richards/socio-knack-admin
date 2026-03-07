@@ -13,9 +13,9 @@ export default function Login() {
 	const [showPassword, setShowPassword] = useState(false);
 
 	return (
-		<div className="flex min-h-screen w-full bg-darkBlue-900 text-white">
+		<div className="bg-darkBlue-900 flex min-h-screen w-full text-white">
 			{/* Left Form Section */}
-			<div className="flex w-full flex-col p-8 md:w-1/2 md:p-16 lg:px-32 xl:p-40 xl:pt-32 justify-center">
+			<div className="flex w-full flex-col justify-center p-8 md:w-1/2 md:p-16 lg:px-32 xl:p-40 xl:pt-32">
 				{/* Logo */}
 				<motion.div
 					initial={{ opacity: 0, y: -20 }}
@@ -29,7 +29,7 @@ export default function Login() {
 						alt="SocioKnack Logo"
 						width={180}
 						height={40}
-						className="object-contain brightness-[5] sepia-[1] hue-rotate-[180deg] saturate-[300%]" // Attempting to turn blue logo white/light via CSS filter, since we're on dark bg
+						className="object-contain brightness-[5] hue-rotate-180 saturate-[300%] sepia-[1]" // Attempting to turn blue logo white/light via CSS filter, since we're on dark bg
 					/>
 				</motion.div>
 
@@ -53,22 +53,22 @@ export default function Login() {
 				>
 					{/* Email */}
 					<div className="space-y-2">
-						<Label htmlFor="email" className="text-white flex items-center gap-2">
-							<Icon icon="lucide:mail" className="h-4 w-4 text-yellow-500" />
+						<Label htmlFor="email" className="flex items-center gap-2 text-white">
+							<Icon icon="lucide:mail" className="size-4 text-yellow-500" />
 							Email
 						</Label>
 						<Input
 							id="email"
 							type="email"
 							placeholder="Email"
-							className="bg-white/10 border-none text-white placeholder:text-gray-400 focus-visible:ring-yellow-500 h-12"
+							className="h-12 border-none bg-white/10 text-white placeholder:text-gray-400 focus-visible:ring-yellow-500"
 						/>
 					</div>
 
 					{/* Password */}
 					<div className="space-y-2">
-						<Label htmlFor="password" className="text-white flex items-center gap-2">
-							<Icon icon="lucide:lock" className="h-4 w-4 text-yellow-500" />
+						<Label htmlFor="password" className="flex items-center gap-2 text-white">
+							<Icon icon="lucide:lock" className="size-4 text-yellow-500" />
 							Password
 						</Label>
 						<div className="relative">
@@ -76,17 +76,17 @@ export default function Login() {
 								id="password"
 								type={showPassword ? "text" : "password"}
 								placeholder="Password"
-								className="bg-white/10 border-none text-white placeholder:text-gray-400 focus-visible:ring-yellow-500 h-12 pr-10"
+								className="h-12 border-none bg-white/10 pr-10 text-white placeholder:text-gray-400 focus-visible:ring-yellow-500"
 							/>
 							<button
 								type="button"
 								onClick={() => setShowPassword(!showPassword)}
-								className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+								className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-white"
 								aria-label={showPassword ? "Hide password" : "Show password"}
 							>
 								<Icon
 									icon={showPassword ? "lucide:eye-off" : "lucide:eye"}
-									className="h-5 w-5"
+									className="size-5"
 								/>
 							</button>
 						</div>
@@ -96,14 +96,14 @@ export default function Login() {
 					<div className="flex justify-end">
 						<Link
 							href="/forgot-password"
-							className="text-sm text-yellow-500 hover:text-yellow-400 font-medium tracking-wide transition-colors"
+							className="text-sm font-medium tracking-wide text-yellow-500 transition-colors hover:text-yellow-400"
 						>
 							Forgot Password
 						</Link>
 					</div>
 
 					{/* Login Button */}
-					<Button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold h-12 text-lg">
+					<Button className="h-12 w-full bg-blue-500 text-lg font-semibold text-white hover:bg-blue-600">
 						Log in
 					</Button>
 
@@ -111,7 +111,7 @@ export default function Login() {
 					<div className="pt-2">
 						<Link
 							href="/register"
-							className="block w-full text-center py-3 bg-white/5 hover:bg-white/10 text-white rounded-md transition-colors border border-white/10"
+							className="block w-full rounded-md border border-white/10 bg-white/5 py-3 text-center text-white transition-colors hover:bg-white/10"
 						>
 							Create an account
 						</Link>
@@ -124,10 +124,10 @@ export default function Login() {
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.8 }}
-				className="hidden md:block md:w-1/2 relative h-screen"
+				className="relative hidden h-screen md:block md:w-1/2"
 			>
 				{/* We add a blue overlay mix-blend to match UI if raw image is too bright */}
-				<div className="absolute inset-0 bg-darkBlue-900/20 mix-blend-multiply z-10" />
+				<div className="bg-darkBlue-900/20 absolute inset-0 z-10 mix-blend-multiply" />
 				<Image
 					src="/assets/images/login_bg.png"
 					alt="Login Background"

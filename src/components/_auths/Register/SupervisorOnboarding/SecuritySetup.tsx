@@ -85,8 +85,8 @@ export default function SecuritySetup({
 							htmlFor="terms"
 							className="cursor-pointer text-sm font-medium leading-[1.3] text-gray-600"
 						>
-							By clicking "Continue" I certify that I have reviewed and agree to be
-							bound by the{" "}
+							By clicking &quot;Continue&quot; I certify that I have reviewed and
+							agree to be bound by the{" "}
 							<a href="#" className="text-blue-600 hover:underline">
 								Terms of Service
 							</a>

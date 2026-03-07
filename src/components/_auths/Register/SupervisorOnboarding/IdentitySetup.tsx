@@ -40,12 +40,13 @@ export default function IdentitySetup({
 						Government-issued ID Upload
 					</Label>
 					<p className="mb-2 text-xs text-gray-500">
-						Upload Document (Passport / National ID / Driver's License)
+						Upload Document (Passport / National ID / Driver&apos;s License)
 					</p>
 
 					<div className="relative flex items-center">
 						<input
 							type="text"
+							aria-label="Upload Document Name"
 							value={fileName}
 							placeholder="Upload"
 							readOnly
@@ -57,6 +58,7 @@ export default function IdentitySetup({
 							</span>
 							<input
 								type="file"
+								aria-label="Upload Document File"
 								className="hidden"
 								onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
 								accept=".png,.jpeg,.jpg,.pdf"

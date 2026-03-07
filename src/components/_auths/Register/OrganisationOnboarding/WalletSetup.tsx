@@ -11,8 +11,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Icon } from "@iconify/react";
-import { useState } from "react";
-import Image from "next/image";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function WalletSetup({
@@ -26,8 +24,6 @@ export default function WalletSetup({
 	step?: number;
 	totalSteps?: number;
 }) {
-	const [activeProcessor, setActiveProcessor] = useState<string>("paystack");
-
 	return (
 		<div className="relative w-full">
 			<button

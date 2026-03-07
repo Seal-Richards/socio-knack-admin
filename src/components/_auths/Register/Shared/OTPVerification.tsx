@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Icon } from "@iconify/react";
 import { Input } from "@/components/ui/input";
 
 export default function OTPVerification({
@@ -37,7 +36,7 @@ export default function OTPVerification({
 
 				<div className="mb-8 text-center">
 					<p className="text-sm text-gray-500">
-						Didn't receive a code?{" "}
+						Didn&apos;t receive a code?{" "}
 						<button type="button" className="font-medium text-blue-500 hover:underline">
 							Resend OTP Code (15)
 						</button>

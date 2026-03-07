@@ -1,14 +1,13 @@
+import { CloudSun, Sun, Moon } from "lucide-react";
+import type { FC } from "react";
 
-import { CloudSun, Sun, Moon } from 'lucide-react'
-import type { FC } from 'react'
-
-export function getGreeting(): {
-  text: string
-  Icon: FC<{ className?: string }>
+export default function getGreeting(): {
+	text: string;
+	Icon: FC<{ className?: string }>;
 } {
-  const hour = new Date().getHours()
+	const hour = new Date().getHours();
 
-  if (hour < 12) return { text: 'Good morning', Icon: CloudSun }
-  if (hour < 18) return { text: 'Good afternoon', Icon: Sun }
-  return { text: 'Good evening', Icon: Moon }
+	if (hour < 12) return { text: "Good morning", Icon: CloudSun };
+	if (hour < 18) return { text: "Good afternoon", Icon: Sun };
+	return { text: "Good evening", Icon: Moon };
 }
