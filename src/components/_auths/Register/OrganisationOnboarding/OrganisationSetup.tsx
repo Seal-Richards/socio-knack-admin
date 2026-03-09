@@ -48,11 +48,6 @@ export default function OrganisationSetup({
 				</div>
 
 				<div className="space-y-2">
-					<Label className="text-sm font-semibold text-gray-700">Brandname</Label>
-					<Input placeholder="Enter here" className="h-12 border-gray-200 bg-gray-50" />
-				</div>
-
-				<div className="space-y-2">
 					<Label className="text-sm font-semibold text-gray-700">Platform domain</Label>
 					<Input placeholder="Enter here" className="h-12 border-gray-200 bg-gray-50" />
 				</div>

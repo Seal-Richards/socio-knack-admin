@@ -2,23 +2,23 @@
 
 export const ROUTES = {
 	DASHBOARD: "/dashboard",
-	ACTIVE_USERS: "/active-users",
+	AGENTS: "/agent-management",
+	SUPERVISORS: "/supervisor-management",
+	TERRITORY: "/territory-control",
+	REPORTS: "/reports-payouts",
+	USERS: "/user-management",
+	SETTINGS: "/settings",
+	HELP: "/help",
+	LOGOUT: "/logout",
 
+	// Legacy or other routes
 	CUSTOMERS: "/customer-management",
-	// Dynamic route helper
-	CUSTOMER_DETAILS: (id: string) => `/customer-management/${id}`,
-
 	VENDORS: "/vendor-management",
 	RIDERS: "/rider-management",
 	ORDERS: "/order-management",
 	SUPPORT: "/support",
 	FINANCE: "/finance-management",
 	ANALYTICS: "/report-analytics",
-	USERS: "/user-management",
-
-	SETTINGS: "/settings",
-	HELP: "#",
-	LOGOUT: "/logout",
 } as const;
 
 export const getRoute = (path: string, params?: Record<string, string>) => {

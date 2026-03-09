@@ -1,82 +1,70 @@
 // src/constants/SidebarMenuItems.tsx
-import { LayoutDashboard, Store, ClipboardList, HelpCircle, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Icon } from "@iconify/react";
 import { ROUTES } from "@/constants/routes";
 
-const CustomerIcon = ({ className }: { className?: string }) => (
-	<Icon icon="lineicons:emoji-smile-tongue" className={className} />
+const DashboardIcon = ({ className }: { className?: string }) => (
+	<Icon icon="lucide:layout-dashboard" className={className} />
 );
 
-const BikeIcon = ({ className }: { className?: string }) => (
-	<Icon icon="mingcute:ebike-line" className={className} />
+const AgentIcon = ({ className }: { className?: string }) => (
+	<Icon icon="solar:users-group-rounded-bold" className={className} />
 );
 
-const MessageSquareIcon = ({ className }: { className?: string }) => (
-	<Icon icon="icon-park-outline:message" className={className} />
+const SupervisorIcon = ({ className }: { className?: string }) => (
+	<Icon icon="solar:shield-user-bold" className={className} />
 );
 
-const FinanceStatsIcon = ({ className }: { className?: string }) => (
-	<Icon icon="material-symbols:finance-mode" className={className} />
+const TerritoryIcon = ({ className }: { className?: string }) => (
+	<Icon icon="solar:map-point-bold" className={className} />
 );
 
-const BarChart3Icon = ({ className }: { className?: string }) => (
-	<Icon icon="material-symbols:finance-sharp" className={className} />
+const ReportsIcon = ({ className }: { className?: string }) => (
+	<Icon icon="solar:document-text-bold" className={className} />
 );
 
 const UsersIcon = ({ className }: { className?: string }) => (
-	<Icon icon="fa7-solid:users" className={className} />
+	<Icon icon="solar:user-rounded-bold" className={className} />
 );
 
 const SettingsIcon = ({ className }: { className?: string }) => (
-	<Icon icon="streamline-plump:cog" className={className} />
+	<Icon icon="solar:settings-bold" className={className} />
+);
+
+const HelpIcon = ({ className }: { className?: string }) => (
+	<Icon icon="solar:help-circle-bold" className={className} />
 );
 
 export const MENU_ITEMS = [
 	{
 		label: "Dashboard",
-		icon: LayoutDashboard,
-		href: ROUTES.DASHBOARD, // Updated
-		variant: "default",
+		icon: DashboardIcon,
+		href: ROUTES.DASHBOARD,
 	},
 	{
-		label: "Customer Management",
-		icon: CustomerIcon,
-		href: ROUTES.CUSTOMERS, // Updated
+		label: "Agent Management",
+		icon: AgentIcon,
+		href: ROUTES.AGENTS,
 	},
 	{
-		label: "Vendor Management",
-		icon: Store,
-		href: ROUTES.VENDORS, // Updated
+		label: "Supervisor Management",
+		icon: SupervisorIcon,
+		href: ROUTES.SUPERVISORS,
 	},
 	{
-		label: "Rider Management",
-		icon: BikeIcon,
-		href: ROUTES.RIDERS, // Updated
+		label: "Territory Control",
+		icon: TerritoryIcon,
+		href: ROUTES.TERRITORY,
 	},
 	{
-		label: "Order Lifecycle Management",
-		icon: ClipboardList,
-		href: ROUTES.ORDERS, // Updated
-	},
-	{
-		label: "Support & Communication",
-		icon: MessageSquareIcon,
-		href: ROUTES.SUPPORT, // Updated
-	},
-	{
-		label: "Finance & Settlements",
-		icon: FinanceStatsIcon,
-		href: ROUTES.FINANCE, // Updated
-	},
-	{
-		label: "Analytics & Reports",
-		icon: BarChart3Icon,
-		href: ROUTES.ANALYTICS, // Updated
+		label: "Reports & Payouts",
+		icon: ReportsIcon,
+		href: ROUTES.REPORTS,
 	},
 	{
 		label: "User Management",
 		icon: UsersIcon,
-		href: ROUTES.USERS, // Updated
+		href: ROUTES.USERS,
 	},
 ];
 
@@ -84,17 +72,17 @@ export const BOTTOM_MENU_ITEMS = [
 	{
 		label: "Settings",
 		icon: SettingsIcon,
-		href: ROUTES.SETTINGS, // Updated
+		href: ROUTES.SETTINGS,
 	},
 	{
 		label: "Help",
-		icon: HelpCircle,
-		href: ROUTES.HELP, // Updated
+		icon: HelpIcon,
+		href: ROUTES.HELP,
 	},
 ];
 
 export const LOGOUT_ITEM = {
 	label: "Logout",
 	icon: LogOut,
-	href: ROUTES.LOGOUT, // Updated
+	href: ROUTES.LOGOUT,
 };

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export default function OTPVerification({
 	onNext,
@@ -21,6 +22,7 @@ export default function OTPVerification({
 				className="w-full max-w-sm"
 				onSubmit={(e) => {
 					e.preventDefault();
+					toast.success("OTP Verified Successfully!");
 					onNext();
 				}}
 			>

@@ -14,7 +14,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 			<Sidebar />
 
 			{/* Main Content Area - Pushed right by sidebar width on desktop */}
-			<div className="flex min-h-screen flex-col transition-all duration-300 lg:pl-[280px]">
+			<div className="flex min-h-screen flex-col transition-all duration-300 lg:pl-[300px]">
 				<Navbar />
 
 				<main className="flex-1 overflow-x-hidden p-4 lg:p-8">{children}</main>

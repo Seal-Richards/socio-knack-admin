@@ -76,14 +76,8 @@ export default function IdentitySetup({
 								id="phone"
 								type="tel"
 								placeholder="Enter here"
-								className="h-12 border-gray-300 bg-gray-50 pr-24 text-gray-900"
+								className="h-12 border-gray-300 bg-gray-50 text-gray-900"
 							/>
-							<button
-								type="button"
-								className="absolute right-2 top-1/2 -translate-y-1/2 cursor-not-allowed rounded-full bg-green-600 px-3 py-1 text-xs font-semibold uppercase text-white hover:bg-green-700"
-							>
-								Verify
-							</button>
 						</div>
 					</div>
 				</div>
@@ -152,7 +146,7 @@ export default function IdentitySetup({
 						type="submit"
 						className="text-md h-12 w-full bg-blue-500 font-sans font-semibold text-white hover:bg-blue-600"
 					>
-						To continue Set 2FA
+						Next
 					</Button>
 				</div>
 			</form>

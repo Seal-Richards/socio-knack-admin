@@ -20,7 +20,7 @@ export default function AuthSuccess() {
 			<h2 className="text-darkBlue-900 mb-8 text-2xl font-bold">You are all set!</h2>
 
 			<Button
-				onClick={() => router.push("/")}
+				onClick={() => router.push("/dashboard")}
 				className="text-md h-12 w-full max-w-[250px] bg-blue-500 font-sans font-semibold text-white hover:bg-blue-600"
 			>
 				Proceed to Dashboard

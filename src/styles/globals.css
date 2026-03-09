@@ -5,15 +5,15 @@
 @layer base {
 	:root {
 		/* Background: White */
-		--background: 0 0% 100%;
-		/* Foreground: Black Normal */
-		--foreground: 0 0% 15%;
+		--background: 210 40% 98%;
+		/* Foreground: Darker Zinc */
+		--foreground: 240 10% 3.9%;
 
 		--card: 0 0% 100%;
-		--card-foreground: 0 0% 15%;
+		--card-foreground: 240 10% 3.9%;
 
 		--popover: 0 0% 100%;
-		--popover-foreground: 0 0% 15%;
+		--popover-foreground: 240 10% 3.9%;
 
 		/* Primary: Blue */
 		--primary: 235 60% 44%;
@@ -23,10 +23,10 @@
 		--secondary: 219 66% 37%;
 		--secondary-foreground: 0 0% 100%;
 
-		/* Muted: Gray Normal */
-		--muted: 0 0% 92%;
-		/* Muted Foreground: Gray Dark active */
-		--muted-foreground: 0 0% 42%;
+		/* Muted: Gray Normal - Adjusted for better visibility */
+		--muted: 240 4.8% 95.9%;
+		/* Muted Foreground: Much darker for readability */
+		--muted-foreground: 240 3.8% 46.1%;
 
 		/* Accent: Yellow */
 		--accent: 43 79% 49%;
@@ -35,12 +35,12 @@
 		--destructive: 0 84% 60%;
 		--destructive-foreground: 0 0% 100%;
 
-		/* Border: Gray Normal */
-		--border: 0 0% 92%;
-		--input: 0 0% 92%;
+		/* Border: Slightly darker gray */
+		--border: 240 5.9% 90%;
+		--input: 240 5.9% 90%;
 		--ring: 235 60% 44%;
 
-		--radius: 0.5rem;
+		--radius: 1rem;
 	}
 
 	.dark {
@@ -79,32 +79,33 @@
 		@apply border-border;
 	}
 	body {
-		@apply bg-background text-foreground font-sans;
+		@apply bg-background text-foreground font-sans selection:bg-primary/10;
+		font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 	}
 
-	/* Typography scale */
+	/* Typography scale refined for professional look */
 	h1,
 	.h1 {
-		@apply text-[45px] font-bold md:text-[65px];
+		@apply text-[40px] font-black md:text-[50px] tracking-tight leading-[1.1];
 	}
 	h2,
 	.h2 {
-		@apply text-[35px] font-bold md:text-[55px];
+		@apply text-[32px] font-bold md:text-[42px] tracking-tight leading-[1.1];
 	}
 	h3,
 	.h3 {
-		@apply text-[25px] font-bold md:text-[45px];
+		@apply text-[24px] font-bold md:text-[32px] tracking-tight leading-[1.2];
 	}
 	h4,
 	.h4 {
-		@apply text-[18px] font-normal md:text-[35px] md:font-semibold;
+		@apply text-[20px] font-bold md:text-[24px] tracking-tight;
 	}
 	h5,
 	.h5 {
-		@apply text-[16px] font-normal md:text-[26px] md:font-semibold;
+		@apply text-[16px] font-bold md:text-[18px] tracking-tight;
 	}
 	p,
 	.p {
-		@apply text-[16px] font-normal md:text-[16px];
+		@apply text-[15px] leading-relaxed text-muted-foreground font-medium;
 	}
 }
