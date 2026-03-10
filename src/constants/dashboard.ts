@@ -26,16 +26,25 @@ export const DASHBOARD_METRICS = [
 	},
 ];
 
+export const TASK_TABS = [
+	{ id: "Ongoing", label: "Ongoing" },
+	{ id: "Today", label: "Today" },
+	{ id: "Upcoming", label: "Upcoming" },
+	{ id: "Completed", label: "Completed" },
+	{ id: "Missed", label: "Missed" },
+];
+
 export const ONGOING_TASKS = [
 	{
 		id: 1,
-		agentName: "Kolawole James",
-		agentAvatar: "/assets/images/admin-avatar.png",
+		agentName: "James Kolawole",
+		avatar: "/assets/images/admin-avatar.png",
 		date: "07 Feb 2026",
 		time: "10:00 AM",
 		location: "Visit: Central Market",
-		store: "Lead Boutique Store",
+		subLocation: "Lead Boutique Store",
 		distance: "0.4 miles away",
+		status: "active",
 	},
 ];
 

@@ -55,25 +55,22 @@ export default function Sidebar({ className }: { className?: string }) {
 	return (
 		<aside
 			className={cn(
-				"hidden lg:flex flex-col w-[300px] bg-[#1d4ea8] h-screen fixed left-0 top-0 border-r border-white/5 text-white z-50",
+				"flex flex-col w-full lg:w-[300px] bg-[#1d4ea8] h-full lg:h-screen lg:fixed lg:left-0 lg:top-0 border-r border-white/5 text-white z-50",
 				className,
 			)}
 		>
-			<div className="flex h-24 items-center px-8">
-				<div className="relative h-10 w-full">
-					<Link href="/dashboard" className="flex items-center gap-2">
-						<div className="relative size-10">
-							<Image
-								src="/assets/images/logo_sk_white.png"
-								alt="SK"
-								fill
-								className="object-contain"
-								priority
-							/>
-						</div>
-						<span className="text-2xl font-black tracking-tight">SocioKnack</span>
-					</Link>
-				</div>
+			<div className="flex h-20 items-center justify-center px-8 lg:h-24 lg:justify-start">
+				<Link href="/dashboard" className="relative flex items-center justify-center">
+					<div className="relative h-12 w-48">
+						<Image
+							src="/assets/images/logo_sk_white.png"
+							alt="SocioKnack"
+							fill
+							className="object-contain"
+							priority
+						/>
+					</div>
+				</Link>
 			</div>
 
 			<div className="flex-1 space-y-1 overflow-y-auto py-8">

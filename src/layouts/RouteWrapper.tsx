@@ -1,44 +1,62 @@
-// src/layouts/RouteWrapper.tsx
 import cn from "@/lib/utils";
-import { type ReactNode } from "react";
+import React from "react";
 
 interface RouteWrapperProps {
-	topLeftSlot?: ReactNode;
-	topRightSlot?: ReactNode;
-	middleSlot?: ReactNode;
-	children?: ReactNode;
+	topLeftSlot?: React.ReactNode;
+	topRightSlot?: React.ReactNode;
+	middleSlot?: React.ReactNode;
+	bottomLeftSlot?: React.ReactNode;
+	bottomRightSlot?: React.ReactNode;
+	children?: React.ReactNode;
 }
 
 const baseStyles = {
-	top: "flex flex-col items-start gap-4 p-4 sm:p-6 lg:col-span-2 rounded-xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-800",
-	middle: "grid grid-cols-1 gap-6",
-	// Update children style to be flexible
-	children: "flex flex-col flex-1 min-h-0 w-full",
+	topRow: "flex flex-col sm:flex-row items-center justify-between w-full gap-4",
+	middleGrid: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6",
+	bottomGrid: "grid grid-cols-1 gap-8 lg:grid-cols-2",
+	childrenContainer: "flex flex-col flex-1 min-h-0 w-full gap-8 lg:gap-10",
 };
 
 export default function RouteWrapper({
 	topLeftSlot,
 	topRightSlot,
 	middleSlot,
+	bottomLeftSlot,
+	bottomRightSlot,
 	children,
 }: RouteWrapperProps = {}) {
-	// Check if slots are used to adjust layout mode
 	const hasSlots = !!topLeftSlot || !!topRightSlot || !!middleSlot;
 
 	return (
-		<section className={cn("flex flex-col gap-6 w-full h-full", !hasSlots && "p-0 gap-0")}>
-			{/* Only render grid if top slots exist */}
+		<section
+			className={cn(
+				"flex flex-col gap-8 w-full h-full p-4 lg:p-10",
+				!hasSlots && "p-0 gap-0",
+			)}
+		>
+			{/* Top Bar - Inline Alignment */}
 			{(!!topLeftSlot || !!topRightSlot) && (
-				<div className="mt-4 grid shrink-0 grid-cols-1 gap-4 lg:grid-cols-4 lg:gap-6">
-					{!!topLeftSlot && <div className={cn(baseStyles.top)}>{topLeftSlot}</div>}
-					{!!topRightSlot && <div className={cn(baseStyles.top)}>{topRightSlot}</div>}
+				<div className={cn(baseStyles.topRow, "shrink-0")}>
+					<div className="flex-1">{topLeftSlot}</div>
+					<div className="w-full shrink-0 lg:w-auto">{topRightSlot}</div>
 				</div>
 			)}
 
-			{!!middleSlot && <div className={cn(baseStyles.middle, "shrink-0")}>{middleSlot}</div>}
+			{/* Middle Bar - Metrics/Widgets */}
+			{!!middleSlot && (
+				<div className={cn(baseStyles.middleGrid, "shrink-0")}>{middleSlot}</div>
+			)}
 
-			{/* Children slot - Takes remaining space */}
-			{children && <div className={cn(baseStyles.children)}>{children}</div>}
+			{/* Custom Content Area */}
+			{children && <div className={cn(baseStyles.childrenContainer)}>{children}</div>}
+
+			{/* Bottom Grid for Lists + Maps */}
+			{(!!bottomLeftSlot || !!bottomRightSlot) && (
+				<div className={cn(baseStyles.bottomGrid, "shrink-0")}>
+					<div className="flex h-full flex-col">{bottomLeftSlot}</div>
+					<div className="flex h-full flex-col">{bottomRightSlot}</div>
+				</div>
+			)}
 		</section>
 	);
 }

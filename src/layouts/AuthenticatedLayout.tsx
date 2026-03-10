@@ -11,7 +11,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 	return (
 		<div className="min-h-screen bg-gray-50/50">
 			{/* Sidebar - Fixed Position */}
-			<Sidebar />
+			<Sidebar className="hidden lg:block" />
 
 			{/* Main Content Area - Pushed right by sidebar width on desktop */}
 			<div className="flex min-h-screen flex-col transition-all duration-300 lg:pl-[300px]">
