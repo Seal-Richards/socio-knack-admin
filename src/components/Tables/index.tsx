@@ -2,51 +2,51 @@
 
 import React from "react";
 import cn from "@/lib/utils";
+import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
+import type { TableProps } from "./types";
 
-interface Column<T> {
-	header: string;
-	accessor: keyof T | string;
-	render?: (row: T) => React.ReactNode;
-}
-
-interface TableProps<T> {
-	columns: Column<T>[];
-	data: T[];
-	className?: string;
-}
-
-export default function Table<T extends { id?: string | number }>({
+export default function Table<TData extends { id?: string | number }>({
 	columns,
 	data,
 	className,
-}: TableProps<T>) {
+}: TableProps<TData>) {
+	const table = useReactTable({
+		data,
+		columns,
+		getCoreRowModel: getCoreRowModel(),
+	});
+
 	return (
 		<div className={cn("w-full overflow-x-auto", className)}>
 			<table className="w-full text-left">
 				<thead>
-					<tr className="border-b border-gray-50">
-						{columns.map((col) => (
-							<th
-								key={col.header}
-								className="pb-4 text-[13px] font-bold uppercase tracking-wider text-gray-400"
-							>
-								{col.header}
-							</th>
-						))}
-					</tr>
+					{table.getHeaderGroups().map((headerGroup) => (
+						<tr key={headerGroup.id} className="border-b border-gray-50">
+							{headerGroup.headers.map((header) => (
+								<th
+									key={header.id}
+									className="border-b border-gray-50 pb-4 text-[13px] font-bold uppercase tracking-wider text-gray-400"
+								>
+									{header.isPlaceholder
+										? null
+										: flexRender(
+												header.column.columnDef.header,
+												header.getContext(),
+											)}
+								</th>
+							))}
+						</tr>
+					))}
 				</thead>
 				<tbody className="divide-y divide-gray-50/50">
-					{data.map((row, rowIndex) => (
-						<tr key={row.id || rowIndex} className="group hover:bg-gray-50/50">
-							{columns.map((col) => (
+					{table.getRowModel().rows.map((row) => (
+						<tr key={row.id} className="group transition-colors hover:bg-gray-50/50">
+							{row.getVisibleCells().map((cell) => (
 								<td
-									key={col.header}
-									className="py-4 text-[15px] font-medium text-gray-700"
+									key={cell.id}
+									className="py-4 text-[13px] font-bold text-gray-700"
 								>
-									{col.render
-										? col.render(row)
-										: // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-											(row as any)[col.accessor as string]}
+									{flexRender(cell.column.columnDef.cell, cell.getContext())}
 								</td>
 							))}
 						</tr>

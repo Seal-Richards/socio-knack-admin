@@ -4,66 +4,89 @@ import { useState } from "react";
 import RouteWrapper from "@/layouts/RouteWrapper";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
-import MetricCard from "@/components/_widgets/MetricCard";
+import AgentsWidget from "@/components/_widgets/Agents";
+import TerritorySalesWidget from "@/components/_widgets/TerritorySales";
+import ComplianceWidget from "@/components/_widgets/ComplianceSales";
+import PendingActionsWidget from "@/components/_widgets/PendingActions";
 import Tabs from "@/components/Tabs";
 import Table from "@/components/Tables";
-import TaskList from "@/components/List/TaskList";
-import { DASHBOARD_METRICS, ONGOING_TASKS, AGENT_LIST } from "@/constants/dashboard";
+import { AGENT_LIST } from "@/constants/dashboard";
 import Image from "next/image";
+import type { ColumnDef } from "@tanstack/react-table";
+
+interface Agent {
+	id: number;
+	name: string;
+	status: string;
+	avatar: string;
+	lastCheckIn: string;
+}
+
+const AGENT_COLUMNS: ColumnDef<Agent>[] = [
+	{
+		header: "Agent Name",
+		accessorKey: "name",
+		cell: ({ row }) => {
+			const agent = row.original;
+			return (
+				<div className="flex items-center gap-2.5">
+					<div className="relative size-8 overflow-hidden rounded-full border border-gray-100">
+						<Image src={agent.avatar} alt={agent.name} fill className="object-cover" />
+					</div>
+					<span className="font-bold text-gray-700">{agent.name}</span>
+				</div>
+			);
+		},
+	},
+	{
+		header: "Status",
+		accessorKey: "status",
+		cell: ({ row }) => {
+			const agent = row.original;
+			return (
+				<div className="flex items-center gap-2">
+					<div
+						className={`size-2 rounded-full ${agent.status === "Active" ? "bg-green-500" : "bg-orange-400"}`}
+					/>
+					<span className="text-[13px] font-bold text-gray-600">{agent.status}</span>
+				</div>
+			);
+		},
+	},
+	{
+		header: "Last Check-in",
+		accessorKey: "lastCheckIn",
+		cell: ({ row }) => {
+			const agent = row.original;
+			return <span className="text-[13px] font-bold text-gray-400">{agent.lastCheckIn}</span>;
+		},
+	},
+];
+
+const ONGOING_TASKS = [
+	{
+		id: 1,
+		agentName: "James Kolawole",
+		avatar: "/assets/images/admin-avatar.png",
+		date: "07 Feb 2026",
+		time: "10:00 AM",
+		location: "Visit: Central Market",
+		subLocation: "Lead Boutique Store",
+		distance: "0.4 miles away",
+		status: "active",
+	},
+];
+
+const TASK_TABS = [
+	{ id: "Ongoing", label: "Ongoing" },
+	{ id: "Today", label: "Today" },
+	{ id: "Upcoming", label: "Upcoming" },
+	{ id: "Completed", label: "Completed" },
+	{ id: "Missed", label: "Missed" },
+];
 
 export default function DashboardClient() {
 	const [activeTab, setActiveTab] = useState("Ongoing");
-
-	const taskTabs = [
-		{ id: "Ongoing", label: "Ongoing" },
-		{ id: "Today", label: "Today" },
-		{ id: "Upcoming", label: "Upcoming" },
-		{ id: "Completed", label: "Completed" },
-		{ id: "Missed", label: "Missed" },
-	];
-
-	const agentColumns = [
-		{
-			header: "Agent Name",
-			accessor: "name",
-			render: (row: Record<string, any>) => (
-				<div className="flex items-center gap-2.5">
-					<div className="relative size-8 overflow-hidden rounded-full border border-gray-100">
-						<Image
-							src={row.avatar as string}
-							alt={row.name as string}
-							fill
-							className="object-cover"
-						/>
-					</div>
-					<span className="font-bold text-gray-700">{row.name as string}</span>
-				</div>
-			),
-		},
-		{
-			header: "Status",
-			accessor: "status",
-			render: (row: Record<string, any>) => (
-				<div className="flex items-center gap-2">
-					<div
-						className={`size-2 rounded-full ${row.status === "Active" ? "bg-green-500" : "bg-orange-400"}`}
-					/>
-					<span className="text-[13px] font-bold text-gray-600">
-						{row.status as string}
-					</span>
-				</div>
-			),
-		},
-		{
-			header: "Last Check-in",
-			accessor: "lastCheckIn",
-			render: (row: Record<string, any>) => (
-				<span className="text-[13px] font-bold text-gray-400">
-					{row.lastCheckIn as string}
-				</span>
-			),
-		},
-	];
 
 	return (
 		<RouteWrapper>
@@ -85,13 +108,10 @@ export default function DashboardClient() {
 
 				{/* Metrics Grid */}
 				<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-					{DASHBOARD_METRICS.map((metric) => (
-						<MetricCard
-							key={metric.label}
-							{...metric}
-							color={metric.color as "blue" | "green" | "purple" | "orange"}
-						/>
-					))}
+					<AgentsWidget label="My Agents" value="42" activeCount="40 Active" />
+					<TerritorySalesWidget label="Today's Territory Sales" value="₦850,000" />
+					<ComplianceWidget label="Team Compliance" value="94%" />
+					<PendingActionsWidget label="Pending Actions" value="2" />
 				</div>
 
 				{/* Tasks Section */}
@@ -102,7 +122,7 @@ export default function DashboardClient() {
 								<Icon icon="lucide:clock" className="size-5" />
 							</div>
 							<Tabs
-								tabs={taskTabs}
+								tabs={TASK_TABS}
 								activeTab={activeTab}
 								onChange={setActiveTab}
 								className="border-none"
@@ -114,7 +134,78 @@ export default function DashboardClient() {
 						</button>
 					</div>
 
-					<TaskList tasks={ONGOING_TASKS} />
+					<div className="flex flex-col gap-3">
+						{ONGOING_TASKS.map((task) => (
+							<div
+								key={task.id}
+								className="group flex items-center justify-between rounded-3xl border border-gray-100 bg-[#f4f7fc]/50 p-4 transition-all hover:bg-white hover:shadow-md"
+							>
+								<div className="flex items-center gap-6">
+									<div className="size-2 rounded-full bg-[#1d4ea8] shadow-[0_0_10px_rgba(29,78,168,0.4)]" />
+
+									<div className="flex items-center gap-3">
+										<div className="relative size-10 overflow-hidden rounded-full border-2 border-white shadow-sm">
+											<Image
+												src={task.avatar}
+												alt={task.agentName}
+												fill
+												className="object-cover"
+											/>
+										</div>
+										<span className="text-[15px] font-bold text-gray-800">
+											{task.agentName}
+										</span>
+									</div>
+
+									<div className="mx-2 h-8 w-px bg-gray-200" />
+
+									<div className="flex items-center gap-6 text-[13px] font-bold text-gray-500">
+										<div className="flex items-center gap-2">
+											<Icon
+												icon="solar:calendar-bold"
+												className="size-4 text-[#1d4ea8]/60"
+											/>
+											{task.date}
+										</div>
+										<div className="flex items-center gap-2">
+											<Icon
+												icon="solar:clock-circle-bold"
+												className="size-4 text-[#1d4ea8]/60"
+											/>
+											{task.time}
+										</div>
+										<div className="flex items-center gap-2">
+											<Icon
+												icon="solar:user-rounded-bold"
+												className="size-4 text-[#1d4ea8]/60"
+											/>
+											{task.location}
+										</div>
+									</div>
+								</div>
+
+								<div className="flex items-center gap-8">
+									<div className="flex items-center gap-2 text-right">
+										<div className="flex flex-col">
+											<span className="text-[13px] font-bold text-gray-800">
+												{task.subLocation}
+											</span>
+											<span className="text-[11px] font-bold text-gray-400">
+												{task.distance}
+											</span>
+										</div>
+										<Icon
+											icon="solar:map-point-bold"
+											className="size-4 text-[#1d4ea8]/60"
+										/>
+									</div>
+									<button className="flex size-8 items-center justify-center rounded-full bg-blue-50 text-[#1d4ea8] shadow-inner transition-all hover:bg-[#1d4ea8] hover:text-white">
+										<Icon icon="solar:eye-bold" className="size-4" />
+									</button>
+								</div>
+							</div>
+						))}
+					</div>
 				</div>
 
 				{/* Bottom Grid: Agent List + Map */}
@@ -140,7 +231,7 @@ export default function DashboardClient() {
 							/>
 						</div>
 
-						<Table columns={agentColumns} data={AGENT_LIST} />
+						<Table columns={AGENT_COLUMNS} data={AGENT_LIST as Agent[]} />
 					</div>
 
 					{/* Map Placeholder */}
