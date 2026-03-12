@@ -6,11 +6,15 @@ import SearchBar from "@/components/_atoms/SearchBar";
 import DynamicFilter from "@/components/_atoms/DynamicFilter";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
-import { agentManagementColumns } from "@/components/Tables/columns/agentManagementColumns";
-import { DUMMY_AGENTS, TERRITORY_OPTIONS, STATUS_OPTIONS } from "@/constants/agentManagement";
+import { supervisorManagementColumns } from "@/components/Tables/columns/supervisorManagementColumns";
+import {
+	DUMMY_SUPERVISORS,
+	TERRITORY_OPTIONS,
+	STATUS_OPTIONS,
+} from "@/constants/supervisorManagement";
 import TableLayoutWrapper from "../TableLayoutWrapper";
 
-export default function AgentManagementList() {
+export default function SupervisorManagementList() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedTerritory, setSelectedTerritory] = useState<string>();
 	const [selectedStatus, setSelectedStatus] = useState<string>();
@@ -56,20 +60,22 @@ export default function AgentManagementList() {
 				</div>
 			</div>
 
-			<Button className="h-11 w-full gap-2 rounded-xl bg-[#1d4ea8] px-6 text-[14px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95 lg:w-auto">
-				<Icon icon="solar:export-bold" className="size-4 text-white" />
-				Export Active List
-			</Button>
+			<div className="flex items-center gap-3">
+				<Button className="h-11 w-full gap-2 rounded-xl border border-gray-200 bg-white px-6 text-[14px] font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 lg:w-auto">
+					<Icon icon="solar:user-plus-bold" className="size-4 text-gray-500" />
+					Bulk Invite via CSV
+				</Button>
+				<Button className="h-11 w-full gap-2 rounded-xl bg-[#1d4ea8] px-6 text-[14px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95 lg:w-auto">
+					<Icon icon="solar:export-bold" className="size-4 text-white" />
+					Export Active List
+				</Button>
+			</div>
 		</div>
 	);
 
 	return (
-		<TableLayoutWrapper
-			title=""
-			filters={filterActions}
-			className="gap-0" // Remove standard gap since slots handle header
-		>
-			<Table columns={agentManagementColumns as any[]} data={DUMMY_AGENTS} />
+		<TableLayoutWrapper title="" filters={filterActions} className="gap-0">
+			<Table columns={supervisorManagementColumns as any[]} data={DUMMY_SUPERVISORS} />
 		</TableLayoutWrapper>
 	);
 }

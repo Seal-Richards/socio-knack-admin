@@ -1,4 +1,4 @@
-import type { Agent } from "@/components/Tables/columns/agentManagementColoumn";
+import type { Agent } from "@/components/Tables/columns/agentManagementColumns";
 
 export const DUMMY_AGENTS: Agent[] = [
 	{
