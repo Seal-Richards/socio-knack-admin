@@ -16,10 +16,10 @@ interface TabsProps {
 	className?: string;
 }
 
-export default function Tabs({ tabs, activeTab, onChange, className }: TabsProps) {
+export default function Tabs({ tabs = [], activeTab, onChange, className }: TabsProps) {
 	return (
 		<div className={cn("flex items-center gap-8 border-b border-gray-100", className)}>
-			{tabs.map((tab) => {
+			{tabs?.map((tab) => {
 				const isActive = activeTab === tab.id;
 				return (
 					<button
