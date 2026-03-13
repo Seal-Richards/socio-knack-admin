@@ -8,9 +8,40 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginFormData } from "@/schemas/auth";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Login() {
 	const [showPassword, setShowPassword] = useState(false);
+	const router = useRouter();
+
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = useForm<LoginFormData>({
+		resolver: zodResolver(loginSchema),
+		defaultValues: {
+			email: "",
+			password: "",
+		},
+	});
+
+	const onSubmit = async (data: LoginFormData) => {
+		// Demo login credentials
+		const DEMO_EMAIL = "admin@socioknack.com";
+		const DEMO_PASSWORD = "SocioKnack@2026";
+
+		if (data.email === DEMO_EMAIL && data.password === DEMO_PASSWORD) {
+			toast.success("Login successful! Redirecting...");
+			router.push("/dashboard");
+		} else {
+			toast.error("Invalid email or password. Please use the demo credentials.");
+		}
+	};
 
 	return (
 		<div className="bg-darkBlue-900 flex min-h-screen w-full text-white">
@@ -49,6 +80,7 @@ export default function Login() {
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.2 }}
+					onSubmit={handleSubmit(onSubmit)}
 					className="space-y-6"
 				>
 					{/* Email */}
@@ -61,8 +93,14 @@ export default function Login() {
 							id="email"
 							type="email"
 							placeholder="Email"
+							{...register("email")}
 							className="h-12 border-none bg-white/10 text-white placeholder:text-gray-400 focus-visible:ring-yellow-500"
 						/>
+						{errors.email && (
+							<p className="text-xs font-medium text-red-400">
+								{errors.email.message}
+							</p>
+						)}
 					</div>
 
 					{/* Password */}
@@ -76,6 +114,7 @@ export default function Login() {
 								id="password"
 								type={showPassword ? "text" : "password"}
 								placeholder="Password"
+								{...register("password")}
 								className="h-12 border-none bg-white/10 pr-10 text-white placeholder:text-gray-400 focus-visible:ring-yellow-500"
 							/>
 							<button
@@ -90,6 +129,11 @@ export default function Login() {
 								/>
 							</button>
 						</div>
+						{errors.password && (
+							<p className="text-xs font-medium text-red-400">
+								{errors.password.message}
+							</p>
+						)}
 					</div>
 
 					{/* Forgot Password Link */}
@@ -103,8 +147,12 @@ export default function Login() {
 					</div>
 
 					{/* Login Button */}
-					<Button className="h-12 w-full bg-blue-500 text-lg font-semibold text-white hover:bg-blue-600">
-						Log in
+					<Button
+						type="submit"
+						disabled={isSubmitting}
+						className="h-12 w-full bg-blue-500 text-lg font-semibold text-white hover:bg-blue-600 disabled:opacity-50"
+					>
+						{isSubmitting ? "Logging in..." : "Log in"}
 					</Button>
 
 					{/* Create Account Link */}

@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { adminIdentitySchema, type AdminIdentityFormData } from "@/schemas/auth";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function IdentitySetup({
@@ -17,19 +20,25 @@ export default function IdentitySetup({
 	totalSteps: number;
 }) {
 	const [showPassword, setShowPassword] = useState(false);
-	const [showConfirmPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm<AdminIdentityFormData>({
+		resolver: zodResolver(adminIdentitySchema),
+	});
+
+	const onSubmit = (_data: AdminIdentityFormData) => {
+		onNext();
+	};
 
 	return (
 		<div className="flex w-full flex-col items-center justify-center">
 			<StepProgressBar currentStep={step} totalSteps={totalSteps} title="Identity Setup" />
 
-			<form
-				className="mt-4 w-full space-y-6"
-				onSubmit={(e) => {
-					e.preventDefault();
-					onNext();
-				}}
-			>
+			<form className="mt-4 w-full space-y-6" onSubmit={handleSubmit(onSubmit)}>
 				{/* Name Row */}
 				<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 					<div className="space-y-2">
@@ -39,8 +48,14 @@ export default function IdentitySetup({
 						<Input
 							id="firstName"
 							placeholder="Enter here"
+							{...register("firstName")}
 							className="h-12 border-gray-300 bg-gray-50 text-gray-900"
 						/>
+						{errors.firstName && (
+							<p className="text-xs font-medium text-red-500">
+								{errors.firstName.message}
+							</p>
+						)}
 					</div>
 					<div className="space-y-2">
 						<Label htmlFor="lastName" className="text-darkBlue-900">
@@ -49,8 +64,14 @@ export default function IdentitySetup({
 						<Input
 							id="lastName"
 							placeholder="Enter here"
+							{...register("lastName")}
 							className="h-12 border-gray-300 bg-gray-50 text-gray-900"
 						/>
+						{errors.lastName && (
+							<p className="text-xs font-medium text-red-500">
+								{errors.lastName.message}
+							</p>
+						)}
 					</div>
 				</div>
 
@@ -64,8 +85,14 @@ export default function IdentitySetup({
 							id="workEmail"
 							type="email"
 							placeholder="Enter here"
+							{...register("email")}
 							className="h-12 border-gray-300 bg-gray-50 text-gray-900"
 						/>
+						{errors.email && (
+							<p className="text-xs font-medium text-red-500">
+								{errors.email.message}
+							</p>
+						)}
 					</div>
 					<div className="relative space-y-2">
 						<Label htmlFor="phone" className="text-darkBlue-900">
@@ -76,9 +103,15 @@ export default function IdentitySetup({
 								id="phone"
 								type="tel"
 								placeholder="Enter here"
+								{...register("phoneNumber")}
 								className="h-12 border-gray-300 bg-gray-50 text-gray-900"
 							/>
 						</div>
+						{errors.phoneNumber && (
+							<p className="text-xs font-medium text-red-500">
+								{errors.phoneNumber.message}
+							</p>
+						)}
 					</div>
 				</div>
 
@@ -98,6 +131,7 @@ export default function IdentitySetup({
 									id="password"
 									type={showPassword ? "text" : "password"}
 									placeholder="PASSWORD"
+									{...register("password")}
 									className="h-12 border-gray-300 bg-gray-50 font-medium tracking-widest text-gray-900 placeholder:font-normal placeholder:tracking-normal"
 								/>
 								<button
@@ -111,6 +145,11 @@ export default function IdentitySetup({
 									/>
 								</button>
 							</div>
+							{errors.password && (
+								<p className="text-xs font-medium text-red-500">
+									{errors.password.message}
+								</p>
+							)}
 						</div>
 						<div className="relative space-y-2">
 							<Label
@@ -127,15 +166,32 @@ export default function IdentitySetup({
 									id="confirmPassword"
 									type={showConfirmPassword ? "text" : "password"}
 									placeholder="CONFIRM PASSWORD"
-									className="h-12 border-green-500/50 bg-green-50/20 font-medium tracking-widest text-gray-900 placeholder:font-normal placeholder:tracking-normal"
+									{...register("confirmPassword")}
+									className={`h-12 border-gray-300 bg-gray-50 font-medium tracking-widest text-gray-900 placeholder:font-normal placeholder:tracking-normal ${errors.confirmPassword ? "border-red-500" : "border-green-500/50 bg-green-50/20"}`}
 								/>
-								<div className="absolute right-3 top-1/2 -translate-y-1/2">
-									<Icon
-										icon="lucide:check-circle-2"
-										className="size-5 text-green-500"
-									/>
-								</div>
+								<button
+									type="button"
+									onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+									className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+								>
+									{errors.confirmPassword ? (
+										<Icon
+											icon="lucide:alert-circle"
+											className="size-5 text-red-500"
+										/>
+									) : (
+										<Icon
+											icon="lucide:check-circle-2"
+											className="size-5 text-green-500"
+										/>
+									)}
+								</button>
 							</div>
+							{errors.confirmPassword && (
+								<p className="text-xs font-medium text-red-500">
+									{errors.confirmPassword.message}
+								</p>
+							)}
 						</div>
 					</div>
 				</div>
