@@ -8,18 +8,18 @@ import { createColumns } from "./columnFactory";
 import { ActionCell } from "../cells/ActionCells";
 import type { TableColumns } from "./definitions";
 
-export interface UserManagementData {
+export interface AdminManagementData {
 	id: string | number;
 	name: string;
-	mail: string;
+	role: string;
 	activityType: string;
 	status: "Active" | "Inactive";
 	stamp: string;
 	avatar: string;
 }
 
-export const userManagementColumns: TableColumns<UserManagementData> =
-	createColumns<UserManagementData>([
+export const adminManagementColumns: TableColumns<AdminManagementData> =
+	createColumns<AdminManagementData>([
 		{
 			id: "select",
 			header: () => (
@@ -57,11 +57,11 @@ export const userManagementColumns: TableColumns<UserManagementData> =
 			},
 		},
 		{
-			id: "mail",
-			header: "Mail",
-			accessorKey: "mail",
+			id: "role",
+			header: "Role",
+			accessorKey: "role",
 			cell: ({ getValue }) => (
-				<span className="text-[13px] font-medium text-gray-500">
+				<span className="text-[13px] font-medium text-gray-600">
 					{getValue() as string}
 				</span>
 			),

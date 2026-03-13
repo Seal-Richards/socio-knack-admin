@@ -6,32 +6,32 @@ import Table from "@/components/Tables";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import {
-	userManagementColumns,
-	type UserManagementData,
-} from "@/components/Tables/columns/userManagementColumns";
+	adminManagementColumns,
+	type AdminManagementData,
+} from "@/components/Tables/columns/adminManagementColumns";
 
-const DUMMY_USERS: UserManagementData[] = [
+const DUMMY_ADMINS: AdminManagementData[] = [
 	{
 		id: "1",
-		name: "Sarah John",
-		mail: "sarajohn@gmail.com",
-		activityType: "Reset Password",
+		name: "John Dea",
+		role: "Supervisor",
+		activityType: "Assign Agent",
 		status: "Active",
-		stamp: "12 Jan, 2026 | 12:19 AM",
+		stamp: "12 Jan, 2026 | 8:10 AM",
 		avatar: "/assets/images/admin-avatar.png",
 	},
 	{
 		id: "2",
 		name: "Kelvin Oti",
-		mail: "kelvinoti@gmail.com",
-		activityType: "Task Check-in",
+		role: "Supervisor",
+		activityType: "Approve Task Report",
 		status: "Active",
-		stamp: "12 Jan, 2026 | 1:20 PM",
+		stamp: "12 Jan, 2026 | 10:15 AM",
 		avatar: "/assets/images/admin-avatar.png",
 	},
 ];
 
-export default function UserManagementList() {
+export default function AdminManagementList() {
 	const [, setRowSelection] = useState({});
 
 	return (
@@ -48,8 +48,8 @@ export default function UserManagementList() {
 			className="gap-0"
 		>
 			<Table
-				columns={userManagementColumns as any[]}
-				data={DUMMY_USERS}
+				columns={adminManagementColumns as any[]}
+				data={DUMMY_ADMINS}
 				onRowSelectionChange={setRowSelection}
 			/>
 		</TableLayoutWrapper>
