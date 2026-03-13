@@ -1,12 +1,12 @@
 "use client";
 
 import RouteWrapper from "@/layouts/RouteWrapper";
-import Admin from "@/components/Admin";
+import Payout from "@/components/Payout";
 
-export default function DashboardClient() {
+export default function ReportsPayoutsClient() {
 	return (
 		<RouteWrapper>
-			<Admin />
+			<Payout />
 		</RouteWrapper>
 	);
 }

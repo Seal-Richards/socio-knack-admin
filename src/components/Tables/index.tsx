@@ -9,11 +9,22 @@ export default function Table<TData extends { id?: string | number }>({
 	columns,
 	data,
 	className,
-}: TableProps<TData>) {
+	onRowSelectionChange,
+}: TableProps<TData> & { onRowSelectionChange?: (selection: Record<string, boolean>) => void }) {
+	const [rowSelection, setRowSelection] = React.useState({});
+
 	const table = useReactTable({
 		data,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
+		onRowSelectionChange: (updater) => {
+			const next = typeof updater === "function" ? updater(rowSelection) : updater;
+			setRowSelection(next);
+			onRowSelectionChange?.(next);
+		},
+		state: {
+			rowSelection,
+		},
 	});
 
 	return (
