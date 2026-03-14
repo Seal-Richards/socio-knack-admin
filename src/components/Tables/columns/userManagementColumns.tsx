@@ -123,7 +123,6 @@ export const userManagementColumns: TableColumns<UserManagementData> =
 				<ActionCell
 					id={row.original.id}
 					onView={() => undefined}
-					onEdit={() => undefined}
 					onDelete={() => undefined}
 				/>
 			),

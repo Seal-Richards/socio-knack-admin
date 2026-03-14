@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { ROUTES } from "@/constants/routes";
 import { createColumns } from "./columnFactory";
 import { ActionCell } from "../cells/ActionCells";
 import type { TableColumns } from "./definitions";
@@ -80,12 +81,7 @@ export const agentManagementColumns: TableColumns<Agent> = createColumns<Agent>(
 		cell: ({ row }) => (
 			<ActionCell
 				id={row.original.id}
-				onView={() => {
-					/* VIEW ACTION */
-				}}
-				onEdit={() => {
-					/* EDIT ACTION */
-				}}
+				viewHref={ROUTES.AGENT_DETAILS(row.original.id)}
 				onDelete={() => {
 					/* DELETE ACTION */
 				}}

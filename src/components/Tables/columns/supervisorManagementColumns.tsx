@@ -86,9 +86,6 @@ export const supervisorManagementColumns: TableColumns<Supervisor> = createColum
 				onView={() => {
 					/* VIEW ACTION */
 				}}
-				onEdit={() => {
-					/* EDIT ACTION */
-				}}
 				onDelete={() => {
 					/* DELETE ACTION */
 				}}

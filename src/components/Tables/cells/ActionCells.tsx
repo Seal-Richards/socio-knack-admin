@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@iconify/react";
+import Link from "next/link";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -11,12 +12,13 @@ import { Button } from "@/components/ui/button";
 
 interface ActionCellProps {
 	onView?: () => void;
+	viewHref?: string;
 	onEdit?: () => void;
 	onDelete?: () => void;
 	id: string | number;
 }
 
-export function ActionCell({ onView, onEdit, onDelete, id: _id }: ActionCellProps) {
+export function ActionCell({ onView, viewHref, onEdit, onDelete, id: _id }: ActionCellProps) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -31,13 +33,24 @@ export function ActionCell({ onView, onEdit, onDelete, id: _id }: ActionCellProp
 				align="end"
 				className="w-40 rounded-xl border-gray-100 p-1 shadow-xl"
 			>
-				{onView && (
+				{onView && !viewHref && (
 					<DropdownMenuItem
 						onClick={onView}
 						className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50"
 					>
 						<Icon icon="solar:eye-bold" className="size-4 text-[#1d4ea8]" />
 						View Details
+					</DropdownMenuItem>
+				)}
+				{viewHref && (
+					<DropdownMenuItem asChild>
+						<Link
+							href={viewHref}
+							className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50"
+						>
+							<Icon icon="solar:eye-bold" className="size-4 text-[#1d4ea8]" />
+							View Details
+						</Link>
 					</DropdownMenuItem>
 				)}
 				{onEdit && (

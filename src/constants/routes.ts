@@ -3,12 +3,13 @@
 export const ROUTES = {
 	DASHBOARD: "/dashboard",
 	AGENTS: "/agent-management",
+	AGENT_DETAILS: (id: string | number) => `/agent-management/${id}`,
 	SUPERVISORS: "/supervisor-management",
 	TERRITORY: "/territory-control",
 	REPORTS: "/reports-payouts",
 	USERS: "/user-management",
 	SETTINGS: "/settings",
-	HELP: "/help",
+	HELP: "#",
 	LOGOUT: "/logout",
 
 	// Legacy or other routes
