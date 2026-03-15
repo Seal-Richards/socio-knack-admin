@@ -18,7 +18,12 @@ interface TabsProps {
 
 export default function Tabs({ tabs = [], activeTab, onChange, className }: TabsProps) {
 	return (
-		<div className={cn("flex items-center gap-8 border-b border-gray-100", className)}>
+		<div
+			className={cn(
+				"flex items-center gap-8 overflow-x-auto hide-scrollbar border-b border-gray-100",
+				className,
+			)}
+		>
 			{tabs?.map((tab) => {
 				const isActive = activeTab === tab.id;
 				return (
@@ -26,7 +31,7 @@ export default function Tabs({ tabs = [], activeTab, onChange, className }: Tabs
 						key={tab.id}
 						onClick={() => onChange(tab.id)}
 						className={cn(
-							"relative pb-4 text-[15px] font-semibold transition-all duration-200",
+							"relative whitespace-nowrap pb-4 text-[15px] font-semibold transition-all duration-200",
 							isActive ? "text-[#1d4ea8]" : "text-gray-400 hover:text-gray-600",
 						)}
 					>

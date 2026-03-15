@@ -6,8 +6,8 @@ import { Icon } from "@iconify/react";
 
 export default function ProfileSettings() {
 	return (
-		<div className="flex flex-col gap-8 rounded-3xl border border-gray-100 bg-white p-8">
-			<h3 className="text-[15px] font-bold text-gray-600">Personal Profile</h3>
+		<div className="flex flex-col gap-6 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm md:gap-8 md:p-8">
+			<h3 className="text-[14px] font-bold text-gray-600 sm:text-[15px]">Personal Profile</h3>
 			<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 				<div className="space-y-2">
 					<Label className="text-[13px] font-bold text-gray-700">Full Name</Label>

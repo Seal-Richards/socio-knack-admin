@@ -20,15 +20,15 @@ export default function SupervisorManagementList() {
 	const [selectedStatus, setSelectedStatus] = useState<string>();
 
 	const filterActions = (
-		<div className="flex w-full flex-wrap items-center justify-between gap-4">
-			<div className="flex flex-wrap items-center gap-3">
+		<div className="flex w-full flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+			<div className="flex w-full flex-col gap-4 xl:w-auto xl:flex-row xl:items-center">
 				<SearchBar
 					placeholder="Search"
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
-					containerClassName="w-full lg:w-64"
+					containerClassName="w-full xl:w-64"
 				/>
-				<div className="flex items-center gap-2">
+				<div className="flex w-full flex-wrap items-center gap-3 xl:w-auto">
 					<Button
 						variant="ghost"
 						className="size-10 shrink-0 rounded-xl border border-gray-100 p-0 hover:bg-gray-50"
@@ -60,8 +60,8 @@ export default function SupervisorManagementList() {
 				</div>
 			</div>
 
-			<div className="flex items-center gap-3">
-				<Button className="h-11 w-full gap-2 rounded-xl border border-gray-200 bg-white px-6 text-[14px] font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 lg:w-auto">
+			<div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
+				<Button className="h-11 w-full gap-2 rounded-xl border border-gray-200 bg-white px-6 text-[14px] font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 sm:w-auto">
 					<Icon icon="solar:user-plus-bold" className="size-4 text-gray-500" />
 					Bulk Invite via CSV
 				</Button>

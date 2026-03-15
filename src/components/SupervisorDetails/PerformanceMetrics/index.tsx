@@ -16,7 +16,7 @@ export default function PerformanceMetrics() {
 							Completed Visits
 						</span>
 						<h2 className="text-[40px] font-bold leading-tight text-gray-600">134</h2>
-						<span className="text-[14px] font-medium text-gray-500">
+						<span className="text-[14px] font-medium text-gray-400">
 							Total visit completed since joining
 						</span>
 					</div>
@@ -37,7 +37,7 @@ export default function PerformanceMetrics() {
 							Completed Visits
 						</span>
 						<h2 className="text-[40px] font-bold leading-tight text-gray-600">134</h2>
-						<span className="text-[14px] font-medium text-gray-500">
+						<span className="text-[14px] font-medium text-gray-400">
 							Total visit completed since joining
 						</span>
 					</div>
@@ -47,7 +47,7 @@ export default function PerformanceMetrics() {
 							Completed Visits
 						</span>
 						<h2 className="text-[40px] font-bold leading-tight text-gray-600">134</h2>
-						<span className="text-[14px] font-medium text-gray-500">
+						<span className="text-[14px] font-medium text-gray-400">
 							Total visit completed since joining
 						</span>
 					</div>

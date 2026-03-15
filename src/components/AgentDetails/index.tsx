@@ -27,11 +27,11 @@ export default function AgentDetails({ id: _id }: AgentDetailsProps) {
 	};
 
 	return (
-		<div className="flex flex-col gap-6 p-4 md:p-8">
+		<div className="flex w-full flex-col gap-6">
 			<ProfileHeader agent={agent} />
 
 			<Tabs defaultValue="profile-settings" className="w-full">
-				<TabsList className="mb-6 h-auto w-full justify-start gap-2 rounded-full bg-gray-50/50 p-1.5 md:w-max">
+				<TabsList className="hide-scrollbar mb-6 flex h-auto w-full justify-start gap-2 overflow-x-auto rounded-full bg-gray-50/50 p-1.5 md:w-max">
 					<TabsTrigger
 						value="profile-settings"
 						className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"

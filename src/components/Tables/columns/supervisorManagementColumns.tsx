@@ -1,6 +1,8 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
+import { ROUTES } from "@/constants/routes";
 import { createColumns } from "./columnFactory";
 import { ActionCell } from "../cells/ActionCells";
 import type { TableColumns } from "./definitions";
@@ -83,9 +85,7 @@ export const supervisorManagementColumns: TableColumns<Supervisor> = createColum
 		cell: ({ row }) => (
 			<ActionCell
 				id={row.original.id}
-				onView={() => {
-					/* VIEW ACTION */
-				}}
+				viewHref={ROUTES.SUPERVISOR_DETAILS(row.original.id)}
 				onDelete={() => {
 					/* DELETE ACTION */
 				}}

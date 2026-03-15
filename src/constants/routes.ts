@@ -5,6 +5,7 @@ export const ROUTES = {
 	AGENTS: "/agent-management",
 	AGENT_DETAILS: (id: string | number) => `/agent-management/${id}`,
 	SUPERVISORS: "/supervisor-management",
+	SUPERVISOR_DETAILS: (id: string | number) => `/supervisor-management/${id}`,
 	TERRITORY: "/territory-control",
 	REPORTS: "/reports-payouts",
 	USERS: "/user-management",

@@ -27,6 +27,7 @@ export default function Breadcrumbs() {
 
 		// Mock mapping for dynamic IDs based on parent route
 		if (prevSegment === "agent-management") return "Kolawole James Profile";
+		if (prevSegment === "supervisor-management") return "Sarah Johnson Profile";
 
 		return "Details";
 	};
