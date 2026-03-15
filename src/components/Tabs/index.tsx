@@ -7,6 +7,8 @@ interface TabItem {
 	id: string;
 	label: string;
 	icon?: string;
+	activeColor?: string;
+	activeBg?: string;
 }
 
 interface TabsProps {
@@ -32,12 +34,19 @@ export default function Tabs({ tabs = [], activeTab, onChange, className }: Tabs
 						onClick={() => onChange(tab.id)}
 						className={cn(
 							"relative whitespace-nowrap pb-4 text-[15px] font-semibold transition-all duration-200",
-							isActive ? "text-[#1d4ea8]" : "text-gray-400 hover:text-gray-600",
+							isActive
+								? tab.activeColor || "text-[#1d4ea8]"
+								: "text-gray-400 hover:text-gray-600",
 						)}
 					>
 						{tab.label}
 						{isActive && (
-							<div className="absolute bottom-0 left-0 h-1 w-full rounded-full bg-[#1d4ea8]" />
+							<div
+								className={cn(
+									"absolute bottom-0 left-0 h-1 w-full rounded-full",
+									tab.activeBg || "bg-[#1d4ea8]",
+								)}
+							/>
 						)}
 					</button>
 				);

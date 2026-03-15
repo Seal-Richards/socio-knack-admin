@@ -13,12 +13,17 @@ import {
 	dashboardAgentColumns,
 	type Agent,
 } from "@/components/Tables/columns/dashboardAgentColumns";
-import DashboardTaskList from "@/components/List/DashboardTaskList";
+import TaskStatusTab from "@/components/Task/TaskStatusTab";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import DashboardQuickActions from "../_widgets/DashboardQuickActions";
+import CreateTaskModal from "../_modals/CreateTaskModal";
+import AllTaskModal from "../_modals/AllTaskModal";
 
 export default function Admin() {
+	const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = React.useState(false);
+	const [isAllTaskModalOpen, setIsAllTaskModalOpen] = React.useState(false);
+
 	return (
 		<div className="flex flex-col gap-8">
 			{/* Top Bar - Inline Alignment */}
@@ -29,7 +34,10 @@ export default function Admin() {
 					</h1>
 					<span className="text-2xl lg:text-[32px]">👋</span>
 				</div>
-				<Button className="h-11 gap-2 rounded-xl bg-[#1d4ea8] px-5 text-[14px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95 lg:h-12 lg:px-6 lg:text-[15px]">
+				<Button
+					onClick={() => setIsCreateTaskModalOpen(true)}
+					className="h-11 gap-2 rounded-xl bg-[#1d4ea8] px-5 text-[14px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95 lg:h-12 lg:px-6 lg:text-[15px]"
+				>
 					<Icon icon="lucide:plus" className="size-4" />
 					Create New Task
 				</Button>
@@ -64,7 +72,17 @@ export default function Admin() {
 				</div>
 			</div>
 
-			<DashboardTaskList />
+			<TaskStatusTab onSeeMore={() => setIsAllTaskModalOpen(true)} />
+
+			<CreateTaskModal
+				isOpen={isCreateTaskModalOpen}
+				onClose={() => setIsCreateTaskModalOpen(false)}
+			/>
+
+			<AllTaskModal
+				isOpen={isAllTaskModalOpen}
+				onClose={() => setIsAllTaskModalOpen(false)}
+			/>
 		</div>
 	);
 }

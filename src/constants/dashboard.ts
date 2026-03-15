@@ -27,11 +27,16 @@ export const DASHBOARD_METRICS = [
 ];
 
 export const TASK_TABS = [
-	{ id: "Ongoing", label: "Ongoing" },
-	{ id: "Today", label: "Today" },
-	{ id: "Upcoming", label: "Upcoming" },
-	{ id: "Completed", label: "Completed" },
-	{ id: "Missed", label: "Missed" },
+	{ id: "Ongoing", label: "Ongoing", activeColor: "text-[#1d4ea8]", activeBg: "bg-[#1d4ea8]" },
+	{ id: "Today", label: "Today", activeColor: "text-[#1d4ea8]", activeBg: "bg-[#1d4ea8]" },
+	{ id: "Upcoming", label: "Upcoming", activeColor: "text-[#facc15]", activeBg: "bg-[#facc15]" },
+	{
+		id: "Completed",
+		label: "Completed",
+		activeColor: "text-[#22c55e]",
+		activeBg: "bg-[#22c55e]",
+	},
+	{ id: "Pending", label: "Pending", activeColor: "text-[#ef4444]", activeBg: "bg-[#ef4444]" },
 ];
 
 export const ONGOING_TASKS = [
