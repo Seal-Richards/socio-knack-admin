@@ -1,117 +1,197 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import cn from "@/lib/utils";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import {
+	GoogleMap,
+	useJsApiLoader,
+	MarkerF,
+	InfoWindowF,
+	DrawingManager,
+} from "@react-google-maps/api";
+import { toast } from "sonner";
 
-import { TerraDraw, TerraDrawPolygonMode, TerraDrawSelectMode } from "terra-draw";
-import { TerraDrawMapboxGLAdapter } from "terra-draw-mapbox-gl-adapter";
-// Mapbox Token from environment
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
+const containerStyle = {
+	width: "100%",
+	height: "100%",
+};
+
+const center = {
+	lat: 6.5244,
+	lng: 3.3792,
+};
+
+interface LatLng {
+	lat: number;
+	lng: number;
+}
+
+interface Zone {
+	id: number;
+	name: string;
+	position: LatLng;
+	color: string;
+}
 
 interface MapProps {
 	className?: string;
 }
 
 export default function Map({ className }: MapProps) {
-	const mapContainerRef = useRef<HTMLDivElement>(null);
-	const mapRef = useRef<mapboxgl.Map | null>(null);
-	const drawRef = useRef<TerraDraw | null>(null);
+	const { isLoaded, loadError } = useJsApiLoader({
+		id: "google-map-script",
+		googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAP_API || "",
+		libraries: ["drawing", "places"],
+	});
 
-	useEffect(() => {
-		if (!mapContainerRef.current || mapRef.current || !mapboxgl.accessToken) return;
+	const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
+	const [isDrawing, setIsDrawing] = useState(false);
+	const [newTerritory, setNewTerritory] = useState<LatLng[] | null>(null);
 
-		// Initialize Mapbox
-		const mapInstance = new mapboxgl.Map({
-			container: mapContainerRef.current,
-			style: "mapbox://styles/mapbox/light-v11",
-			center: [3.3792, 6.5244],
-			zoom: 12,
-		});
+	const zones = useMemo<Zone[]>(
+		() => [
+			{
+				id: 1,
+				name: "Yaba Zone",
+				position: { lat: 6.5244, lng: 3.3792 },
+				color: "#10b981",
+			},
+			{
+				id: 2,
+				name: "Ikeja Zone",
+				position: { lat: 6.6018, lng: 3.3484 },
+				color: "#f59e0b",
+			},
+			{
+				id: 3,
+				name: "V.I Zone",
+				position: { lat: 6.4281, lng: 3.4244 },
+				color: "#1d4ea8",
+			},
+		],
+		[],
+	);
 
-		mapInstance.on("load", () => {
-			mapRef.current = mapInstance;
+	const onPolygonComplete = useCallback((polygon: google.maps.Polygon) => {
+		const path = polygon.getPath();
+		const coordinates: LatLng[] = [];
+		for (let i = 0; i < path.getLength(); i += 1) {
+			const point = path.getAt(i);
+			coordinates.push({ lat: point.lat(), lng: point.lng() });
+		}
 
-			try {
-				const drawInstance = new TerraDraw({
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-					adapter: new TerraDrawMapboxGLAdapter({
-						map: mapInstance,
-					}) as any,
-					modes: [
-						new TerraDrawSelectMode({
-							flags: {
-								polygon: {
-									feature: {
-										draggable: true,
-										coordinates: { draggable: true },
-									},
-								},
-							},
-						}),
-						new TerraDrawPolygonMode(),
-					],
-				});
-
-				drawInstance.start();
-				drawRef.current = drawInstance;
-			} catch (error) {
-				console.error("Failed to initialize Terra Draw:", error);
-			}
-
-			// Mock tags/points
-			const zones = [
-				{
-					name: "Yaba Zone",
-					coords: [3.3792, 6.5244] as [number, number],
-					color: "#10b981",
-				},
-				{
-					name: "Ikeja Zone",
-					coords: [3.3484, 6.6018] as [number, number],
-					color: "#f59e0b",
-				},
-				{
-					name: "V.I Zone",
-					coords: [3.4244, 6.4281] as [number, number],
-					color: "#1d4ea8",
-				},
-			];
-
-			zones.forEach((zone) => {
-				new mapboxgl.Marker({ color: zone.color })
-					.setLngLat(zone.coords)
-					.setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`<h3>${zone.name}</h3>`))
-					.addTo(mapInstance);
-			});
-		});
-
-		const cleanup = () => {
-			if (drawRef.current) {
-				try {
-					drawRef.current.stop();
-				} catch (e) {
-					console.error("Failed to stop Terra Draw:", e);
-				}
-			}
-			if (mapRef.current) {
-				mapRef.current.remove();
-				mapRef.current = null;
-			}
-		};
-
-		// eslint-disable-next-line consistent-return
-		return () => {
-			cleanup();
-		};
-		return;
+		setNewTerritory(coordinates);
+		setIsDrawing(false);
+		// Note: Usually we would show a modal here to name the territory
 	}, []);
+
+	if (loadError) {
+		return (
+			<div className="flex h-full items-center justify-center bg-red-50 p-4 text-red-500">
+				Error loading maps: {loadError.message}
+			</div>
+		);
+	}
 
 	return (
 		<div className={cn("relative overflow-hidden bg-gray-50", className)}>
-			<div ref={mapContainerRef} className="absolute inset-0 size-full" />
-			{!mapboxgl.accessToken && (
+			{isLoaded ? (
+				<>
+					<GoogleMap
+						mapContainerStyle={containerStyle}
+						center={center}
+						zoom={12}
+						options={{
+							styles: [
+								{
+									featureType: "all",
+									elementType: "labels.text.fill",
+									stylers: [{ color: "#64748b" }],
+								},
+							],
+							disableDefaultUI: false,
+							mapTypeControl: false,
+							streetViewControl: false,
+						}}
+					>
+						{zones.map((zone) => (
+							<MarkerF
+								key={zone.id}
+								position={zone.position}
+								onClick={() => setSelectedZone(zone)}
+							/>
+						))}
+
+						{selectedZone && (
+							<InfoWindowF
+								position={selectedZone.position}
+								onCloseClick={() => setSelectedZone(null)}
+							>
+								<div className="p-2">
+									<h3 className="font-bold text-gray-900">{selectedZone.name}</h3>
+									<p className="text-xs text-gray-500">Active Territory</p>
+								</div>
+							</InfoWindowF>
+						)}
+
+						{isDrawing && (
+							<DrawingManager
+								onPolygonComplete={onPolygonComplete}
+								options={{
+									drawingControl: true,
+									drawingControlOptions: {
+										position: google.maps.ControlPosition.TOP_CENTER,
+										drawingModes: [google.maps.drawing.OverlayType.POLYGON],
+									},
+									polygonOptions: {
+										fillColor: "#2C38B2",
+										fillOpacity: 0.3,
+										strokeWeight: 2,
+										strokeColor: "#2C38B2",
+										editable: true,
+										zIndex: 1,
+									},
+								}}
+							/>
+						)}
+					</GoogleMap>
+
+					{/* UI Overlays */}
+					<div className="absolute bottom-6 left-6 flex space-x-3">
+						<button
+							onClick={() => setIsDrawing(!isDrawing)}
+							className={cn(
+								"flex items-center px-6 py-3 rounded-full font-bold shadow-lg transition-all",
+								isDrawing
+									? "bg-red-500 text-white"
+									: "bg-primary text-white hover:bg-secondary",
+							)}
+						>
+							{isDrawing ? "Cancel Drawing" : "Draw New Territory"}
+						</button>
+
+						{newTerritory && (
+							<button
+								onClick={() => {
+									toast.success(
+										"Territory coordinates captured! Ready to save to backend.",
+									);
+									setNewTerritory(null);
+								}}
+								className="bg-accent flex items-center rounded-full px-6 py-3 font-bold text-white shadow-lg"
+							>
+								Save Territory
+							</button>
+						)}
+					</div>
+				</>
+			) : (
+				<div className="flex h-full animate-pulse items-center justify-center bg-gray-100">
+					<p className="font-medium text-gray-400">Initializing Google Maps...</p>
+				</div>
+			)}
+
+			{!process.env.NEXT_PUBLIC_GOOGLE_MAP_API && (
 				<div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 p-6 text-center backdrop-blur-sm">
 					<div className="max-w-md space-y-4 rounded-3xl border border-red-100 bg-white p-8 shadow-2xl">
 						<div className="mx-auto flex size-12 items-center justify-center rounded-full bg-red-50">
@@ -129,17 +209,15 @@ export default function Map({ className }: MapProps) {
 								/>
 							</svg>
 						</div>
-						<h3 className="text-lg font-black text-gray-900">Mapbox Token Missing</h3>
+						<h3 className="text-lg font-black text-gray-900">
+							Google Maps Key Missing
+						</h3>
 						<p className="text-sm text-gray-500">
-							Please add your Mapbox Access Token to your{" "}
-							<code className="rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-xs font-bold text-red-500">
-								.env
-							</code>{" "}
-							file:
+							Please add your Google Maps API Key to your .env file:
 						</p>
 						<div className="rounded-xl bg-gray-50 p-3 text-left">
 							<code className="font-mono text-xs font-bold text-red-500">
-								NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.eyJ...
+								NEXT_PUBLIC_GOOGLE_MAP_API=AIzaSy...
 							</code>
 						</div>
 					</div>
