@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Icon } from "@iconify/react";
 
 interface ProfileHeaderProps {
@@ -24,14 +24,11 @@ export default function ProfileHeader({ supervisor }: ProfileHeaderProps) {
 		<div className="flex flex-col gap-6 lg:gap-8">
 			{/* Top Bar: Basic Info */}
 			<div className="flex flex-col items-start gap-4 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:gap-6 md:p-10">
-				<div className="relative size-[4.5rem] shrink-0 overflow-hidden rounded-full border-4 border-white shadow-md sm:size-[5.5rem]">
-					<Image
-						src={supervisor.avatar}
-						alt={supervisor.name}
-						fill
-						className="object-cover"
-					/>
-				</div>
+				<DynamicAvatar
+					name={supervisor.name}
+					image={supervisor.avatar}
+					className="size-[4.5rem] shrink-0 rounded-full border-4 border-white shadow-md sm:size-[5.5rem]"
+				/>
 				<div className="flex w-full flex-col gap-3 sm:gap-2">
 					<div className="flex flex-wrap items-center gap-2 sm:gap-4">
 						<h1 className="text-[18px] font-bold text-gray-800 sm:text-[20px]">

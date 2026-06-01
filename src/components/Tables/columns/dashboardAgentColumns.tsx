@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 
 export interface Agent {
 	id: number;
@@ -19,9 +19,11 @@ export const dashboardAgentColumns: ColumnDef<Agent>[] = [
 			const agent = row.original;
 			return (
 				<div className="flex items-center gap-2.5">
-					<div className="relative size-8 overflow-hidden rounded-full border border-gray-100">
-						<Image src={agent.avatar} alt={agent.name} fill className="object-cover" />
-					</div>
+					<DynamicAvatar
+						name={agent.name}
+						image={agent.avatar}
+						className="size-8 shrink-0 rounded-full border border-gray-100"
+					/>
 					<span className="font-bold text-gray-700">{agent.name}</span>
 				</div>
 			);

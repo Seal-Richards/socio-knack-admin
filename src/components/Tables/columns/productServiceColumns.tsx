@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@iconify/react";
 import type { ProductData } from "@/lib/requests/product";
@@ -46,21 +46,11 @@ export const getProductServiceColumns = (
 						: "General";
 				return (
 					<div className="flex items-center gap-3">
-						<div className="relative flex size-12 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-gray-50/30">
-							{product.avatar ? (
-								<Image
-									src={product.avatar}
-									alt={product.name}
-									fill
-									className="object-cover"
-								/>
-							) : (
-								<Icon
-									icon="solar:box-bold-duotone"
-									className="size-6 text-gray-300"
-								/>
-							)}
-						</div>
+						<DynamicAvatar
+							name={product.name}
+							image={product.avatar}
+							className="size-12 shrink-0 rounded-xl border border-gray-100"
+						/>
 						<div className="flex flex-col">
 							<span className="text-[14px] font-bold text-gray-800">
 								{product.name}

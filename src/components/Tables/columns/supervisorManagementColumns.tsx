@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { ROUTES } from "@/constants/routes";
 import { createColumns } from "./columnFactory";
 import { ActionCell } from "../cells/ActionCells";
@@ -26,14 +26,11 @@ export const supervisorManagementColumns: TableColumns<Supervisor> = createColum
 			const supervisor = row.original;
 			return (
 				<div className="flex items-center gap-3">
-					<div className="relative size-10 overflow-hidden rounded-full border border-gray-100">
-						<Image
-							src={supervisor.avatar}
-							alt={supervisor.name}
-							fill
-							className="object-cover"
-						/>
-					</div>
+					<DynamicAvatar
+						name={supervisor.name}
+						image={supervisor.avatar}
+						className="size-10 shrink-0 rounded-full border border-gray-100"
+					/>
 					<span className="text-[14px] font-bold text-gray-800">{supervisor.name}</span>
 				</div>
 			);

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@iconify/react";
 import {
@@ -61,14 +61,11 @@ export const getAccessManagementColumns = (
 				const user = row.original;
 				return (
 					<div className="flex items-center gap-3">
-						<div className="relative size-12 overflow-hidden rounded-full ring-2 ring-gray-100 ring-offset-1">
-							<Image
-								src={user.avatar}
-								alt={user.name}
-								fill
-								className="object-cover"
-							/>
-						</div>
+						<DynamicAvatar
+							name={user.name}
+							image={user.avatar}
+							className="size-12 rounded-full ring-2 ring-gray-100 ring-offset-1"
+						/>
 						<span className="text-[14px] font-bold text-gray-800">{user.name}</span>
 					</div>
 				);

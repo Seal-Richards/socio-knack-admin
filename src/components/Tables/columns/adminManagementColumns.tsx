@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@iconify/react";
 import { createColumns } from "./columnFactory";
@@ -43,14 +43,11 @@ export const adminManagementColumns: TableColumns<AdminManagementData> =
 				const user = row.original;
 				return (
 					<div className="flex items-center gap-3">
-						<div className="relative size-10 overflow-hidden rounded-full border border-gray-100">
-							<Image
-								src={user.avatar}
-								alt={user.name}
-								fill
-								className="object-cover"
-							/>
-						</div>
+						<DynamicAvatar
+							name={user.name}
+							image={user.avatar}
+							className="size-10 shrink-0 rounded-full border border-gray-100"
+						/>
 						<span className="text-[14px] font-bold text-gray-800">{user.name}</span>
 					</div>
 				);

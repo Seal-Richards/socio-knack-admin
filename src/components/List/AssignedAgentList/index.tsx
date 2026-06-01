@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import Table from "@/components/Tables";
 import { type ColumnDef } from "@tanstack/react-table";
 
@@ -50,14 +50,11 @@ const columns: ColumnDef<Agent>[] = [
 		header: "Agent Name",
 		cell: ({ row }) => (
 			<div className="flex items-center gap-3">
-				<div className="relative size-8 overflow-hidden rounded-full">
-					<Image
-						src={row.original.avatar}
-						alt={row.original.name}
-						fill
-						className="object-cover"
-					/>
-				</div>
+				<DynamicAvatar
+					name={row.original.name}
+					image={row.original.avatar}
+					className="size-8 shrink-0 rounded-full"
+				/>
 				<span className="text-[13px] font-bold text-gray-700">{row.original.name}</span>
 			</div>
 		),

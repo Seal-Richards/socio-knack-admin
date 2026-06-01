@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Icon } from "@iconify/react";
 import Map from "@/components/Map";
 
@@ -94,14 +94,11 @@ export default function TerritoryAndTeam() {
 									className="grid grid-cols-12 items-center gap-2 border-b border-gray-50 pb-4 last:border-0 last:pb-0"
 								>
 									<div className="col-span-4 flex items-center gap-2">
-										<div className="relative size-8 shrink-0 overflow-hidden rounded-full border border-gray-100">
-											<Image
-												src={agent.avatar}
-												alt={agent.name}
-												fill
-												className="object-cover"
-											/>
-										</div>
+										<DynamicAvatar
+											name={agent.name}
+											image={agent.avatar}
+											className="size-8 shrink-0 rounded-full border border-gray-100"
+										/>
 										<span className="truncate text-[13px] font-bold text-gray-800">
 											{agent.name}
 										</span>

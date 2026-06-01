@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { ROUTES } from "@/constants/routes";
 import { createColumns } from "./columnFactory";
 import { ActionCell } from "../cells/ActionCells";
@@ -24,9 +24,11 @@ export const agentManagementColumns: TableColumns<Agent> = createColumns<Agent>(
 			const agent = row.original;
 			return (
 				<div className="flex items-center gap-3">
-					<div className="relative size-10 overflow-hidden rounded-full border border-gray-100">
-						<Image src={agent.avatar} alt={agent.name} fill className="object-cover" />
-					</div>
+					<DynamicAvatar
+						name={agent.name}
+						image={agent.avatar}
+						className="size-10 rounded-full border border-gray-100"
+					/>
 					<span className="text-[14px] font-bold text-gray-800">{agent.name}</span>
 				</div>
 			);

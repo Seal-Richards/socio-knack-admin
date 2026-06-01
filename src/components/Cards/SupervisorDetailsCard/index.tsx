@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 
@@ -19,9 +19,11 @@ export default function SupervisorDetailsCard({
 	return (
 		<div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
 			<div className="flex items-center gap-3">
-				<div className="relative size-12 overflow-hidden rounded-full">
-					<Image src={avatar} alt={name} fill className="object-cover" />
-				</div>
+				<DynamicAvatar
+					name={name}
+					image={avatar}
+					className="size-12 shrink-0 rounded-full"
+				/>
 				<div>
 					<h3 className="text-sm font-bold text-gray-900">{name}</h3>
 					<div className="flex items-center gap-1">
