@@ -2,8 +2,16 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-export default function AuthSuccess() {
+export default function AuthSuccess({ isSupervisorFlow = false }: { isSupervisorFlow?: boolean }) {
 	const router = useRouter();
+
+	const handleProceed = () => {
+		if (isSupervisorFlow) {
+			router.push("/login");
+		} else {
+			router.push("/dashboard");
+		}
+	};
 
 	return (
 		<div className="flex size-full flex-col items-center justify-center py-8">
@@ -20,10 +28,10 @@ export default function AuthSuccess() {
 			<h2 className="text-darkBlue-900 mb-8 text-2xl font-bold">You are all set!</h2>
 
 			<Button
-				onClick={() => router.push("/dashboard")}
+				onClick={handleProceed}
 				className="text-md h-12 w-full max-w-[250px] bg-blue-500 font-sans font-semibold text-white hover:bg-blue-600"
 			>
-				Proceed to Dashboard
+				{isSupervisorFlow ? "Proceed to Log in" : "Proceed to Dashboard"}
 			</Button>
 		</div>
 	);

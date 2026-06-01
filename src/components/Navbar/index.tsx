@@ -9,8 +9,20 @@ import SearchBar from "@/components/_atoms/SearchBar";
 import { Icon } from "@iconify/react";
 import Breadcrumbs from "@/components/_atoms/Breadcrumbs";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import { useGetMe } from "@/hooks/useProfile";
 
 export default function Navbar() {
+	const { data: session } = useSession();
+
+	// Fetch live profile via GET /auth/me — works for all roles
+	const { data: ownProfileRes } = useGetMe();
+	const profileData = ownProfileRes?.data;
+
+	// Use backend avatar first, fall back to session image, then null (shows icon)
+	const avatarSrc = profileData?.avatar ?? session?.user?.image ?? null;
+	const displayName = session?.user?.name ?? "User";
+
 	return (
 		<header className="sticky top-0 z-40 flex h-20 w-full items-center border-b border-gray-100 bg-white/80 px-4 backdrop-blur-md lg:h-24 lg:px-8">
 			<div className="flex w-full items-center justify-between">
@@ -75,14 +87,20 @@ export default function Navbar() {
 							<Icon icon="solar:bell-bing-linear" className="size-5 text-gray-500" />
 							<span className="absolute right-2.5 top-2.5 size-2 rounded-full border-2 border-white bg-red-500" />
 						</Button>
+
+						{/* Profile Avatar */}
 						<div className="ml-1 flex items-center gap-3">
-							<div className="relative size-10 overflow-hidden rounded-full border-2 border-[#1d4ea8]/10 shadow-sm ring-2 ring-white">
-								<Image
-									src="/assets/images/admin-avatar.png"
-									alt="Profile"
-									fill
-									className="object-cover"
-								/>
+							<div className="relative flex size-10 items-center justify-center overflow-hidden rounded-full border-2 border-[#1d4ea8]/10 bg-gray-100 shadow-sm ring-2 ring-white">
+								{avatarSrc ? (
+									<Image
+										src={avatarSrc}
+										alt={displayName}
+										fill
+										className="object-cover"
+									/>
+								) : (
+									<Icon icon="solar:user-bold" className="size-6 text-gray-400" />
+								)}
 							</div>
 						</div>
 					</div>

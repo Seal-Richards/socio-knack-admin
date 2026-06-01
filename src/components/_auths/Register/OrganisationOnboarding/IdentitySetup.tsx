@@ -8,6 +8,8 @@ import { Icon } from "@iconify/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { adminIdentitySchema, type AdminIdentityFormData } from "@/schemas/auth";
+import { useRegisterAdmin } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function IdentitySetup({
@@ -22,6 +24,8 @@ export default function IdentitySetup({
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+	const registerAdminMutation = useRegisterAdmin();
+
 	const {
 		register,
 		handleSubmit,
@@ -30,8 +34,28 @@ export default function IdentitySetup({
 		resolver: zodResolver(adminIdentitySchema),
 	});
 
-	const onSubmit = (_data: AdminIdentityFormData) => {
-		onNext();
+	const onSubmit = async (data: AdminIdentityFormData) => {
+		try {
+			const res = await registerAdminMutation.mutateAsync({
+				firstName: data.firstName,
+				lastName: data.lastName,
+				email: data.email,
+				password: data.password,
+				phone: data.phoneNumber,
+			});
+
+			if (res.success) {
+				toast.success(res.message);
+				if (typeof window !== "undefined") {
+					localStorage.setItem("register_email", data.email);
+				}
+				onNext();
+			} else {
+				toast.error(res.message);
+			}
+		} catch (error: unknown) {
+			toast.error(error instanceof Error ? error.message : "Admin registration failed.");
+		}
 	};
 
 	return (
@@ -49,7 +73,7 @@ export default function IdentitySetup({
 							id="firstName"
 							placeholder="Enter here"
 							{...register("firstName")}
-							className="h-12 border-gray-300 bg-gray-50 text-gray-900"
+							className="h-12 border-gray-300 bg-gray-50 text-gray-900 focus-visible:ring-yellow-500"
 						/>
 						{errors.firstName && (
 							<p className="text-xs font-medium text-red-500">
@@ -65,7 +89,7 @@ export default function IdentitySetup({
 							id="lastName"
 							placeholder="Enter here"
 							{...register("lastName")}
-							className="h-12 border-gray-300 bg-gray-50 text-gray-900"
+							className="h-12 border-gray-300 bg-gray-50 text-gray-900 focus-visible:ring-yellow-500"
 						/>
 						{errors.lastName && (
 							<p className="text-xs font-medium text-red-500">
@@ -86,7 +110,7 @@ export default function IdentitySetup({
 							type="email"
 							placeholder="Enter here"
 							{...register("email")}
-							className="h-12 border-gray-300 bg-gray-50 text-gray-900"
+							className="h-12 border-gray-300 bg-gray-50 text-gray-900 focus-visible:ring-yellow-500"
 						/>
 						{errors.email && (
 							<p className="text-xs font-medium text-red-500">
@@ -104,7 +128,7 @@ export default function IdentitySetup({
 								type="tel"
 								placeholder="Enter here"
 								{...register("phoneNumber")}
-								className="h-12 border-gray-300 bg-gray-50 text-gray-900"
+								className="h-12 border-gray-300 bg-gray-50 text-gray-900 focus-visible:ring-yellow-500"
 							/>
 						</div>
 						{errors.phoneNumber && (
@@ -132,7 +156,7 @@ export default function IdentitySetup({
 									type={showPassword ? "text" : "password"}
 									placeholder="PASSWORD"
 									{...register("password")}
-									className="h-12 border-gray-300 bg-gray-50 font-medium tracking-widest text-gray-900 placeholder:font-normal placeholder:tracking-normal"
+									className="h-12 border-gray-300 bg-gray-50 font-medium tracking-widest text-gray-900 placeholder:font-normal placeholder:tracking-normal focus-visible:ring-yellow-500"
 								/>
 								<button
 									type="button"
@@ -167,7 +191,7 @@ export default function IdentitySetup({
 									type={showConfirmPassword ? "text" : "password"}
 									placeholder="CONFIRM PASSWORD"
 									{...register("confirmPassword")}
-									className={`h-12 border-gray-300 bg-gray-50 font-medium tracking-widest text-gray-900 placeholder:font-normal placeholder:tracking-normal ${errors.confirmPassword ? "border-red-500" : "border-green-500/50 bg-green-50/20"}`}
+									className={`h-12 border-gray-300 bg-gray-50 font-medium tracking-widest text-gray-900 placeholder:font-normal placeholder:tracking-normal focus-visible:ring-yellow-500 ${errors.confirmPassword ? "border-red-500" : "border-green-500/50 bg-green-50/20"}`}
 								/>
 								<button
 									type="button"
@@ -200,9 +224,10 @@ export default function IdentitySetup({
 				<div className="pt-4">
 					<Button
 						type="submit"
-						className="text-md h-12 w-full bg-blue-500 font-sans font-semibold text-white hover:bg-blue-600"
+						disabled={registerAdminMutation.isPending}
+						className="text-md h-12 w-full bg-blue-500 font-sans font-semibold text-white hover:bg-blue-600 disabled:opacity-50"
 					>
-						Next
+						{registerAdminMutation.isPending ? "Registering..." : "Next"}
 					</Button>
 				</div>
 			</form>

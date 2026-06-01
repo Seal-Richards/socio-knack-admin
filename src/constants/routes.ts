@@ -2,6 +2,7 @@
 
 export const ROUTES = {
 	DASHBOARD: "/dashboard",
+	PRODUCTS_SERVICES: "/products-services",
 	AGENTS: "/agent-management",
 	AGENT_DETAILS: (id: string | number) => `/agent-management/${id}`,
 	SUPERVISORS: "/supervisor-management",

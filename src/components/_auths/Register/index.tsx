@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Icon } from "@iconify/react";
+import { useVerifyInvite } from "@/hooks/useAuth";
 
 // Phase 1: Admin & Organization Setup (Steps 1-6)
+import type { RegisterSupervisorPayload } from "@/types/auth";
 import AdminIdentitySetup from "./OrganisationOnboarding/IdentitySetup";
 import AdminOwnershipVerification from "./OrganisationOnboarding/OwnershipVerification";
 import AdminOrganisationSetup from "./OrganisationOnboarding/OrganisationSetup";
 import AdminWalletSetup from "./OrganisationOnboarding/WalletSetup";
 import AdminPlatformActivation from "./OrganisationOnboarding/PlatformActivation";
+
+// Phase 2: Supervisor & Staff Onboarding Setup (Invited Users)
+import SupervisorPersonalSetup from "./SupervisorOnboarding/PersonalSetup";
+import SupervisorIdentitySetup from "./SupervisorOnboarding/IdentitySetup";
+import SupervisorSecuritySetup from "./SupervisorOnboarding/SecuritySetup";
 
 // Phase 3: Final Auth (Steps 10-11)
 import OTPVerification from "./Shared/OTPVerification";
@@ -19,8 +26,52 @@ import AuthSuccess from "./Shared/AuthSuccess";
 
 export default function Register() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+
+	const token = searchParams?.get("token") || "";
+	const email = searchParams?.get("email") || "";
+	const isInvitedFlow = !!token && !!email;
+
+	// Query invitation status
+	const {
+		data: inviteVerifyRes,
+		isLoading: isVerifyingInvite,
+		isError: inviteVerifyError,
+	} = useVerifyInvite(token, email);
+
+	// Standard Admin Flow Step Tracker
 	const [currentStep, setCurrentStep] = useState(1);
 	const totalSteps = 7; // 1: Identity, 2: OTP, 3: Ownership, 4: Org, 5: Wallet, 6: Activation, 7: Success
+
+	// Invited User Onboarding Flow Step Tracker
+	const [onboardStep, setOnboardStep] = useState(1);
+	const totalOnboardSteps = 4; // 1: Personal Info, 2: Identity, 3: Security, 4: Success
+
+	// Invited User cumulative data state
+	const [onboardData, setOnboardData] = useState<RegisterSupervisorPayload>({
+		token,
+		email,
+		firstName: "",
+		lastName: "",
+		phone: "",
+		dob: "",
+		gender: "",
+		city: "",
+		state: "",
+		country: "",
+		password: "",
+	});
+
+	// Sync query params when they load
+	useEffect(() => {
+		if (token && email) {
+			setOnboardData((prev) => ({
+				...prev,
+				token,
+				email,
+			}));
+		}
+	}, [token, email]);
 
 	const stepVariants: Variants = {
 		initial: { x: 20, opacity: 0 },
@@ -31,6 +82,61 @@ export default function Register() {
 	const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
 	const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
+	const nextOnboardStep = () => setOnboardStep((prev) => Math.min(prev + 1, totalOnboardSteps));
+	const prevOnboardStep = () => setOnboardStep((prev) => Math.max(prev - 1, 1));
+
+	// If verifying the invite, show loading overlay
+	if (isInvitedFlow && isVerifyingInvite) {
+		return (
+			<div className="bg-darkBlue-900 flex min-h-screen w-full items-center justify-center text-white">
+				<div className="flex flex-col items-center gap-4">
+					<div className="size-10 animate-spin rounded-full border-4 border-yellow-500 border-t-transparent" />
+					<p className="text-gray-300">Verifying invitation token...</p>
+				</div>
+			</div>
+		);
+	}
+
+	// If verify failed or is expired, show error card
+	if (isInvitedFlow && (inviteVerifyError || !inviteVerifyRes?.success)) {
+		return (
+			<div className="bg-darkBlue-900 flex min-h-screen w-full items-center justify-center p-4">
+				<motion.div
+					initial={{ opacity: 0, scale: 0.95 }}
+					animate={{ opacity: 1, scale: 1 }}
+					className="w-full max-w-md rounded-xl bg-white p-8 text-center text-gray-800 shadow-2xl"
+				>
+					<div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-red-50 text-red-500">
+						<Icon icon="lucide:alert-triangle" className="size-8" />
+					</div>
+					<h2 className="mb-2 text-2xl font-bold text-gray-900">Invalid Invite Link</h2>
+					<p className="mb-8 text-gray-500">
+						{inviteVerifyRes?.message ||
+							"This invitation link is invalid, expired, or has already been used. Please contact your business administrator."}
+					</p>
+					<button
+						onClick={() => router.push("/login")}
+						className="h-12 w-full rounded-xl bg-[#1d4ea8] text-[15px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95"
+					>
+						Go to Log in
+					</button>
+				</motion.div>
+			</div>
+		);
+	}
+
+	// Determine title/header details for Invited flow
+	const inviteInfo = inviteVerifyRes?.data;
+	const businessName = inviteInfo?.businessName || "Socio Knack Partner";
+	const invitedRole =
+		inviteInfo?.role === "staff" ? `Staff (${inviteInfo.position})` : "Supervisor";
+
+	const isOnSuccessStep = isInvitedFlow ? onboardStep === totalOnboardSteps : currentStep === 6;
+	let containerMaxWidth = "max-w-3xl";
+	if (!isOnSuccessStep && currentStep === 6) {
+		containerMaxWidth = "max-w-6xl";
+	}
+
 	return (
 		<div className="bg-darkBlue-900 text-foreground flex min-h-screen w-full flex-col items-center justify-center p-4 md:bg-gray-100">
 			{/* Container Card */}
@@ -38,23 +144,31 @@ export default function Register() {
 				initial={{ opacity: 0, y: 30 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.5 }}
-				className={`relative w-full overflow-hidden rounded-xl bg-white p-8 shadow-lg transition-all duration-500 ease-in-out md:p-12 ${
-					currentStep === 6 ? "max-w-6xl" : "max-w-3xl"
-				}`}
+				className={`relative w-full overflow-hidden rounded-xl bg-white p-8 shadow-lg transition-all duration-500 ease-in-out md:p-12 ${containerMaxWidth}`}
 			>
 				{/* Header - Logo and Exit (Hidden on Success step) */}
-				{currentStep !== totalSteps && (
-					<div className="text-darkBlue-900 mb-10 flex items-center justify-between">
-						<Image
-							src="/assets/images/socioknack_blue_text_logo.png"
-							alt="SocioKnack Logo"
-							width={150}
-							height={30}
-							className="object-contain"
-						/>
+				{(!isInvitedFlow
+					? currentStep !== totalSteps
+					: onboardStep !== totalOnboardSteps) && (
+					<div className="text-darkBlue-900 mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+						<div className="flex flex-col gap-1">
+							<Image
+								src="/assets/images/socioknack_blue_text_logo.png"
+								alt="SocioKnack Logo"
+								width={150}
+								height={30}
+								className="object-contain"
+							/>
+							{isInvitedFlow && (
+								<p className="mt-1 inline-block rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-[#1d4ea8]">
+									Invited as {invitedRole} by{" "}
+									<span className="font-bold">{businessName}</span>
+								</p>
+							)}
+						</div>
 						<button
 							onClick={() => router.push("/login")}
-							className="flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-500 transition-colors hover:bg-blue-100"
+							className="flex size-8 items-center justify-center self-end rounded-full bg-blue-50 text-blue-500 transition-colors hover:bg-blue-100 md:self-auto"
 						>
 							<Icon icon="lucide:x" className="size-5" />
 						</button>
@@ -65,51 +179,109 @@ export default function Register() {
 				<div className="relative min-h-[400px]">
 					<AnimatePresence mode="wait">
 						<motion.div
-							key={currentStep}
+							key={
+								isInvitedFlow ? `invited-${onboardStep}` : `standard-${currentStep}`
+							}
 							variants={stepVariants}
 							initial="initial"
 							animate="enter"
 							exit="exit"
-							className={`w-full ${currentStep === totalSteps ? "flex h-full flex-col justify-center" : ""}`}
+							className={`w-full ${
+								(
+									isInvitedFlow
+										? onboardStep === totalOnboardSteps
+										: currentStep === totalSteps
+								)
+									? "flex h-full flex-col justify-center"
+									: ""
+							}`}
 						>
-							{currentStep === 1 && (
-								<AdminIdentitySetup
-									onNext={nextStep}
-									step={currentStep}
-									totalSteps={totalSteps - 1}
-								/>
+							{isInvitedFlow ? (
+								// Invited User (Supervisor/Staff) Onboarding Flow
+								<>
+									{onboardStep === 1 && (
+										<SupervisorPersonalSetup
+											onNext={(data) => {
+												setOnboardData((prev) => ({ ...prev, ...data }));
+												nextOnboardStep();
+											}}
+											onPrev={() => router.push("/login")}
+											step={onboardStep}
+											totalSteps={totalOnboardSteps - 1}
+											prefilledEmail={email}
+										/>
+									)}
+									{onboardStep === 2 && (
+										<SupervisorIdentitySetup
+											onNext={() => {
+												nextOnboardStep();
+											}}
+											onPrev={prevOnboardStep}
+											step={onboardStep}
+											totalSteps={totalOnboardSteps - 1}
+										/>
+									)}
+									{onboardStep === 3 && (
+										<SupervisorSecuritySetup
+											onNext={async (data) => {
+												const finalPayload = { ...onboardData, ...data };
+												setOnboardData(finalPayload);
+												nextOnboardStep();
+											}}
+											onPrev={prevOnboardStep}
+											step={onboardStep}
+											totalSteps={totalOnboardSteps - 1}
+											onboardPayload={onboardData}
+										/>
+									)}
+									{onboardStep === 4 && <AuthSuccess isSupervisorFlow />}
+								</>
+							) : (
+								// Standard Business Admin Flow
+								<>
+									{currentStep === 1 && (
+										<AdminIdentitySetup
+											onNext={nextStep}
+											step={currentStep}
+											totalSteps={totalSteps - 1}
+										/>
+									)}
+									{currentStep === 2 && (
+										<OTPVerification onNext={nextStep} onPrev={prevStep} />
+									)}
+									{currentStep === 3 && (
+										<AdminOwnershipVerification
+											onNext={nextStep}
+											onPrev={prevStep}
+										/>
+									)}
+									{currentStep === 4 && (
+										<AdminOrganisationSetup
+											onNext={nextStep}
+											onPrev={prevStep}
+											step={currentStep}
+											totalSteps={totalSteps - 1}
+										/>
+									)}
+									{currentStep === 5 && (
+										<AdminWalletSetup
+											onNext={nextStep}
+											onPrev={prevStep}
+											step={currentStep}
+											totalSteps={totalSteps - 1}
+										/>
+									)}
+									{currentStep === 6 && (
+										<AdminPlatformActivation
+											onNext={nextStep}
+											_onPrev={prevStep}
+											step={currentStep}
+											totalSteps={totalSteps - 1}
+										/>
+									)}
+									{currentStep === 7 && <AuthSuccess />}
+								</>
 							)}
-							{currentStep === 2 && (
-								<OTPVerification onNext={nextStep} onPrev={prevStep} />
-							)}
-							{currentStep === 3 && (
-								<AdminOwnershipVerification onNext={nextStep} onPrev={prevStep} />
-							)}
-							{currentStep === 4 && (
-								<AdminOrganisationSetup
-									onNext={nextStep}
-									onPrev={prevStep}
-									step={currentStep}
-									totalSteps={totalSteps - 1}
-								/>
-							)}
-							{currentStep === 5 && (
-								<AdminWalletSetup
-									onNext={nextStep}
-									onPrev={prevStep}
-									step={currentStep}
-									totalSteps={totalSteps - 1}
-								/>
-							)}
-							{currentStep === 6 && (
-								<AdminPlatformActivation
-									onNext={nextStep}
-									_onPrev={prevStep}
-									step={currentStep}
-									totalSteps={totalSteps - 1}
-								/>
-							)}
-							{currentStep === 7 && <AuthSuccess />}
 						</motion.div>
 					</AnimatePresence>
 				</div>

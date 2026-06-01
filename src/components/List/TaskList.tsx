@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react";
 import Image from "next/image";
+import Empty from "@/components/_atoms/Empty";
 
 interface TaskItem {
 	id: number;
@@ -15,6 +16,16 @@ interface TaskItem {
 }
 
 export default function TaskList({ tasks }: { tasks: TaskItem[] }) {
+	if (!tasks || tasks.length === 0) {
+		return (
+			<Empty
+				title="No Tasks Available"
+				description="There are currently no tasks to display for this criteria."
+				icon="solar:clipboard-list-bold-duotone"
+			/>
+		);
+	}
+
 	return (
 		<div className="space-y-4">
 			{tasks.map((task) => (

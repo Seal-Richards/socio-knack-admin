@@ -51,6 +51,11 @@ export default function UserManagementList() {
 				columns={userManagementColumns as any[]}
 				data={DUMMY_USERS}
 				onRowSelectionChange={setRowSelection}
+				emptyState={{
+					title: "No Users Found",
+					description: "There are currently no users found in the system.",
+					icon: "solar:users-group-two-rounded-bold-duotone",
+				}}
 			/>
 		</TableLayoutWrapper>
 	);

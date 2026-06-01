@@ -51,6 +51,11 @@ export default function AdminManagementList() {
 				columns={adminManagementColumns as any[]}
 				data={DUMMY_ADMINS}
 				onRowSelectionChange={setRowSelection}
+				emptyState={{
+					title: "No Admins Found",
+					description: "There are currently no administrators in the system.",
+					icon: "solar:shield-warning-bold-duotone",
+				}}
 			/>
 		</TableLayoutWrapper>
 	);

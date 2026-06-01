@@ -20,11 +20,18 @@ export interface AccessManagementData {
 	email: string;
 	location: string;
 	role: string;
+	position?: string;
 	status: "Active" | "Inactive";
 	avatar: string;
+	rawRole: "admin" | "supervisor" | "staff";
 }
 
-export const accessManagementColumns: TableColumns<AccessManagementData> =
+export const getAccessManagementColumns = (
+	tempRoles: Record<string | number, string>,
+	setTempRoles: React.Dispatch<React.SetStateAction<Record<string | number, string>>>,
+	onSave: (id: string | number, role: string) => void,
+	isSaving: boolean,
+): TableColumns<AccessManagementData> =>
 	createColumns<AccessManagementData>([
 		{
 			id: "select",
@@ -116,32 +123,68 @@ export const accessManagementColumns: TableColumns<AccessManagementData> =
 		{
 			id: "role",
 			header: "Role",
-			accessorKey: "role",
-			cell: ({ row }) => (
-				<div className="w-40">
-					<Select defaultValue={row.original.role}>
-						<SelectTrigger className="h-10 rounded-2xl border-gray-100 bg-white px-4 text-[13px] font-bold text-gray-700 transition-all hover:bg-gray-50 focus:ring-0">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent className="rounded-xl border-gray-100">
-							<SelectItem value="Super Admin">Super Admin</SelectItem>
-							<SelectItem value="Finance Officer">Finance Officer</SelectItem>
-							<SelectItem value="Supervisor">Supervisor</SelectItem>
-							<SelectItem value="Region Manager">Region Manager</SelectItem>
-						</SelectContent>
-					</Select>
-				</div>
-			),
+			cell: ({ row }) => {
+				const user = row.original;
+				const currentRole = tempRoles[user.id] ?? user.rawRole;
+
+				return (
+					<div className="flex w-44 flex-col gap-1">
+						<Select
+							value={currentRole}
+							onValueChange={(val) => {
+								setTempRoles((prev) => ({
+									...prev,
+									[user.id]: val,
+								}));
+							}}
+						>
+							<SelectTrigger className="h-10 rounded-2xl border-gray-100 bg-white px-4 text-[13px] font-bold text-gray-700 transition-all hover:bg-gray-50 focus:ring-0">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent className="rounded-xl border-gray-100">
+								<SelectItem value="admin">Admin</SelectItem>
+								<SelectItem value="supervisor">Supervisor</SelectItem>
+								<SelectItem value="staff">Staff</SelectItem>
+							</SelectContent>
+						</Select>
+						{/* Position designation helper — only staff has unique position */}
+						{user.rawRole === "staff" && user.position && (
+							<span className="pl-2 text-[11px] font-medium text-gray-400">
+								{user.position}
+							</span>
+						)}
+					</div>
+				);
+			},
 		},
 		{
 			id: "save",
 			header: "",
-			cell: () => (
-				<button className="flex items-center gap-2 rounded-xl border border-green-100 bg-green-50/10 px-4 py-2 text-[12px] font-bold text-[#10b981] transition-all hover:bg-green-50/30 active:scale-95">
-					<Icon icon="solar:diskette-bold-duotone" className="size-4" />
-					Save permission
-				</button>
-			),
+			cell: ({ row }) => {
+				const user = row.original;
+				const hasChanged =
+					tempRoles[user.id] !== undefined && tempRoles[user.id] !== user.rawRole;
+
+				return (
+					<button
+						disabled={!hasChanged || isSaving}
+						onClick={() => {
+							const newRole = tempRoles[user.id];
+							if (newRole) {
+								onSave(user.id, newRole);
+							}
+						}}
+						className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-[12px] font-bold transition-all active:scale-95 disabled:pointer-events-none disabled:opacity-30 ${
+							hasChanged
+								? "border-green-100 bg-green-50 text-[#10b981] hover:bg-green-100/50"
+								: "border-gray-100 bg-gray-50 text-gray-400"
+						}`}
+					>
+						<Icon icon="solar:diskette-bold-duotone" className="size-4" />
+						Save permission
+					</button>
+				);
+			},
 		},
 		{
 			id: "actions",

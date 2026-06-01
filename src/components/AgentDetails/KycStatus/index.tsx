@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,8 +12,54 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import type { AgentData } from "@/types/agent";
+import { useUpdateAgentStatus } from "@/hooks/useAgent";
+import { toast } from "sonner";
 
-export default function KycStatus() {
+export default function KycStatus({ agent }: { agent: AgentData }) {
+	const hasId = !!agent.kycDocuments?.idFront;
+	const hasSelfie = !!agent.kycDocuments?.selfie;
+	const hasBank = !!agent.wallet?.fincraAccountNumber;
+
+	let progress = 0;
+	if (hasId) progress += 35;
+	if (hasSelfie) progress += 35;
+	if (hasBank) progress += 30;
+
+	const [kycStatus, setKycStatus] = useState(agent.kycStatus || "pending");
+	const [comment, setComment] = useState(agent.kycComment || "");
+
+	const updateStatusMutation = useUpdateAgentStatus();
+
+	const handleSave = async () => {
+		try {
+			const res = await updateStatusMutation.mutateAsync({
+				userId: agent._id || agent.id,
+				payload: {
+					kycStatus,
+					kycComment: comment,
+					comment,
+				},
+			});
+
+			if (res.success) {
+				toast.success("Agent KYC status updated successfully.");
+			} else {
+				toast.error(res.message || "Failed to update KYC status.");
+			}
+		} catch (error: unknown) {
+			toast.error(error instanceof Error ? error.message : "An error occurred.");
+		}
+	};
+
+	const viewDocument = (url?: string) => {
+		if (url) {
+			window.open(url, "_blank");
+		} else {
+			toast.info("No document uploaded yet.");
+		}
+	};
+
 	return (
 		<div className="flex flex-col gap-6 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm md:gap-8 md:p-10">
 			<h3 className="text-[14px] font-bold text-gray-500 sm:text-[15px]">KYC Verification</h3>
@@ -23,9 +71,12 @@ export default function KycStatus() {
 					Verification
 				</span>
 				<div className="h-3.5 w-full flex-1 overflow-hidden rounded-full bg-gray-200">
-					<div className="size-full rounded-full bg-[#1d4ea8]" />
+					<div
+						style={{ width: `${progress}%` }}
+						className="h-full rounded-full bg-[#1d4ea8]"
+					/>
 				</div>
-				<span className="text-[14px] font-bold text-gray-800">100%</span>
+				<span className="text-[14px] font-bold text-gray-800">{progress}%</span>
 			</div>
 
 			<div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:gap-16">
@@ -35,19 +86,25 @@ export default function KycStatus() {
 						<span className="text-[14px] font-bold text-gray-700 sm:text-[15px]">
 							Identity Verification
 						</span>
-						<button className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[12px] font-bold text-gray-600 transition-colors hover:bg-gray-50">
+						<button
+							onClick={() => viewDocument(agent.kycDocuments?.idFront)}
+							className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[12px] font-bold text-gray-600 transition-colors hover:bg-gray-50"
+						>
 							<Icon icon="solar:eye-bold" className="size-4" />
-							View
+							View ID Card
 						</button>
 					</div>
 
 					<div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 sm:p-5">
 						<span className="text-[14px] font-bold text-gray-700 sm:text-[15px]">
-							Proof of address
+							Proof of address / Selfie
 						</span>
-						<button className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[12px] font-bold text-gray-600 transition-colors hover:bg-gray-50">
+						<button
+							onClick={() => viewDocument(agent.kycDocuments?.selfie)}
+							className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[12px] font-bold text-gray-600 transition-colors hover:bg-gray-50"
+						>
 							<Icon icon="solar:eye-bold" className="size-4" />
-							View
+							View Selfie
 						</button>
 					</div>
 
@@ -55,9 +112,15 @@ export default function KycStatus() {
 						<span className="text-[14px] font-bold text-gray-700 sm:text-[15px]">
 							Link Bank Account
 						</span>
-						<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#4CAF50] text-white">
-							<Icon icon="lucide:check" className="size-4" />
-						</div>
+						{hasBank ? (
+							<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#4CAF50] text-white">
+								<Icon icon="lucide:check" className="size-4" />
+							</div>
+						) : (
+							<span className="rounded-full bg-orange-100 px-3 py-1 text-[11px] font-bold text-orange-600">
+								Not Linked
+							</span>
+						)}
 					</div>
 				</div>
 
@@ -71,7 +134,7 @@ export default function KycStatus() {
 							<Label className="text-[13px] font-bold text-gray-800">
 								Set Status
 							</Label>
-							<Select defaultValue="approved">
+							<Select value={kycStatus} onValueChange={setKycStatus}>
 								<SelectTrigger className="h-12 w-full rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-600 focus:ring-0">
 									<SelectValue placeholder="Select Status" />
 								</SelectTrigger>
@@ -86,6 +149,8 @@ export default function KycStatus() {
 						<div className="space-y-2">
 							<Label className="text-[13px] font-bold text-gray-800">Comment</Label>
 							<Textarea
+								value={comment}
+								onChange={(e) => setComment(e.target.value)}
 								placeholder="Input comment"
 								className="min-h-[120px] resize-none rounded-xl border-gray-200 px-4 py-3 text-[13px] focus-visible:ring-0"
 							/>
@@ -94,12 +159,20 @@ export default function KycStatus() {
 						<div className="mt-4 flex flex-col gap-4 sm:flex-row">
 							<Button
 								variant="outline"
+								onClick={() => {
+									setKycStatus(agent.kycStatus || "pending");
+									setComment(agent.kycComment || "");
+								}}
 								className="h-12 flex-1 rounded-full border-gray-100 text-[14px] font-bold text-gray-800 hover:bg-gray-50"
 							>
 								Cancel
 							</Button>
-							<Button className="h-12 flex-1 rounded-full bg-[#4CAF50] text-[14px] font-bold text-white hover:bg-[#43A047]">
-								Save
+							<Button
+								disabled={updateStatusMutation.isPending}
+								onClick={handleSave}
+								className="h-12 flex-1 rounded-full bg-[#4CAF50] text-[14px] font-bold text-white hover:bg-[#43A047]"
+							>
+								{updateStatusMutation.isPending ? "Saving..." : "Save"}
 							</Button>
 						</div>
 					</div>

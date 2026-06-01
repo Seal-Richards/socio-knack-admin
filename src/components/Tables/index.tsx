@@ -3,12 +3,14 @@
 import React from "react";
 import cn from "@/lib/utils";
 import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
+import Empty from "@/components/_atoms/Empty";
 import type { TableProps } from "./types";
 
 export default function Table<TData extends { id?: string | number }>({
 	columns,
 	data,
 	className,
+	emptyState,
 	onRowSelectionChange,
 }: TableProps<TData> & { onRowSelectionChange?: (selection: Record<string, boolean>) => void }) {
 	const [rowSelection, setRowSelection] = React.useState({});
@@ -50,18 +52,38 @@ export default function Table<TData extends { id?: string | number }>({
 					))}
 				</thead>
 				<tbody className="divide-y divide-gray-50/50">
-					{table.getRowModel().rows.map((row) => (
-						<tr key={row.id} className="group transition-colors hover:bg-gray-50/50">
-							{row.getVisibleCells().map((cell) => (
-								<td
-									key={cell.id}
-									className="py-4 text-[13px] font-bold text-gray-700"
-								>
-									{flexRender(cell.column.columnDef.cell, cell.getContext())}
-								</td>
-							))}
+					{data.length === 0 ? (
+						<tr>
+							<td colSpan={columns.length} className="py-8">
+								<Empty
+									title={emptyState?.title || "No Data Found"}
+									description={
+										emptyState?.description ||
+										"There are currently no records to display."
+									}
+									icon={emptyState?.icon || "solar:box-minimalistic-bold-duotone"}
+									actionLabel={emptyState?.actionLabel}
+									onAction={emptyState?.onAction}
+								/>
+							</td>
 						</tr>
-					))}
+					) : (
+						table.getRowModel().rows.map((row) => (
+							<tr
+								key={row.id}
+								className="group transition-colors hover:bg-gray-50/50"
+							>
+								{row.getVisibleCells().map((cell) => (
+									<td
+										key={cell.id}
+										className="py-4 text-[13px] font-bold text-gray-700"
+									>
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</td>
+								))}
+							</tr>
+						))
+					)}
 				</tbody>
 			</table>
 		</div>

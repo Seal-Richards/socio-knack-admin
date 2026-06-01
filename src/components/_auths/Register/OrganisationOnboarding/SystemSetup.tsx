@@ -47,7 +47,7 @@ export default function SystemSetup({
 						</div>
 
 						<div className="flex items-center justify-between border-b border-gray-100 pb-2">
-							<span className="text-sm font-medium text-gray-700">Super Admin</span>
+							<span className="text-sm font-medium text-gray-700">Admin</span>
 							<span className="rounded-full bg-green-100 px-3 py-1 text-[10px] font-bold text-green-600">
 								Full access
 							</span>

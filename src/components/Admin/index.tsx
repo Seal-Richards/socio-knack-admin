@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useSession } from "next-auth/react";
 import AgentsWidget from "@/components/_widgets/Agents";
 import TerritorySalesWidget from "@/components/_widgets/TerritorySales";
 import ComplianceWidget from "@/components/_widgets/ComplianceSales";
@@ -21,6 +22,10 @@ import CreateTaskModal from "../_modals/CreateTaskModal";
 import AllTaskModal from "../_modals/AllTaskModal";
 
 export default function Admin() {
+	const { data: session } = useSession();
+	// Extract first name only (e.g. "Kenny" from "Kenny Osei")
+	const firstName = session?.user?.name?.split(" ")[0] ?? "there";
+
 	const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = React.useState(false);
 	const [isAllTaskModalOpen, setIsAllTaskModalOpen] = React.useState(false);
 
@@ -30,7 +35,7 @@ export default function Admin() {
 			<div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
 				<div className="flex items-center gap-3">
 					<h1 className="text-2xl font-black tracking-tight text-gray-900 lg:text-[32px]">
-						Welcome back, Kenny
+						Welcome back, {firstName}
 					</h1>
 					<span className="text-2xl lg:text-[32px]">👋</span>
 				</div>
@@ -64,7 +69,15 @@ export default function Admin() {
 							/>
 						}
 					>
-						<Table columns={dashboardAgentColumns} data={AGENT_LIST as Agent[]} />
+						<Table
+							columns={dashboardAgentColumns}
+							data={AGENT_LIST as Agent[]}
+							emptyState={{
+								title: "No Agents Available",
+								description: "You haven't added any agents to your list yet.",
+								icon: "solar:users-group-rounded-bold-duotone",
+							}}
+						/>
 					</TableLayoutWrapper>
 				</div>
 				<div className="flex h-full flex-col">

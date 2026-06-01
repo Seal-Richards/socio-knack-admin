@@ -1,0 +1,31 @@
+// src/lib/requests/profile/index.ts
+
+import { apiClient } from "@/lib/apiClient";
+import type { ApiResponse } from "@/types/generic";
+import type { UserProfileData, UpdateProfilePayload, UpdatePasswordPayload } from "@/types/profile";
+
+export const profileRequests = {
+	/** GET /auth/me — returns the logged-in user's full profile for any role */
+	async getMe(): Promise<ApiResponse<UserProfileData>> {
+		return apiClient.get<ApiResponse<UserProfileData>>(
+			"/auth/me",
+			"Failed to load user profile.",
+		);
+	},
+
+	async updateProfile(body: UpdateProfilePayload): Promise<ApiResponse<UserProfileData>> {
+		return apiClient.patch<ApiResponse<UserProfileData>, UpdateProfilePayload>(
+			"/auth/profile",
+			body,
+			"Failed to update profile settings.",
+		);
+	},
+
+	async updatePassword(body: UpdatePasswordPayload): Promise<ApiResponse<null>> {
+		return apiClient.post<ApiResponse<null>, UpdatePasswordPayload>(
+			"/auth/update-password",
+			body,
+			"Failed to update security password.",
+		);
+	},
+};

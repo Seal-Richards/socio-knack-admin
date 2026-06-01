@@ -27,29 +27,31 @@ export default function Modal({
 	children,
 	className,
 }: ModalProps) {
+	const hasCustomMaxWidth = className?.includes("max-w-") || className?.includes("sm:max-w-");
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<DialogContent
 				className={cn(
-					"sm:max-w-[500px] border-none p-0 overflow-hidden rounded-[2rem]",
+					"w-full border-none p-0 overflow-hidden rounded-[2rem] max-h-[90vh] flex flex-col bg-white",
+					!hasCustomMaxWidth && "sm:max-w-[500px]",
 					className,
 				)}
 			>
 				{(title || description) && (
-					<DialogHeader className="p-6 pb-0">
+					<DialogHeader className="shrink-0 p-6 pb-3">
 						{title && (
 							<DialogTitle className="text-xl font-bold text-[#1d4ea8]">
 								{title}
 							</DialogTitle>
 						)}
 						{description && (
-							<DialogDescription className="text-gray-500">
+							<DialogDescription className="text-sm text-gray-500">
 								{description}
 							</DialogDescription>
 						)}
 					</DialogHeader>
 				)}
-				<div className="p-6">{children}</div>
+				<div className="flex-1 overflow-y-auto px-6 pb-6 pt-2">{children}</div>
 			</DialogContent>
 		</Dialog>
 	);

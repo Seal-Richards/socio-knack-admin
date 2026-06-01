@@ -6,6 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	supervisorSecuritySetupSchema,
+	type SupervisorSecuritySetupFormData,
+} from "@/schemas/auth";
+import { useRegisterSupervisorOnboarding } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import type { RegisterSupervisorPayload } from "@/types/auth";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function SecuritySetup({
@@ -13,18 +22,57 @@ export default function SecuritySetup({
 	onPrev,
 	step = 3,
 	totalSteps = 3,
+	onboardPayload,
 }: {
-	onNext?: () => void;
+	onNext: (data: SupervisorSecuritySetupFormData) => void;
 	onPrev?: () => void;
 	step?: number;
 	totalSteps?: number;
+	onboardPayload: RegisterSupervisorPayload;
 }) {
 	const [showPassword, setShowPassword] = useState(false);
+	const registerOnboardingMutation = useRegisterSupervisorOnboarding();
+
+	const {
+		register,
+		handleSubmit,
+		control,
+		formState: { errors },
+	} = useForm<SupervisorSecuritySetupFormData>({
+		resolver: zodResolver(supervisorSecuritySetupSchema),
+		defaultValues: {
+			password: "",
+			confirmPassword: "",
+		},
+	});
+
+	const onSubmit = async (data: SupervisorSecuritySetupFormData) => {
+		try {
+			const res = await registerOnboardingMutation.mutateAsync({
+				...onboardPayload,
+				password: data.password,
+			});
+
+			if (res.success) {
+				toast.success(res.message);
+				onNext(data);
+			} else {
+				toast.error(res.message);
+			}
+		} catch (error: unknown) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to complete onboarding registration",
+			);
+		}
+	};
 
 	return (
-		<div className="relative w-full">
+		<div className="relative w-full text-gray-800">
 			<button
 				onClick={onPrev}
+				type="button"
 				className="absolute right-0 top-0 flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-500 transition-colors hover:bg-blue-100"
 			>
 				<Icon icon="lucide:arrow-left" className="size-5" />
@@ -32,13 +80,17 @@ export default function SecuritySetup({
 
 			<StepProgressBar currentStep={step} totalSteps={totalSteps} title="Security Setup" />
 
-			<div className="space-y-5">
+			<form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5">
 				<div className="relative space-y-2">
-					<Label className="text-sm font-semibold text-gray-700">Create password</Label>
+					<Label htmlFor="password" className="text-sm font-semibold text-gray-700">
+						Create password
+					</Label>
 					<Input
+						id="password"
 						type={showPassword ? "text" : "password"}
 						placeholder="PASSWORD"
-						className="h-12 border-gray-200 bg-gray-50 pr-12"
+						{...register("password")}
+						className="h-12 border-gray-200 bg-gray-50 pr-12 text-gray-900 focus-visible:ring-yellow-500"
 					/>
 					<button
 						type="button"
@@ -50,27 +102,53 @@ export default function SecuritySetup({
 							className="size-5"
 						/>
 					</button>
+					{errors.password && (
+						<p className="text-xs font-medium text-red-500">
+							{errors.password.message}
+						</p>
+					)}
 				</div>
 
 				<div className="relative space-y-2">
-					<Label className="text-sm font-semibold text-gray-700">Confirm password</Label>
+					<Label
+						htmlFor="confirmPassword"
+						className="text-sm font-semibold text-gray-700"
+					>
+						Confirm password
+					</Label>
 					<Input
+						id="confirmPassword"
 						type={showPassword ? "text" : "password"}
 						placeholder="CONFIRM PASSWORD"
-						className="h-12 border-gray-200 bg-gray-50 pr-12"
+						{...register("confirmPassword")}
+						className="h-12 border-gray-200 bg-gray-50 pr-12 text-gray-900 focus-visible:ring-yellow-500"
 					/>
 					<div className="absolute right-3 top-8 rounded-full bg-green-500 p-0.5">
 						<Icon icon="lucide:check" className="size-3 text-white" />
 					</div>
+					{errors.confirmPassword && (
+						<p className="text-xs font-medium text-red-500">
+							{errors.confirmPassword.message}
+						</p>
+					)}
 				</div>
 
-				<Button className="bg-darkBlue-900 hover:bg-darkBlue-800 my-6 h-12 w-full rounded-md font-semibold text-white shadow-md">
-					Set Two Factory Authenticator
+				<Button
+					type="button"
+					className="bg-darkBlue-900 hover:bg-darkBlue-800 my-6 h-12 w-full rounded-md font-semibold text-white shadow-md"
+				>
+					Set Two-Factor Authenticator (Optional)
 				</Button>
 
 				<div className="space-y-4 border-t border-gray-100 pt-2">
 					<div className="flex items-start space-x-3">
-						<Checkbox id="device-trust" className="mt-1" />
+						<Controller
+							name="password" // Standard checkbox control can also be registered
+							control={control}
+							render={({ field: _field }) => (
+								<Checkbox id="device-trust" className="mt-1" defaultChecked />
+							)}
+						/>
 						<label
 							htmlFor="device-trust"
 							className="cursor-pointer text-sm font-medium leading-none text-gray-600"
@@ -80,7 +158,7 @@ export default function SecuritySetup({
 					</div>
 
 					<div className="flex items-start space-x-3">
-						<Checkbox id="terms" className="mt-1" />
+						<Checkbox id="terms" className="mt-1" defaultChecked required />
 						<label
 							htmlFor="terms"
 							className="cursor-pointer text-sm font-medium leading-[1.3] text-gray-600"
@@ -105,12 +183,13 @@ export default function SecuritySetup({
 				</div>
 
 				<Button
-					onClick={onNext}
-					className="text-md mt-8 h-12 w-full bg-green-500 font-sans font-semibold text-white shadow-md hover:bg-green-600"
+					type="submit"
+					disabled={registerOnboardingMutation.isPending}
+					className="text-md mt-8 h-12 w-full bg-green-500 font-sans font-semibold text-white shadow-md hover:bg-green-600 disabled:opacity-50"
 				>
-					Continue
+					{registerOnboardingMutation.isPending ? "Completing Setup..." : "Continue"}
 				</Button>
-			</div>
+			</form>
 		</div>
 	);
 }

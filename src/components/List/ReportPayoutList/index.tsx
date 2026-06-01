@@ -63,6 +63,11 @@ export default function ReportPayoutList() {
 				columns={reportPayoutColumns as any[]}
 				data={mockData}
 				onRowSelectionChange={setRowSelection}
+				emptyState={{
+					title: "No Payouts to Report",
+					description: "There are currently no agent payouts requiring approval.",
+					icon: "solar:wad-of-money-bold-duotone",
+				}}
 			/>
 
 			{selectedCount > 0 && (

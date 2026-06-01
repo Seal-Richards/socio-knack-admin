@@ -88,5 +88,16 @@ const columns: ColumnDef<Agent>[] = [
 ];
 
 export default function AssignedAgentList() {
-	return <Table columns={columns} data={agents} className="mt-4" />;
+	return (
+		<Table
+			columns={columns}
+			data={agents}
+			className="mt-4"
+			emptyState={{
+				title: "No Agents Assigned",
+				description: "There are currently no agents assigned to this territory.",
+				icon: "solar:users-group-two-rounded-bold-duotone",
+			}}
+		/>
+	);
 }

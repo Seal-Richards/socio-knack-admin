@@ -7,6 +7,10 @@ const DashboardIcon = ({ className }: { className?: string }) => (
 	<Icon icon="lucide:layout-dashboard" className={className} />
 );
 
+const ProductsServicesIcon = ({ className }: { className?: string }) => (
+	<Icon icon="solar:box-bold" className={className} />
+);
+
 const AgentIcon = ({ className }: { className?: string }) => (
 	<Icon icon="solar:users-group-rounded-bold" className={className} />
 );
@@ -40,6 +44,11 @@ export const MENU_ITEMS = [
 		label: "Dashboard",
 		icon: DashboardIcon,
 		href: ROUTES.DASHBOARD,
+	},
+	{
+		label: "Products & Services",
+		icon: ProductsServicesIcon,
+		href: ROUTES.PRODUCTS_SERVICES,
 	},
 	{
 		label: "Agent Management",

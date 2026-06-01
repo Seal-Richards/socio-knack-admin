@@ -13,6 +13,7 @@ declare module "next-auth" {
 	}
 	interface Session {
 		user: {
+			id?: string;
 			role?: string;
 			backendToken?: string;
 		} & DefaultSession["user"];
@@ -21,6 +22,7 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
 	interface JWT {
+		id?: string;
 		role?: string;
 		backendToken?: string;
 	}
@@ -64,7 +66,7 @@ export const nextAuthOptions: NextAuthConfig = {
 						credentials?.email
 					) {
 						const response = await axios.post<BackendResponse>(
-							`${env.NEXT_PUBLIC_ADMIN_API_BASE_URL}/auth/verify-otp`,
+							`${env.NEXT_PUBLIC_ADMIN_API_BASE_URL}/auth/verify-email`,
 							{ email: credentials.email, otp: credentials.otp },
 						);
 						data = response.data;
@@ -114,9 +116,10 @@ export const nextAuthOptions: NextAuthConfig = {
 		async jwt({ token, user }) {
 			// Spread token and safely add properties without reassigning parameter
 			if (user) {
-				const u = user as { role?: string; backendToken?: string };
+				const u = user as { role?: string; backendToken?: string; id?: string };
 				return {
 					...token,
+					id: u.id || token.sub,
 					backendToken: u.backendToken,
 					role: u.role,
 				};
@@ -129,6 +132,7 @@ export const nextAuthOptions: NextAuthConfig = {
 				...session,
 				user: {
 					...session.user,
+					id: token.id!,
 					role: token.role,
 					backendToken: token.backendToken,
 				},

@@ -7,17 +7,51 @@ import DynamicFilter from "@/components/_atoms/DynamicFilter";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import { supervisorManagementColumns } from "@/components/Tables/columns/supervisorManagementColumns";
-import {
-	DUMMY_SUPERVISORS,
-	TERRITORY_OPTIONS,
-	STATUS_OPTIONS,
-} from "@/constants/supervisorManagement";
+import { TERRITORY_OPTIONS, STATUS_OPTIONS } from "@/constants/supervisorManagement";
+import { useGetSupervisors } from "@/hooks/useTeam";
 import TableLayoutWrapper from "../TableLayoutWrapper";
 
 export default function SupervisorManagementList() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedTerritory, setSelectedTerritory] = useState<string>();
 	const [selectedStatus, setSelectedStatus] = useState<string>();
+
+	// Fetch real supervisors list from backend using React Query
+	const { data: supervisorsRes, isLoading } = useGetSupervisors();
+
+	// Map backend data to Table column definitions
+	const supervisors = (supervisorsRes?.data ?? []).map((s) => ({
+		id: s.id,
+		name: `${s.firstName || ""} ${s.lastName || ""}`.trim(),
+		email: s.email || "",
+		territory: "Unassigned",
+		agentCount: 0,
+		complianceScore: "100%",
+		lastActivity: s.status === "active" ? "Active Now" : "Inactive",
+		avatar: s.avatar ?? "/assets/images/admin-avatar.png",
+		status: s.status ?? "pending",
+	}));
+
+	// Perform client-side search & filters
+	const filteredSupervisors = supervisors.filter((s) => {
+		const matchesSearch =
+			s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			s.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+		const matchesTerritory =
+			!selectedTerritory ||
+			selectedTerritory === "all" ||
+			s.territory.toLowerCase() === selectedTerritory.toLowerCase() ||
+			(selectedTerritory === "yaba" && s.territory.toLowerCase().includes("yaba")) ||
+			(selectedTerritory === "ikeja" && s.territory.toLowerCase().includes("ikeja"));
+
+		const matchesStatus =
+			!selectedStatus ||
+			selectedStatus === "all" ||
+			s.status.toLowerCase() === selectedStatus.toLowerCase();
+
+		return matchesSearch && matchesTerritory && matchesStatus;
+	});
 
 	const filterActions = (
 		<div className="flex w-full flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
@@ -75,7 +109,22 @@ export default function SupervisorManagementList() {
 
 	return (
 		<TableLayoutWrapper title="" filters={filterActions} className="gap-0">
-			<Table columns={supervisorManagementColumns as any[]} data={DUMMY_SUPERVISORS} />
+			{isLoading ? (
+				<div className="flex h-40 items-center justify-center rounded-[2.5rem] bg-white">
+					<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
+				</div>
+			) : (
+				<Table
+					columns={supervisorManagementColumns}
+					data={filteredSupervisors}
+					emptyState={{
+						title: "No Supervisors Found",
+						description:
+							"We couldn't find any supervisors matching your search criteria.",
+						icon: "solar:user-id-bold-duotone",
+					}}
+				/>
+			)}
 		</TableLayoutWrapper>
 	);
 }
