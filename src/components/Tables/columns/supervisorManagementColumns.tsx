@@ -11,9 +11,10 @@ export interface Supervisor {
 	id: string | number;
 	name: string;
 	email: string;
-	territory: string;
+	territory: string | number;
 	agentCount: number;
-	complianceScore: string;
+	isOnline: boolean;
+	profileStatus: string;
 	lastActivity: string;
 	avatar: string;
 }
@@ -46,27 +47,67 @@ export const supervisorManagementColumns: TableColumns<Supervisor> = createColum
 	},
 	{
 		id: "territory",
-		header: "Territory",
+		header: "My Territory",
 		accessorKey: "territory",
 		cell: ({ getValue }) => (
-			<span className="text-[13px] font-medium text-gray-600">{getValue() as string}</span>
+			<span className="text-[13px] font-medium text-gray-600">
+				{getValue() as string | number}
+			</span>
 		),
 	},
 	{
 		id: "agentCount",
-		header: "Agent count",
+		header: "My Agents",
 		accessorKey: "agentCount",
 		cell: ({ getValue }) => (
 			<span className="text-[13px] font-medium text-gray-600">{getValue() as number}</span>
 		),
 	},
 	{
-		id: "complianceScore",
-		header: "Compliance Score",
-		accessorKey: "complianceScore",
-		cell: ({ getValue }) => (
-			<span className="text-[13px] font-medium text-gray-600">{getValue() as string}</span>
-		),
+		id: "isOnline",
+		header: "Activity Status",
+		accessorKey: "isOnline",
+		cell: ({ row }) => {
+			const { isOnline } = row.original;
+			const statusText = isOnline ? "Active" : "Offline";
+			return (
+				<div className="flex items-center gap-2">
+					<div
+						className={`size-2 rounded-full ${isOnline ? "bg-green-500" : "bg-orange-400"}`}
+					/>
+					<span className="text-[13px] font-bold text-gray-600">{statusText}</span>
+				</div>
+			);
+		},
+	},
+	{
+		id: "profileStatus",
+		header: "Profile Status",
+		accessorKey: "profileStatus",
+		cell: ({ getValue }) => {
+			const status = ((getValue() as string) || "pending").toLowerCase();
+			let badgeClass = "border border-orange-100 bg-orange-50 text-orange-600";
+			let label = "Pending";
+
+			if (status === "active") {
+				badgeClass = "border border-green-100 bg-green-50 text-green-600";
+				label = "Active";
+			} else if (status === "suspended") {
+				badgeClass = "border border-gray-150 bg-gray-100 text-gray-600";
+				label = "Suspended";
+			} else if (status === "rejected") {
+				badgeClass = "border border-red-100 bg-red-50 text-red-600";
+				label = "Rejected";
+			}
+
+			return (
+				<div
+					className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${badgeClass}`}
+				>
+					{label}
+				</div>
+			);
+		},
 	},
 	{
 		id: "lastActivity",

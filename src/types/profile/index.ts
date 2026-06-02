@@ -17,6 +17,7 @@ export type UserProfileTerritory = {
 
 export type UserProfileData = {
 	id: string;
+	_id?: string;
 	firstName: string;
 	lastName: string;
 	email: string;
@@ -30,11 +31,53 @@ export type UserProfileData = {
 	role: string;
 	position?: string | null;
 	kycStatus?: string;
+	kycComment?: string;
+	kycDocuments?: {
+		idType?: string;
+		idNumber?: string;
+		idFront?: string;
+		idBack?: string;
+		selfie?: string;
+	} | null;
 	status?: string;
 	isVerified?: boolean;
 	business?: UserProfileBusiness | null;
 	territory?: UserProfileTerritory | null;
 	createdAt?: string;
+	isOnline?: boolean;
+	lastLogoutTime?: string;
+	territoryCount?: number;
+	agentCount?: number;
+	assignedZones?: string;
+	location?: {
+		address?: string;
+		latitude?: number;
+		longitude?: number;
+	} | null;
+	compliance?: {
+		termsAccepted: boolean;
+		dataProcessingConsent: boolean;
+		locationConsent: boolean;
+		incentivePolicyAccepted: boolean;
+		acceptedAt?: string;
+	};
+	metrics?: {
+		assignedVisits: number;
+		totalZones: number;
+		completedVisits: number;
+		successRate: number;
+	};
+	agents?: Array<{
+		id: string;
+		name: string;
+		email: string;
+		phone: string;
+		isOnline: boolean;
+		lastCheckIn: string;
+		avatar: string;
+		status: string;
+		statusColor: string;
+	}>;
 };
 
 export type UpdateProfilePayload = {

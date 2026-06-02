@@ -49,8 +49,13 @@ export function useUpdateUserRole() {
 export function useUpdateUserStatus() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({ userId, status }: { userId: string; status: string }) =>
-			teamRequests.updateUserStatus(userId, status),
+		mutationFn: ({
+			userId,
+			payload,
+		}: {
+			userId: string;
+			payload: { status?: string; kycStatus?: string };
+		}) => teamRequests.updateUserStatus(userId, payload),
 		onSuccess: () => {
 			queryClient
 				.invalidateQueries({ queryKey: ["admins"] })
@@ -59,8 +64,26 @@ export function useUpdateUserStatus() {
 				.invalidateQueries({ queryKey: ["supervisors"] })
 				.catch((err) => console.error(err));
 			queryClient
+				.invalidateQueries({ queryKey: ["supervisor"] })
+				.catch((err) => console.error(err));
+			queryClient
 				.invalidateQueries({ queryKey: ["staff"] })
 				.catch((err) => console.error(err));
 		},
+	});
+}
+
+export function useGetSupervisorById(id: string) {
+	return useQuery({
+		queryKey: ["supervisor", id],
+		queryFn: () => teamRequests.getSupervisorById(id),
+		enabled: !!id,
+		staleTime: 1000 * 60 * 5,
+	});
+}
+
+export function useLogoutUser() {
+	return useMutation({
+		mutationFn: () => teamRequests.logout(),
 	});
 }

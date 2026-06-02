@@ -23,17 +23,33 @@ export default function SupervisorManagementList() {
 	const { data: supervisorsRes, isLoading } = useGetSupervisors();
 
 	// Map backend data to Table column definitions
-	const supervisors = (supervisorsRes?.data ?? []).map((s) => ({
-		id: s.id,
-		name: `${s.firstName || ""} ${s.lastName || ""}`.trim(),
-		email: s.email || "",
-		territory: "Unassigned",
-		agentCount: 0,
-		complianceScore: "100%",
-		lastActivity: s.status === "active" ? "Active Now" : "Inactive",
-		avatar: s.avatar ?? "/assets/images/admin-avatar.png",
-		status: s.status ?? "pending",
-	}));
+	const supervisors = (supervisorsRes?.data ?? []).map((s) => {
+		const isOnline = s.isOnline || false;
+		let lastActivityText = "Inactive";
+		if (isOnline) {
+			lastActivityText = "Active Now";
+		} else if (s.lastLogoutTime) {
+			const dt = new Date(s.lastLogoutTime);
+			lastActivityText = `${dt.toLocaleDateString()} | ${dt.toLocaleTimeString("en-US", {
+				hour: "numeric",
+				minute: "2-digit",
+				hour12: true,
+			})}`;
+		}
+
+		return {
+			id: s._id || s.id,
+			name: `${s.firstName || ""} ${s.lastName || ""}`.trim(),
+			email: s.email || "",
+			territory: s.territoryCount !== undefined ? s.territoryCount : 0,
+			agentCount: s.agentCount || 0,
+			isOnline,
+			profileStatus: s.status || "pending",
+			lastActivity: lastActivityText,
+			avatar: s.avatar ?? "/assets/images/admin-avatar.png",
+			status: s.status ?? "pending",
+		};
+	});
 
 	// Perform client-side search & filters
 	const filteredSupervisors = supervisors.filter((s) => {
@@ -44,9 +60,9 @@ export default function SupervisorManagementList() {
 		const matchesTerritory =
 			!selectedTerritory ||
 			selectedTerritory === "all" ||
-			s.territory.toLowerCase() === selectedTerritory.toLowerCase() ||
-			(selectedTerritory === "yaba" && s.territory.toLowerCase().includes("yaba")) ||
-			(selectedTerritory === "ikeja" && s.territory.toLowerCase().includes("ikeja"));
+			String(s.territory).toLowerCase() === selectedTerritory.toLowerCase() ||
+			(selectedTerritory === "yaba" && String(s.territory).toLowerCase().includes("yaba")) ||
+			(selectedTerritory === "ikeja" && String(s.territory).toLowerCase().includes("ikeja"));
 
 		const matchesStatus =
 			!selectedStatus ||

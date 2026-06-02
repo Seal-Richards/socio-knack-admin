@@ -51,6 +51,12 @@ export default function SecuritySetup({
 			const res = await registerOnboardingMutation.mutateAsync({
 				...onboardPayload,
 				password: data.password,
+				compliance: {
+					termsAccepted: true,
+					dataProcessingConsent: true,
+					locationConsent: true,
+					incentivePolicyAccepted: true,
+				},
 			});
 
 			if (res.success) {

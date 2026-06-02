@@ -1,47 +1,28 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Icon } from "@iconify/react";
 import Map from "@/components/Map";
+import Empty from "@/components/_atoms/Empty";
+import { type UserProfileData } from "@/types/profile";
 
-// Mock data matching the UI directory
-const AGENT_MOCK_DATA = [
-	{
-		id: 1,
-		name: "Sharon C.",
-		status: "Active",
-		lastCheckIn: "5m ago @Total Ikeja",
-		avatar: "/assets/images/admin-avatar.png",
-		statusColor: "green",
-	},
-	{
-		id: 2,
-		name: "Adewole G.",
-		status: "Idle",
-		lastCheckIn: "4m ago @Mary Land",
-		avatar: "/assets/images/admin-avatar.png",
-		statusColor: "orange",
-	},
-	{
-		id: 3,
-		name: "Kolawole J.",
-		status: "Active",
-		lastCheckIn: "23m ago @Total Ikeja",
-		avatar: "/assets/images/admin-avatar.png",
-		statusColor: "green",
-	},
-	{
-		id: 4,
-		name: "Kelvin O.",
-		status: "Idle",
-		lastCheckIn: "14m ago @Total Ikeja",
-		avatar: "/assets/images/admin-avatar.png",
-		statusColor: "orange",
-	},
-];
+interface TerritoryAndTeamProps {
+	supervisor: {
+		raw?: UserProfileData;
+	};
+}
 
-export default function TerritoryAndTeam() {
+export default function TerritoryAndTeam({ supervisor }: TerritoryAndTeamProps) {
+	const [searchQuery, setSearchQuery] = useState("");
+	const agents = supervisor?.raw?.agents || [];
+
+	const filteredAgents = agents.filter(
+		(agent) =>
+			agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			agent.email.toLowerCase().includes(searchQuery.toLowerCase()),
+	);
+
 	return (
 		<div className="flex flex-col gap-6 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm md:gap-8 md:p-10">
 			<h3 className="text-[14px] font-bold text-gray-500 sm:text-[15px]">Personal Profile</h3>
@@ -54,7 +35,7 @@ export default function TerritoryAndTeam() {
 						Live Territory Map
 					</h4>
 					<div className="relative min-h-[300px] w-full flex-1 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
-						<Map className="size-full" />
+						<Map className="size-full" readOnly />
 					</div>
 				</div>
 
@@ -72,6 +53,8 @@ export default function TerritoryAndTeam() {
 						<input
 							type="text"
 							placeholder="Search"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
 							aria-label="Search agents"
 							className="h-12 w-full rounded-xl border border-gray-100 bg-white pl-11 pr-4 text-[13px] font-medium text-gray-700 placeholder:text-gray-400 focus:border-[#1d4ea8] focus:outline-none focus:ring-1 focus:ring-[#1d4ea8]/20"
 						/>
@@ -88,39 +71,51 @@ export default function TerritoryAndTeam() {
 
 						{/* Items */}
 						<div className="custom-scrollbar flex max-h-[250px] flex-col gap-4 overflow-y-auto pr-2">
-							{AGENT_MOCK_DATA.map((agent) => (
-								<div
-									key={agent.id}
-									className="grid grid-cols-12 items-center gap-2 border-b border-gray-50 pb-4 last:border-0 last:pb-0"
-								>
-									<div className="col-span-4 flex items-center gap-2">
-										<DynamicAvatar
-											name={agent.name}
-											image={agent.avatar}
-											className="size-8 shrink-0 rounded-full border border-gray-100"
-										/>
-										<span className="truncate text-[13px] font-bold text-gray-800">
-											{agent.name}
-										</span>
+							{filteredAgents.length === 0 ? (
+								<Empty
+									title="No Agents Found"
+									description="There are currently no agents matching your search criteria."
+									icon="solar:users-group-two-rounded-bold-duotone"
+									className="py-8"
+								/>
+							) : (
+								filteredAgents.map((agent) => (
+									<div
+										key={agent.id}
+										className="grid grid-cols-12 items-center gap-2 border-b border-gray-50 pb-4 last:border-0 last:pb-0"
+									>
+										<div className="col-span-4 flex items-center gap-2">
+											<DynamicAvatar
+												name={agent.name}
+												image={agent.avatar}
+												className="size-8 shrink-0 rounded-full border border-gray-100"
+											/>
+											<span className="truncate text-[13px] font-bold text-gray-800">
+												{agent.name}
+											</span>
+										</div>
+										<div className="col-span-3 flex items-center gap-1.5">
+											<div
+												className={`size-1.5 shrink-0 rounded-full ${agent.statusColor === "green" ? "bg-green-500" : "bg-orange-500"}`}
+											/>
+											<span className="text-[13px] font-medium text-gray-700">
+												{agent.status}
+											</span>
+										</div>
+										<div className="col-span-4 truncate text-[12px] font-medium text-gray-500">
+											{agent.lastCheckIn}
+										</div>
+										<div className="col-span-1 flex justify-end">
+											<button className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-50">
+												<Icon
+													icon="pepicons-pop:dots-y"
+													className="size-5"
+												/>
+											</button>
+										</div>
 									</div>
-									<div className="col-span-3 flex items-center gap-1.5">
-										<div
-											className={`size-1.5 shrink-0 rounded-full ${agent.statusColor === "green" ? "bg-green-500" : "bg-orange-500"}`}
-										/>
-										<span className="text-[13px] font-medium text-gray-700">
-											{agent.status}
-										</span>
-									</div>
-									<div className="col-span-4 truncate text-[12px] font-medium text-gray-500">
-										{agent.lastCheckIn}
-									</div>
-									<div className="col-span-1 flex justify-end">
-										<button className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-50">
-											<Icon icon="pepicons-pop:dots-y" className="size-5" />
-										</button>
-									</div>
-								</div>
-							))}
+								))
+							)}
 						</div>
 					</div>
 				</div>

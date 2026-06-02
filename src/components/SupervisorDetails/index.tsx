@@ -3,30 +3,55 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { useGetSupervisorById } from "@/hooks/useTeam";
 import ProfileHeader from "./ProfileHeader";
 import ProfileSettings from "./ProfileSettings";
 import TerritoryAndTeam from "./TerritoryAndTeam";
 import PerformanceMetrics from "./PerformanceMetrics";
 import SystemAccess from "./SystemAccess";
+import KycStatus from "./KycStatus";
+import Compliance from "./Compliance";
 
 interface SupervisorDetailsProps {
 	id: string;
 }
 
-export default function SupervisorDetails({ id: _id }: SupervisorDetailsProps) {
-	// Mock supervisor data based on design screenshot
+export default function SupervisorDetails({ id }: SupervisorDetailsProps) {
+	const { data: supervisorRes, isLoading } = useGetSupervisorById(id);
+	const rawSupervisor = supervisorRes?.data;
+
 	const supervisorData = {
-		name: "Sarah Johnson",
-		role: "Supervisor",
-		status: "Active",
-		email: "sarahjohnson@gmail.com",
-		phone: "09088888888",
-		address: "Albingrey street off shore, AB",
-		avatar: "/assets/images/admin-avatar.png",
-		directReports: 45,
-		assignedZones: "Ikeja, Maryland, Ogba",
-		memberSince: "Jan 25th, 2026",
+		id: rawSupervisor?.id || id,
+		name: rawSupervisor
+			? `${rawSupervisor.firstName || ""} ${rawSupervisor.lastName || ""}`.trim()
+			: "Loading...",
+		role: rawSupervisor?.role === "staffs" ? "Staff" : rawSupervisor?.role || "Supervisor",
+		status: rawSupervisor?.status || "pending",
+		email: rawSupervisor?.email || "",
+		phone: rawSupervisor?.phone || "",
+		address: rawSupervisor?.city
+			? `${rawSupervisor.city}, ${rawSupervisor.state || ""}`
+			: "N/A",
+		avatar: rawSupervisor?.avatar || "/assets/images/admin-avatar.png",
+		directReports: rawSupervisor?.agentCount || 0,
+		assignedZones: rawSupervisor?.assignedZones || "Unassigned",
+		memberSince: rawSupervisor?.createdAt
+			? new Date(rawSupervisor.createdAt).toLocaleDateString("en-US", {
+					month: "short",
+					day: "numeric",
+					year: "numeric",
+				})
+			: "N/A",
+		raw: rawSupervisor,
 	};
+
+	if (isLoading) {
+		return (
+			<div className="flex h-60 items-center justify-center rounded-[2.5rem] bg-white">
+				<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex w-full flex-col gap-6 lg:gap-8">
@@ -53,6 +78,18 @@ export default function SupervisorDetails({ id: _id }: SupervisorDetailsProps) {
 						Performance Metrics
 					</TabsTrigger>
 					<TabsTrigger
+						value="kyc-status"
+						className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
+					>
+						KYC Status
+					</TabsTrigger>
+					<TabsTrigger
+						value="compliance"
+						className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
+					>
+						Compliance
+					</TabsTrigger>
+					<TabsTrigger
 						value="system-access"
 						className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
 					>
@@ -61,15 +98,23 @@ export default function SupervisorDetails({ id: _id }: SupervisorDetailsProps) {
 				</TabsList>
 
 				<TabsContent value="profile-settings" className="mt-0 outline-none">
-					<ProfileSettings />
+					<ProfileSettings supervisor={supervisorData} />
 				</TabsContent>
 
 				<TabsContent value="territory-team" className="mt-0 outline-none">
-					<TerritoryAndTeam />
+					<TerritoryAndTeam supervisor={supervisorData} />
 				</TabsContent>
 
 				<TabsContent value="performance-metrics" className="mt-0 outline-none">
-					<PerformanceMetrics />
+					<PerformanceMetrics supervisor={supervisorData} />
+				</TabsContent>
+
+				<TabsContent value="kyc-status" className="mt-0 outline-none">
+					<KycStatus supervisor={supervisorData} />
+				</TabsContent>
+
+				<TabsContent value="compliance" className="mt-0 outline-none">
+					<Compliance supervisor={supervisorData} />
 				</TabsContent>
 
 				<TabsContent value="system-access" className="mt-0 outline-none">

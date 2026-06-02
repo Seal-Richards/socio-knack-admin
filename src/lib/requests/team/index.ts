@@ -26,6 +26,21 @@ export const teamRequests = {
 		);
 	},
 
+	async getSupervisorById(id: string): Promise<ApiResponse<UserProfileData>> {
+		return apiClient.get<ApiResponse<UserProfileData>>(
+			`/admin/supervisors/${id}`,
+			"Failed to load supervisor details.",
+		);
+	},
+
+	async logout(): Promise<ApiResponse<unknown>> {
+		return apiClient.post<ApiResponse<unknown>, undefined>(
+			"/auth/logout",
+			undefined,
+			"Failed to log out.",
+		);
+	},
+
 	async updateUserRole(
 		userId: string,
 		role: string,
@@ -39,12 +54,11 @@ export const teamRequests = {
 
 	async updateUserStatus(
 		userId: string,
-		status: string,
+		payload: { status?: string; kycStatus?: string },
 	): Promise<ApiResponse<{ id: string; status: string }>> {
-		return apiClient.patch<ApiResponse<{ id: string; status: string }>, { status }>(
-			`/admin/users/${userId}/status`,
-			{ status },
-			"Failed to update user status.",
-		);
+		return apiClient.patch<
+			ApiResponse<{ id: string; status: string }>,
+			{ status?: string; kycStatus?: string }
+		>(`/admin/users/${userId}/status`, payload, "Failed to update user status.");
 	},
 };

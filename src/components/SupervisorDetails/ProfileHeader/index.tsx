@@ -39,7 +39,13 @@ export default function ProfileHeader({ supervisor }: ProfileHeaderProps) {
 								{supervisor.role}
 							</span>
 							<div className="flex items-center gap-2 border-l border-gray-200 pl-2 sm:pl-4">
-								<span className="rounded-full bg-green-50 px-3 py-1 text-[11px] font-bold text-green-600">
+								<span
+									className={`rounded-full px-3 py-1 text-[11px] font-bold capitalize ${
+										supervisor.status === "active"
+											? "bg-green-50 text-green-600"
+											: "bg-orange-50 text-orange-600"
+									}`}
+								>
 									{supervisor.status}
 								</span>
 							</div>
@@ -73,9 +79,9 @@ export default function ProfileHeader({ supervisor }: ProfileHeaderProps) {
 
 			{/* Metric Cards */}
 			<div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
-				{/* Direct Reports */}
+				{/* My Agents */}
 				<div className="flex flex-col gap-2 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-md lg:p-8">
-					<span className="text-[14px] font-medium text-gray-600">Direct Reports</span>
+					<span className="text-[14px] font-medium text-gray-600">My Agents</span>
 					<div className="text-[28px] font-black tracking-tight text-gray-900 lg:text-[32px]">
 						{supervisor.directReports}
 					</div>

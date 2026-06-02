@@ -1,10 +1,19 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
+import { type UserProfileData } from "@/types/profile";
 
-export default function ProfileSettings() {
+interface ProfileSettingsProps {
+	supervisor: {
+		name: string;
+		email: string;
+		phone: string;
+		raw?: UserProfileData;
+	};
+}
+
+export default function ProfileSettings({ supervisor }: ProfileSettingsProps) {
 	return (
 		<div className="flex flex-col gap-6 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm md:gap-8 md:p-8">
 			<h3 className="text-[14px] font-bold text-gray-500 sm:text-[15px]">Personal Profile</h3>
@@ -13,16 +22,18 @@ export default function ProfileSettings() {
 				<div className="space-y-2">
 					<Label className="text-[13px] font-bold text-gray-800">Full Name</Label>
 					<Input
-						defaultValue="Sarah Johnson"
-						className="h-12 rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-700 focus:border-[#1d4ea8] focus:ring-0"
+						defaultValue={supervisor.name}
+						disabled
+						className="h-12 rounded-xl border-gray-200 bg-gray-50 px-4 text-[13px] font-medium text-gray-500 focus:border-[#1d4ea8] focus:ring-0"
 					/>
 				</div>
 				<div className="space-y-2">
 					<Label className="text-[13px] font-bold text-gray-800">Mail Address</Label>
 					<div className="relative">
 						<Input
-							defaultValue="sarahjohnson@gmail.com"
-							className="h-12 rounded-xl border-gray-200 bg-white px-4 pr-10 text-[13px] font-medium text-gray-700 focus:border-[#1d4ea8] focus:ring-0"
+							defaultValue={supervisor.email}
+							disabled
+							className="h-12 rounded-xl border-gray-200 bg-gray-50 px-4 pr-10 text-[13px] font-medium text-gray-500 focus:border-[#1d4ea8] focus:ring-0"
 						/>
 						<div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full bg-[#4CAF50] p-0.5 text-white">
 							<Icon icon="lucide:check" className="size-3" />
@@ -33,8 +44,9 @@ export default function ProfileSettings() {
 					<Label className="text-[13px] font-bold text-gray-800">Phone Number</Label>
 					<div className="relative">
 						<Input
-							defaultValue="09088888888"
-							className="h-12 rounded-xl border-gray-200 bg-white px-4 pr-10 text-[13px] font-medium text-gray-700 focus:border-[#1d4ea8] focus:ring-0"
+							defaultValue={supervisor.phone}
+							disabled
+							className="h-12 rounded-xl border-gray-200 bg-gray-50 px-4 pr-10 text-[13px] font-medium text-gray-500 focus:border-[#1d4ea8] focus:ring-0"
 						/>
 						<div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full bg-[#4CAF50] p-0.5 text-white">
 							<Icon icon="lucide:check" className="size-3" />
@@ -44,15 +56,23 @@ export default function ProfileSettings() {
 				<div className="space-y-2">
 					<Label className="text-[13px] font-bold text-gray-800">Date of Birth</Label>
 					<Input
-						placeholder="Here"
-						className="h-12 rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-700 focus:border-[#1d4ea8] focus:ring-0"
+						defaultValue={
+							supervisor.raw?.dob
+								? new Date(supervisor.raw.dob).toLocaleDateString()
+								: ""
+						}
+						placeholder="Not Provided"
+						disabled
+						className="h-12 rounded-xl border-gray-200 bg-gray-50 px-4 text-[13px] font-medium text-gray-500 focus:border-[#1d4ea8] focus:ring-0"
 					/>
 				</div>
 				<div className="space-y-2">
 					<Label className="text-[13px] font-bold text-gray-800">Gender</Label>
 					<Input
-						placeholder="Here"
-						className="h-12 rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-700 focus:border-[#1d4ea8] focus:ring-0"
+						defaultValue={supervisor.raw?.gender || ""}
+						placeholder="Not Provided"
+						disabled
+						className="h-12 rounded-xl border-gray-200 bg-gray-50 px-4 text-[13px] font-medium text-gray-500 focus:border-[#1d4ea8] focus:ring-0"
 					/>
 				</div>
 				<div className="space-y-2">
@@ -60,36 +80,39 @@ export default function ProfileSettings() {
 						Residential Address
 					</Label>
 					<Input
-						placeholder="Here"
-						className="h-12 rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-700 focus:border-[#1d4ea8] focus:ring-0"
+						defaultValue={supervisor.raw?.location?.address || ""}
+						placeholder="Not Provided"
+						disabled
+						className="h-12 rounded-xl border-gray-200 bg-gray-50 px-4 text-[13px] font-medium text-gray-500 focus:border-[#1d4ea8] focus:ring-0"
 					/>
 				</div>
 				<div className="space-y-2">
 					<Label className="text-[13px] font-bold text-gray-800">City</Label>
 					<Input
-						defaultValue="Yaba"
-						className="h-12 rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-700 focus:border-[#1d4ea8] focus:ring-0"
+						defaultValue={supervisor.raw?.city || ""}
+						placeholder="Not Provided"
+						disabled
+						className="h-12 rounded-xl border-gray-200 bg-gray-50 px-4 text-[13px] font-medium text-gray-500 focus:border-[#1d4ea8] focus:ring-0"
 					/>
 				</div>
 				<div className="space-y-2">
 					<Label className="text-[13px] font-bold text-gray-800">State</Label>
 					<Input
-						defaultValue="Lagos"
-						className="h-12 rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-700 focus:border-[#1d4ea8] focus:ring-0"
+						defaultValue={supervisor.raw?.state || ""}
+						placeholder="Not Provided"
+						disabled
+						className="h-12 rounded-xl border-gray-200 bg-gray-50 px-4 text-[13px] font-medium text-gray-500 focus:border-[#1d4ea8] focus:ring-0"
 					/>
 				</div>
 				<div className="space-y-2">
 					<Label className="text-[13px] font-bold text-gray-800">Country</Label>
 					<Input
-						defaultValue="Nigeria"
-						className="h-12 rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-700 focus:border-[#1d4ea8] focus:ring-0"
+						defaultValue={supervisor.raw?.country || ""}
+						placeholder="Not Provided"
+						disabled
+						className="h-12 rounded-xl border-gray-200 bg-gray-50 px-4 text-[13px] font-medium text-gray-500 focus:border-[#1d4ea8] focus:ring-0"
 					/>
 				</div>
-			</div>
-			<div className="mt-4 flex justify-center pt-4">
-				<Button className="h-12 w-full max-w-md rounded-xl bg-[#1d4ea8] font-bold text-white transition-all hover:bg-[#153a82] active:scale-[0.99]">
-					Save Changes
-				</Button>
 			</div>
 		</div>
 	);

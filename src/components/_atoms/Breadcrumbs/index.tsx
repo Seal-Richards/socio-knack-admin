@@ -25,9 +25,9 @@ export default function Breadcrumbs() {
 		if (!isDynamic)
 			return segmentMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
 
-		// Mock mapping for dynamic IDs based on parent route
-		if (prevSegment === "agent-management") return "Kolawole James Profile";
-		if (prevSegment === "supervisor-management") return "Sarah Johnson Profile";
+		// Mapping for dynamic IDs based on parent route
+		if (prevSegment === "agent-management") return "Agent Profile";
+		if (prevSegment === "supervisor-management") return "Supervisor Profile";
 
 		return "Details";
 	};

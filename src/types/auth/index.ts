@@ -74,4 +74,10 @@ export type RegisterSupervisorPayload = {
 	state?: string;
 	country?: string;
 	password?: string;
+	compliance?: {
+		termsAccepted: boolean;
+		dataProcessingConsent: boolean;
+		locationConsent: boolean;
+		incentivePolicyAccepted: boolean;
+	};
 };
