@@ -40,4 +40,15 @@ export const agentRequests = {
 			"Failed to update agent KYC status.",
 		);
 	},
+
+	async sendAgentKycComment(
+		userId: string,
+		comment: string,
+	): Promise<ApiResponse<{ kycComment: string }>> {
+		return apiClient.post<ApiResponse<{ kycComment: string }>, { comment: string }>(
+			`/admin/users/${userId}/kyc-comment`,
+			{ comment },
+			"Failed to send KYC comment.",
+		);
+	},
 };

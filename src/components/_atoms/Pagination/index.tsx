@@ -15,8 +15,6 @@ export default function Pagination({
 	onPageChange,
 	className,
 }: PaginationProps) {
-	if (totalPages <= 1) return null;
-
 	const handlePrev = () => {
 		if (currentPage > 1) onPageChange(currentPage - 1);
 	};
@@ -63,7 +61,7 @@ export default function Pagination({
 	};
 
 	return (
-		<div className={cn("flex items-center justify-center gap-2 py-4", className)}>
+		<div className={cn("flex items-center justify-end gap-2 py-4", className)}>
 			<button
 				onClick={handlePrev}
 				disabled={currentPage === 1}

@@ -11,7 +11,8 @@ export interface Agent {
 	name: string;
 	email: string;
 	territory: string;
-	status: "Active" | "Idle" | "Inactive";
+	isOnline: boolean;
+	profileStatus: string;
 	lastActivity: string;
 	avatar: string;
 }
@@ -51,20 +52,47 @@ export const agentManagementColumns: TableColumns<Agent> = createColumns<Agent>(
 		),
 	},
 	{
-		id: "status",
-		header: "Status",
-		accessorKey: "status",
+		id: "isOnline",
+		header: "Activity Status",
+		accessorKey: "isOnline",
+		cell: ({ row }) => {
+			const { isOnline } = row.original;
+			const statusText = isOnline ? "Active" : "Offline";
+			return (
+				<div className="flex items-center gap-2">
+					<div
+						className={`size-2 rounded-full ${isOnline ? "bg-green-500" : "bg-orange-400"}`}
+					/>
+					<span className="text-[13px] font-bold text-gray-600">{statusText}</span>
+				</div>
+			);
+		},
+	},
+	{
+		id: "profileStatus",
+		header: "Profile Status",
+		accessorKey: "profileStatus",
 		cell: ({ getValue }) => {
-			const status = getValue() as string;
+			const status = ((getValue() as string) || "pending").toLowerCase();
+			let badgeClass = "border border-orange-100 bg-orange-50 text-orange-600";
+			let label = "Pending";
+
+			if (status === "active") {
+				badgeClass = "border border-green-100 bg-green-50 text-green-600";
+				label = "Active";
+			} else if (status === "suspended") {
+				badgeClass = "border border-gray-150 bg-gray-100 text-gray-600";
+				label = "Suspended";
+			} else if (status === "rejected") {
+				badgeClass = "border border-red-100 bg-red-50 text-red-600";
+				label = "Rejected";
+			}
+
 			return (
 				<div
-					className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-						status === "Active"
-							? "border border-green-100 bg-green-50 text-green-600"
-							: "border border-orange-100 bg-orange-50 text-orange-600"
-					}`}
+					className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${badgeClass}`}
 				>
-					{status}
+					{label}
 				</div>
 			);
 		},

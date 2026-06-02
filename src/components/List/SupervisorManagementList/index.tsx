@@ -9,12 +9,15 @@ import { Icon } from "@iconify/react";
 import { supervisorManagementColumns } from "@/components/Tables/columns/supervisorManagementColumns";
 import { TERRITORY_OPTIONS, STATUS_OPTIONS } from "@/constants/supervisorManagement";
 import { useGetSupervisors } from "@/hooks/useTeam";
+import Pagination from "@/components/_atoms/Pagination";
 import TableLayoutWrapper from "../TableLayoutWrapper";
 
 export default function SupervisorManagementList() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedTerritory, setSelectedTerritory] = useState<string>();
 	const [selectedStatus, setSelectedStatus] = useState<string>();
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
 
 	// Fetch real supervisors list from backend using React Query
 	const { data: supervisorsRes, isLoading } = useGetSupervisors();
@@ -53,13 +56,36 @@ export default function SupervisorManagementList() {
 		return matchesSearch && matchesTerritory && matchesStatus;
 	});
 
+	// Pagination Math
+	const totalPages = Math.max(1, Math.ceil(filteredSupervisors.length / itemsPerPage));
+	const paginatedSupervisors = filteredSupervisors.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
+
+	// Helper resets page counter to 1
+	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchQuery(e.target.value);
+		setCurrentPage(1);
+	};
+
+	const handleTerritorySelect = (val?: string) => {
+		setSelectedTerritory(val);
+		setCurrentPage(1);
+	};
+
+	const handleStatusSelect = (val?: string) => {
+		setSelectedStatus(val);
+		setCurrentPage(1);
+	};
+
 	const filterActions = (
 		<div className="flex w-full flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
 			<div className="flex w-full flex-col gap-4 xl:w-auto xl:flex-row xl:items-center">
 				<SearchBar
 					placeholder="Search"
 					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
+					onChange={handleSearchChange}
 					containerClassName="w-full xl:w-64"
 				/>
 				<div className="flex w-full flex-wrap items-center gap-3 xl:w-auto">
@@ -81,14 +107,14 @@ export default function SupervisorManagementList() {
 						label="Territory"
 						options={TERRITORY_OPTIONS}
 						selected={selectedTerritory}
-						onSelect={setSelectedTerritory}
+						onSelect={handleTerritorySelect}
 						className="shrink-0"
 					/>
 					<DynamicFilter
 						label="Status"
 						options={STATUS_OPTIONS}
 						selected={selectedStatus}
-						onSelect={setSelectedStatus}
+						onSelect={handleStatusSelect}
 						className="shrink-0"
 					/>
 				</div>
@@ -114,16 +140,24 @@ export default function SupervisorManagementList() {
 					<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
 				</div>
 			) : (
-				<Table
-					columns={supervisorManagementColumns}
-					data={filteredSupervisors}
-					emptyState={{
-						title: "No Supervisors Found",
-						description:
-							"We couldn't find any supervisors matching your search criteria.",
-						icon: "solar:user-id-bold-duotone",
-					}}
-				/>
+				<>
+					<Table
+						columns={supervisorManagementColumns}
+						data={paginatedSupervisors}
+						emptyState={{
+							title: "No Supervisors Found",
+							description:
+								"We couldn't find any supervisors matching your search criteria.",
+							icon: "solar:user-id-bold-duotone",
+						}}
+					/>
+					<Pagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						onPageChange={setCurrentPage}
+						className="mt-4"
+					/>
+				</>
 			)}
 		</TableLayoutWrapper>
 	);

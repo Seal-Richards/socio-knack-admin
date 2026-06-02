@@ -12,6 +12,7 @@ import { useGetProducts, useDeleteProduct } from "@/hooks/useProduct";
 import { useGetCategories } from "@/hooks/useCategory";
 import { toast } from "sonner";
 import type { ProductData } from "@/lib/requests/product";
+import Pagination from "@/components/_atoms/Pagination";
 
 export default function ProductServiceList() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,6 +22,8 @@ export default function ProductServiceList() {
 	const [filterType, setFilterType] = useState("all");
 	const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>();
 	const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>();
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
 
 	// Fetch lists
 	const {
@@ -83,6 +86,29 @@ export default function ProductServiceList() {
 		filteredProducts = [...filteredProducts].sort((a, b) => a.name.localeCompare(b.name));
 	}
 
+	// Pagination Math
+	const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
+	const paginatedProducts = filteredProducts.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
+
+	// Reset page counter to 1
+	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchQuery(e.target.value);
+		setCurrentPage(1);
+	};
+
+	const handleCategorySelect = (val?: string) => {
+		setSelectedCategoryFilter(val);
+		setCurrentPage(1);
+	};
+
+	const handleStatusSelect = (val?: string) => {
+		setSelectedStatusFilter(val);
+		setCurrentPage(1);
+	};
+
 	const columns = getProductServiceColumns(handleEdit, handleDelete);
 
 	const categoryFilterOptions = [
@@ -101,7 +127,7 @@ export default function ProductServiceList() {
 						<SearchBar
 							placeholder="Search inventory"
 							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
+							onChange={handleSearchChange}
 							containerClassName="w-64 h-12"
 						/>
 						<div className="flex items-center gap-1.5 rounded-xl border border-gray-100 p-1">
@@ -130,7 +156,7 @@ export default function ProductServiceList() {
 							label="Category"
 							options={categoryFilterOptions}
 							selected={selectedCategoryFilter}
-							onSelect={setSelectedCategoryFilter}
+							onSelect={handleCategorySelect}
 							className="h-11 border-gray-100"
 						/>
 						<DynamicFilter
@@ -141,7 +167,7 @@ export default function ProductServiceList() {
 								{ label: "Inactive", value: "inactive" },
 							]}
 							selected={selectedStatusFilter}
-							onSelect={setSelectedStatusFilter}
+							onSelect={handleStatusSelect}
 							className="h-11 border-gray-100"
 						/>
 						<Button
@@ -163,16 +189,24 @@ export default function ProductServiceList() {
 							<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
 						</div>
 					) : (
-						<Table
-							columns={columns}
-							data={filteredProducts}
-							emptyState={{
-								title: "No Products Found",
-								description:
-									"There are currently no products or services matching your filters.",
-								icon: "solar:box-bold-duotone",
-							}}
-						/>
+						<>
+							<Table
+								columns={columns}
+								data={paginatedProducts}
+								emptyState={{
+									title: "No Products Found",
+									description:
+										"There are currently no products or services matching your filters.",
+									icon: "solar:box-bold-duotone",
+								}}
+							/>
+							<Pagination
+								currentPage={currentPage}
+								totalPages={totalPages}
+								onPageChange={setCurrentPage}
+								className="mt-4"
+							/>
+						</>
 					)}
 				</div>
 			</div>

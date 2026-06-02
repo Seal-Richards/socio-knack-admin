@@ -38,6 +38,7 @@ export type AgentData = {
 	country?: string;
 	avatar?: string;
 	role: string;
+	isOnline?: boolean;
 	status: string;
 	kycStatus: string;
 	kycComment?: string;
@@ -48,6 +49,13 @@ export type AgentData = {
 		_id: string;
 		name: string;
 	} | null;
+	compliance?: {
+		termsAccepted: boolean;
+		dataProcessingConsent: boolean;
+		locationConsent: boolean;
+		incentivePolicyAccepted: boolean;
+		acceptedAt?: string;
+	};
 	updatedAt?: string;
 };
 

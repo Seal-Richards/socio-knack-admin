@@ -10,8 +10,9 @@ import {
 	agentManagementColumns,
 	type Agent,
 } from "@/components/Tables/columns/agentManagementColumns";
-import { TERRITORY_OPTIONS, STATUS_OPTIONS } from "@/constants/agentManagement";
+import { STATUS_OPTIONS } from "@/constants/agentManagement";
 import { useGetAgents } from "@/hooks/useAgent";
+import Pagination from "@/components/_atoms/Pagination";
 import TableLayoutWrapper from "../TableLayoutWrapper";
 
 export default function AgentManagementList() {
@@ -19,16 +20,13 @@ export default function AgentManagementList() {
 	const [selectedTerritory, setSelectedTerritory] = useState<string>();
 	const [selectedStatus, setSelectedStatus] = useState<string>();
 	const [sortBy, setSortBy] = useState<"all" | "az">("all");
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
 
 	const { data: agentsRes, isLoading } = useGetAgents();
 
 	const formattedAgents: Agent[] = (agentsRes?.data || []).map((agent) => {
 		const name = `${agent.firstName || ""} ${agent.lastName || ""}`.trim();
-
-		// Determine status
-		let status: "Active" | "Idle" | "Inactive" = "Inactive";
-		if (agent.status === "active") status = "Active";
-		else if (agent.status === "pending") status = "Idle";
 
 		// Formatted territory
 		const territory = agent.territoryId?.name || "Unassigned";
@@ -53,7 +51,8 @@ export default function AgentManagementList() {
 			name,
 			email: agent.email || "",
 			territory,
-			status,
+			isOnline: agent.isOnline || false,
+			profileStatus: agent.status || "pending",
 			lastActivity,
 			avatar: agent.avatar || "/assets/images/admin-avatar.png",
 		};
@@ -68,12 +67,12 @@ export default function AgentManagementList() {
 		const matchesStatus =
 			!selectedStatus ||
 			selectedStatus === "all" ||
-			u.status.toLowerCase() === selectedStatus.toLowerCase();
+			u.profileStatus.toLowerCase() === selectedStatus.toLowerCase();
 
 		const matchesTerritory =
 			!selectedTerritory ||
 			selectedTerritory === "all" ||
-			u.territory.toLowerCase().includes(selectedTerritory.toLowerCase());
+			u.territory.toLowerCase() === selectedTerritory.toLowerCase();
 
 		return matchesSearch && matchesStatus && matchesTerritory;
 	});
@@ -83,13 +82,45 @@ export default function AgentManagementList() {
 		filteredTeam = [...filteredTeam].sort((a, b) => a.name.localeCompare(b.name));
 	}
 
+	// Dynamically build territory list from loaded agents
+	const uniqueTerritories = Array.from(
+		new Set((agentsRes?.data || []).map((agent) => agent.territoryId?.name || "Unassigned")),
+	);
+	const territoryOptions = [
+		{ label: "All Territories", value: "all" },
+		...uniqueTerritories.map((t) => ({ label: t, value: t })),
+	];
+
+	// Pagination Math
+	const totalPages = Math.max(1, Math.ceil(filteredTeam.length / itemsPerPage));
+	const paginatedTeam = filteredTeam.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
+
+	// Helper status/territory selection to reset page counter to 1
+	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchQuery(e.target.value);
+		setCurrentPage(1);
+	};
+
+	const handleTerritorySelect = (val?: string) => {
+		setSelectedTerritory(val);
+		setCurrentPage(1);
+	};
+
+	const handleStatusSelect = (val?: string) => {
+		setSelectedStatus(val);
+		setCurrentPage(1);
+	};
+
 	const filterActions = (
 		<div className="flex w-full flex-wrap items-center justify-between gap-4">
 			<div className="flex flex-wrap items-center gap-3">
 				<SearchBar
 					placeholder="Search"
 					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
+					onChange={handleSearchChange}
 					containerClassName="w-full lg:w-64"
 				/>
 				<div className="flex items-center gap-2">
@@ -115,16 +146,16 @@ export default function AgentManagementList() {
 					</div>
 					<DynamicFilter
 						label="Territory"
-						options={TERRITORY_OPTIONS}
+						options={territoryOptions}
 						selected={selectedTerritory}
-						onSelect={setSelectedTerritory}
+						onSelect={handleTerritorySelect}
 						className="shrink-0"
 					/>
 					<DynamicFilter
 						label="Status"
 						options={STATUS_OPTIONS}
 						selected={selectedStatus}
-						onSelect={setSelectedStatus}
+						onSelect={handleStatusSelect}
 						className="shrink-0"
 					/>
 				</div>
@@ -148,15 +179,23 @@ export default function AgentManagementList() {
 					<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
 				</div>
 			) : (
-				<Table
-					columns={agentManagementColumns as any[]}
-					data={filteredTeam}
-					emptyState={{
-						title: "No Agents Found",
-						description: "There are currently no agents matching your filters.",
-						icon: "solar:user-speak-bold-duotone",
-					}}
-				/>
+				<>
+					<Table
+						columns={agentManagementColumns as any[]}
+						data={paginatedTeam}
+						emptyState={{
+							title: "No Agents Found",
+							description: "There are currently no agents matching your filters.",
+							icon: "solar:user-speak-bold-duotone",
+						}}
+					/>
+					<Pagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						onPageChange={setCurrentPage}
+						className="mt-4"
+					/>
+				</>
 			)}
 		</TableLayoutWrapper>
 	);

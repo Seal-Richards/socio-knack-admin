@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import Table from "@/components/Tables";
 import { type ColumnDef } from "@tanstack/react-table";
+import Pagination from "@/components/_atoms/Pagination";
 
 interface Agent {
 	id: string;
@@ -85,16 +86,33 @@ const columns: ColumnDef<Agent>[] = [
 ];
 
 export default function AssignedAgentList() {
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
+
+	const totalPages = Math.max(1, Math.ceil(agents.length / itemsPerPage));
+	const paginatedAgents = agents.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
+
 	return (
-		<Table
-			columns={columns}
-			data={agents}
-			className="mt-4"
-			emptyState={{
-				title: "No Agents Assigned",
-				description: "There are currently no agents assigned to this territory.",
-				icon: "solar:users-group-two-rounded-bold-duotone",
-			}}
-		/>
+		<>
+			<Table
+				columns={columns}
+				data={paginatedAgents}
+				className="mt-4"
+				emptyState={{
+					title: "No Agents Assigned",
+					description: "There are currently no agents assigned to this territory.",
+					icon: "solar:users-group-two-rounded-bold-duotone",
+				}}
+			/>
+			<Pagination
+				currentPage={currentPage}
+				totalPages={totalPages}
+				onPageChange={setCurrentPage}
+				className="mt-4"
+			/>
+		</>
 	);
 }

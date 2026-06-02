@@ -13,6 +13,7 @@ import InviteTeamModal from "@/components/_modals/InviteTeamModal";
 import DynamicFilter from "@/components/_atoms/DynamicFilter";
 import { useGetAdmins, useGetSupervisors, useGetStaff, useUpdateUserRole } from "@/hooks/useTeam";
 import { toast } from "sonner";
+import Pagination from "@/components/_atoms/Pagination";
 
 interface RawTeamUser {
 	id?: string;
@@ -36,6 +37,8 @@ export default function AccessManagementList() {
 	const [filterType, setFilterType] = useState("all");
 	const [selectedStatus, setSelectedStatus] = useState<string>();
 	const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>();
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
 
 	// Local temporary state for modified roles before saving
 	const [tempRoles, setTempRoles] = useState<Record<string | number, string>>({});
@@ -162,6 +165,29 @@ export default function AccessManagementList() {
 		filteredTeam = [...filteredTeam].sort((a, b) => a.name.localeCompare(b.name));
 	}
 
+	// Pagination Math
+	const totalPages = Math.max(1, Math.ceil(filteredTeam.length / itemsPerPage));
+	const paginatedTeam = filteredTeam.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
+
+	// Reset page counter
+	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchQuery(e.target.value);
+		setCurrentPage(1);
+	};
+
+	const handleStatusSelect = (val?: string) => {
+		setSelectedStatus(val);
+		setCurrentPage(1);
+	};
+
+	const handleRoleSelect = (val?: string) => {
+		setSelectedRoleFilter(val);
+		setCurrentPage(1);
+	};
+
 	const isLoading = isLoadingAdmins || isLoadingSupervisors || isLoadingStaff;
 
 	// Construct dynamic columns passing callback and temporary state
@@ -183,7 +209,7 @@ export default function AccessManagementList() {
 						<SearchBar
 							placeholder="Search"
 							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
+							onChange={handleSearchChange}
 							containerClassName="w-64 h-12"
 						/>
 						<div className="flex items-center gap-2 rounded-xl border border-gray-100 p-1">
@@ -221,7 +247,7 @@ export default function AccessManagementList() {
 								{ label: "Inactive", value: "inactive" },
 							]}
 							selected={selectedStatus}
-							onSelect={setSelectedStatus}
+							onSelect={handleStatusSelect}
 							className="h-11 border-gray-100"
 						/>
 						<DynamicFilter
@@ -233,7 +259,7 @@ export default function AccessManagementList() {
 								{ label: "Staff", value: "staff" },
 							]}
 							selected={selectedRoleFilter}
-							onSelect={setSelectedRoleFilter}
+							onSelect={handleRoleSelect}
 							className="h-11 border-gray-100"
 						/>
 						<Button
@@ -252,16 +278,24 @@ export default function AccessManagementList() {
 							<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
 						</div>
 					) : (
-						<Table
-							columns={columns}
-							data={filteredTeam}
-							emptyState={{
-								title: "No Team Members",
-								description:
-									"We couldn't find any team members matching your filters.",
-								icon: "solar:users-group-two-rounded-bold-duotone",
-							}}
-						/>
+						<>
+							<Table
+								columns={columns}
+								data={paginatedTeam}
+								emptyState={{
+									title: "No Team Members",
+									description:
+										"We couldn't find any team members matching your filters.",
+									icon: "solar:users-group-two-rounded-bold-duotone",
+								}}
+							/>
+							<Pagination
+								currentPage={currentPage}
+								totalPages={totalPages}
+								onPageChange={setCurrentPage}
+								className="mt-4"
+							/>
+						</>
 					)}
 				</div>
 			</div>

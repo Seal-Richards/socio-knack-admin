@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AgentsWidget from "@/components/_widgets/Agents";
@@ -19,6 +19,7 @@ import { useGetDashboardStats } from "@/hooks/useDashboard";
 import { useSocketAgentTracking } from "@/hooks/useDashboard/useSocketAgentTracking";
 import { useGetAgents } from "@/hooks/useAgent";
 import { useGetMe } from "@/hooks/useProfile";
+import Pagination from "@/components/_atoms/Pagination";
 import DashboardQuickActions from "../_widgets/DashboardQuickActions";
 
 export default function Admin() {
@@ -43,6 +44,30 @@ export default function Admin() {
 		...agent,
 		id: agent._id,
 	}));
+
+	const [searchQuery, setSearchQuery] = useState("");
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
+
+	// Filter agents by search query
+	const filteredAgents = agents.filter((agent) => {
+		const agentFullName = `${agent.firstName || ""} ${agent.lastName || ""}`
+			.trim()
+			.toLowerCase();
+		return agentFullName.includes(searchQuery.toLowerCase());
+	});
+
+	// Pagination Math
+	const totalPages = Math.max(1, Math.ceil(filteredAgents.length / itemsPerPage));
+	const paginatedAgents = filteredAgents.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
+
+	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchQuery(e.target.value);
+		setCurrentPage(1);
+	};
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -86,19 +111,29 @@ export default function Admin() {
 							<SearchBar
 								placeholder="Search"
 								aria-label="Search agents"
+								value={searchQuery}
+								onChange={handleSearchChange}
 								containerClassName="w-full"
 							/>
 						}
 					>
-						<Table
-							columns={dashboardAgentColumns}
-							data={agents}
-							emptyState={{
-								title: "No Agents Available",
-								description: "You haven't added any agents to your list yet.",
-								icon: "solar:users-group-rounded-bold-duotone",
-							}}
-						/>
+						<>
+							<Table
+								columns={dashboardAgentColumns}
+								data={paginatedAgents}
+								emptyState={{
+									title: "No Agents Available",
+									description: "You haven't added any agents to your list yet.",
+									icon: "solar:users-group-rounded-bold-duotone",
+								}}
+							/>
+							<Pagination
+								currentPage={currentPage}
+								totalPages={totalPages}
+								onPageChange={setCurrentPage}
+								className="mt-4"
+							/>
+						</>
 					</TableLayoutWrapper>
 				</div>
 				<div className="flex h-full flex-col">

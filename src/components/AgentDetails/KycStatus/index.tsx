@@ -13,7 +13,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import type { AgentData } from "@/types/agent";
-import { useUpdateAgentStatus } from "@/hooks/useAgent";
+import { useUpdateAgentStatus, useSendAgentKycComment } from "@/hooks/useAgent";
 import { toast } from "sonner";
 
 export default function KycStatus({ agent }: { agent: AgentData }) {
@@ -30,15 +30,14 @@ export default function KycStatus({ agent }: { agent: AgentData }) {
 	const [comment, setComment] = useState(agent.kycComment || "");
 
 	const updateStatusMutation = useUpdateAgentStatus();
+	const sendCommentMutation = useSendAgentKycComment();
 
-	const handleSave = async () => {
+	const handleSaveStatus = async () => {
 		try {
 			const res = await updateStatusMutation.mutateAsync({
 				userId: agent._id || agent.id,
 				payload: {
 					kycStatus,
-					kycComment: comment,
-					comment,
 				},
 			});
 
@@ -46,6 +45,23 @@ export default function KycStatus({ agent }: { agent: AgentData }) {
 				toast.success("Agent KYC status updated successfully.");
 			} else {
 				toast.error(res.message || "Failed to update KYC status.");
+			}
+		} catch (error: unknown) {
+			toast.error(error instanceof Error ? error.message : "An error occurred.");
+		}
+	};
+
+	const handleSendComment = async () => {
+		try {
+			const res = await sendCommentMutation.mutateAsync({
+				userId: agent._id || agent.id,
+				comment,
+			});
+
+			if (res.success) {
+				toast.success("KYC comment sent to agent's email successfully.");
+			} else {
+				toast.error(res.message || "Failed to send KYC comment.");
 			}
 		} catch (error: unknown) {
 			toast.error(error instanceof Error ? error.message : "An error occurred.");
@@ -146,6 +162,27 @@ export default function KycStatus({ agent }: { agent: AgentData }) {
 							</Select>
 						</div>
 
+						<div className="mt-4 flex flex-col gap-4 sm:flex-row">
+							<Button
+								variant="outline"
+								onClick={() => {
+									setKycStatus(agent.kycStatus || "pending");
+								}}
+								className="h-12 flex-1 rounded-full border-gray-100 text-[14px] font-bold text-gray-800 hover:bg-gray-50"
+							>
+								Cancel
+							</Button>
+							<Button
+								disabled={updateStatusMutation.isPending}
+								onClick={handleSaveStatus}
+								className="h-12 flex-1 rounded-full bg-[#4CAF50] text-[14px] font-bold text-white hover:bg-[#43A047]"
+							>
+								{updateStatusMutation.isPending ? "Saving..." : "Save"}
+							</Button>
+						</div>
+
+						<div className="h-px w-full bg-gray-100" />
+
 						<div className="space-y-2">
 							<Label className="text-[13px] font-bold text-gray-800">Comment</Label>
 							<Textarea
@@ -156,23 +193,13 @@ export default function KycStatus({ agent }: { agent: AgentData }) {
 							/>
 						</div>
 
-						<div className="mt-4 flex flex-col gap-4 sm:flex-row">
+						<div className="mt-2 flex justify-end">
 							<Button
-								variant="outline"
-								onClick={() => {
-									setKycStatus(agent.kycStatus || "pending");
-									setComment(agent.kycComment || "");
-								}}
-								className="h-12 flex-1 rounded-full border-gray-100 text-[14px] font-bold text-gray-800 hover:bg-gray-50"
+								disabled={sendCommentMutation.isPending || !comment.trim()}
+								onClick={handleSendComment}
+								className="h-12 w-full rounded-full bg-[#1d4ea8] text-[14px] font-bold text-white hover:bg-[#153a82] sm:w-32"
 							>
-								Cancel
-							</Button>
-							<Button
-								disabled={updateStatusMutation.isPending}
-								onClick={handleSave}
-								className="h-12 flex-1 rounded-full bg-[#4CAF50] text-[14px] font-bold text-white hover:bg-[#43A047]"
-							>
-								{updateStatusMutation.isPending ? "Saving..." : "Save"}
+								{sendCommentMutation.isPending ? "Sending..." : "Send"}
 							</Button>
 						</div>
 					</div>

@@ -45,7 +45,7 @@ export default function AgentDetails({ id }: AgentDetailsProps) {
 	const agentInfo = {
 		name: `${rawAgent.firstName || ""} ${rawAgent.lastName || ""}`.trim(),
 		role: "Agent",
-		rating: `${rawAgent.metrics?.successRate || 0}% (success rate)`,
+		rating: `${rawAgent.metrics?.successRate || 0}% (Task success rates)`,
 		status: statusLabel,
 		email: rawAgent.email || "",
 		phone: rawAgent.phone || "No phone listed",

@@ -9,6 +9,7 @@ import {
 	adminManagementColumns,
 	type AdminManagementData,
 } from "@/components/Tables/columns/adminManagementColumns";
+import Pagination from "@/components/_atoms/Pagination";
 
 const DUMMY_ADMINS: AdminManagementData[] = [
 	{
@@ -33,6 +34,15 @@ const DUMMY_ADMINS: AdminManagementData[] = [
 
 export default function AdminManagementList() {
 	const [, setRowSelection] = useState({});
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
+
+	// Pagination Math
+	const totalPages = Math.max(1, Math.ceil(DUMMY_ADMINS.length / itemsPerPage));
+	const paginatedAdmins = DUMMY_ADMINS.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
 
 	return (
 		<TableLayoutWrapper
@@ -47,16 +57,24 @@ export default function AdminManagementList() {
 			}
 			className="gap-0"
 		>
-			<Table
-				columns={adminManagementColumns as any[]}
-				data={DUMMY_ADMINS}
-				onRowSelectionChange={setRowSelection}
-				emptyState={{
-					title: "No Admins Found",
-					description: "There are currently no administrators in the system.",
-					icon: "solar:shield-warning-bold-duotone",
-				}}
-			/>
+			<>
+				<Table
+					columns={adminManagementColumns as any[]}
+					data={paginatedAdmins}
+					onRowSelectionChange={setRowSelection}
+					emptyState={{
+						title: "No Admins Found",
+						description: "There are currently no administrators in the system.",
+						icon: "solar:shield-warning-bold-duotone",
+					}}
+				/>
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					className="mt-4"
+				/>
+			</>
 		</TableLayoutWrapper>
 	);
 }

@@ -111,7 +111,7 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 	};
 
 	const currentTasks = getCurrentTasks();
-	const totalPages = Math.ceil(currentTasks.length / ITEMS_PER_PAGE);
+	const totalPages = Math.max(1, Math.ceil(currentTasks.length / ITEMS_PER_PAGE));
 	const paginatedTasks = currentTasks.slice(
 		(currentPage - 1) * ITEMS_PER_PAGE,
 		currentPage * ITEMS_PER_PAGE,
@@ -165,13 +165,12 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 					<PendingTaskList tasks={paginatedTasks} onView={handleViewVisit} />
 				)}
 
-				{totalPages > 1 && (
-					<Pagination
-						currentPage={currentPage}
-						totalPages={totalPages}
-						onPageChange={setCurrentPage}
-					/>
-				)}
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					className="mt-4"
+				/>
 			</div>
 
 			{selectedVisit && (

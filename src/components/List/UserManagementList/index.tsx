@@ -9,6 +9,7 @@ import {
 	userManagementColumns,
 	type UserManagementData,
 } from "@/components/Tables/columns/userManagementColumns";
+import Pagination from "@/components/_atoms/Pagination";
 
 const DUMMY_USERS: UserManagementData[] = [
 	{
@@ -33,6 +34,15 @@ const DUMMY_USERS: UserManagementData[] = [
 
 export default function UserManagementList() {
 	const [, setRowSelection] = useState({});
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
+
+	// Pagination Math
+	const totalPages = Math.max(1, Math.ceil(DUMMY_USERS.length / itemsPerPage));
+	const paginatedUsers = DUMMY_USERS.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
 
 	return (
 		<TableLayoutWrapper
@@ -47,16 +57,24 @@ export default function UserManagementList() {
 			}
 			className="gap-0"
 		>
-			<Table
-				columns={userManagementColumns as any[]}
-				data={DUMMY_USERS}
-				onRowSelectionChange={setRowSelection}
-				emptyState={{
-					title: "No Users Found",
-					description: "There are currently no users found in the system.",
-					icon: "solar:users-group-two-rounded-bold-duotone",
-				}}
-			/>
+			<>
+				<Table
+					columns={userManagementColumns as any[]}
+					data={paginatedUsers}
+					onRowSelectionChange={setRowSelection}
+					emptyState={{
+						title: "No Users Found",
+						description: "There are currently no users found in the system.",
+						icon: "solar:users-group-two-rounded-bold-duotone",
+					}}
+				/>
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onPageChange={setCurrentPage}
+					className="mt-4"
+				/>
+			</>
 		</TableLayoutWrapper>
 	);
 }

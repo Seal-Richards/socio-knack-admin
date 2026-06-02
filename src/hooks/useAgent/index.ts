@@ -54,3 +54,18 @@ export function useUpdateAgentStatus() {
 		},
 	});
 }
+
+export function useSendAgentKycComment() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ userId, comment }: { userId: string; comment: string }) =>
+			agentRequests.sendAgentKycComment(userId, comment),
+		onSuccess: (_, variables) => {
+			queryClient
+				.invalidateQueries({ queryKey: ["agent", variables.userId] })
+				.catch((err) => {
+					console.error("Failed to invalidate agent query:", err);
+				});
+		},
+	});
+}

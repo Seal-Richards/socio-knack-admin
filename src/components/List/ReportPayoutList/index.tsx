@@ -9,6 +9,7 @@ import {
 	reportPayoutColumns,
 	type ReportPayout,
 } from "@/components/Tables/columns/reportPayoutColumns";
+import Pagination from "@/components/_atoms/Pagination";
 
 const mockData: ReportPayout[] = [
 	{
@@ -18,9 +19,9 @@ const mockData: ReportPayout[] = [
 		kpiScore: "75%",
 		basePay: "₦15,000",
 		bonuses: "₦2,000",
-		deductions: "NO",
 		netPayout: "₦17,000",
 		status: "Ready",
+		deductions: "NO",
 	},
 	{
 		id: "2",
@@ -29,17 +30,39 @@ const mockData: ReportPayout[] = [
 		kpiScore: "65%",
 		basePay: "₦15,000",
 		bonuses: "₦800",
-		deductions: "NO",
 		netPayout: "₦15,800",
 		status: "Pending",
+		deductions: "NO",
 	},
 ];
 
 export default function ReportPayoutList() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
 
 	const selectedCount = Object.keys(rowSelection).filter((key) => rowSelection[key]).length;
+
+	// Filter data
+	const filteredData = mockData.filter(
+		(item) =>
+			item.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			item.territory.toLowerCase().includes(searchQuery.toLowerCase()),
+	);
+
+	// Pagination Math
+	const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+	const paginatedPayouts = filteredData.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
+
+	// Reset page counter
+	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchQuery(e.target.value);
+		setCurrentPage(1);
+	};
 
 	const filterActions = (
 		<div className="flex w-full flex-wrap items-center justify-between gap-4">
@@ -50,7 +73,7 @@ export default function ReportPayoutList() {
 				<SearchBar
 					placeholder="Search"
 					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
+					onChange={handleSearchChange}
 					containerClassName="w-full lg:w-96"
 				/>
 			</div>
@@ -61,13 +84,20 @@ export default function ReportPayoutList() {
 		<TableLayoutWrapper title="" filters={filterActions} className="gap-0">
 			<Table
 				columns={reportPayoutColumns as any[]}
-				data={mockData}
+				data={paginatedPayouts}
 				onRowSelectionChange={setRowSelection}
 				emptyState={{
 					title: "No Payouts to Report",
 					description: "There are currently no agent payouts requiring approval.",
 					icon: "solar:wad-of-money-bold-duotone",
 				}}
+			/>
+
+			<Pagination
+				currentPage={currentPage}
+				totalPages={totalPages}
+				onPageChange={setCurrentPage}
+				className="mt-4"
 			/>
 
 			{selectedCount > 0 && (

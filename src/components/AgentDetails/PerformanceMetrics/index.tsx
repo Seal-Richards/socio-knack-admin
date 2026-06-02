@@ -31,7 +31,9 @@ export default function PerformanceMetrics({ metrics }: { metrics?: AgentMetrics
 					</div>
 					<div className="h-px w-full max-w-72 bg-gray-100" />
 					<div className="flex flex-col gap-2">
-						<span className="text-[15px] font-medium text-gray-800">Success Rate</span>
+						<span className="text-[15px] font-medium text-gray-800">
+							Task success rates
+						</span>
 						<h2 className="text-[40px] font-bold leading-tight text-gray-600">
 							{successRate}%
 						</h2>
