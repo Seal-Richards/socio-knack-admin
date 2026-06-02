@@ -35,9 +35,10 @@ interface Zone {
 
 interface MapProps {
 	className?: string;
+	readOnly?: boolean;
 }
 
-export default function Map({ className }: MapProps) {
+export default function Map({ className, readOnly = false }: MapProps) {
 	const { isLoaded, loadError } = useJsApiLoader({
 		id: "google-map-script",
 		googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAP_API || "",
@@ -157,33 +158,35 @@ export default function Map({ className }: MapProps) {
 					</GoogleMap>
 
 					{/* UI Overlays */}
-					<div className="absolute bottom-6 left-6 flex space-x-3">
-						<button
-							onClick={() => setIsDrawing(!isDrawing)}
-							className={cn(
-								"flex items-center px-6 py-3 rounded-full font-bold shadow-lg transition-all",
-								isDrawing
-									? "bg-red-500 text-white"
-									: "bg-primary text-white hover:bg-secondary",
-							)}
-						>
-							{isDrawing ? "Cancel Drawing" : "Draw New Territory"}
-						</button>
-
-						{newTerritory && (
+					{!readOnly && (
+						<div className="absolute bottom-6 left-6 flex space-x-3">
 							<button
-								onClick={() => {
-									toast.success(
-										"Territory coordinates captured! Ready to save to backend.",
-									);
-									setNewTerritory(null);
-								}}
-								className="bg-accent flex items-center rounded-full px-6 py-3 font-bold text-white shadow-lg"
+								onClick={() => setIsDrawing(!isDrawing)}
+								className={cn(
+									"flex items-center px-6 py-3 rounded-full font-bold shadow-lg transition-all",
+									isDrawing
+										? "bg-red-500 text-white"
+										: "bg-primary text-white hover:bg-secondary",
+								)}
 							>
-								Save Territory
+								{isDrawing ? "Cancel Drawing" : "Draw New Territory"}
 							</button>
-						)}
-					</div>
+
+							{newTerritory && (
+								<button
+									onClick={() => {
+										toast.success(
+											"Territory coordinates captured! Ready to save to backend.",
+										);
+										setNewTerritory(null);
+									}}
+									className="bg-accent flex items-center rounded-full px-6 py-3 font-bold text-white shadow-lg"
+								>
+									Save Territory
+								</button>
+							)}
+						</div>
+					)}
 				</>
 			) : (
 				<div className="flex h-full animate-pulse items-center justify-center bg-gray-100">

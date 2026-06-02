@@ -11,6 +11,10 @@ const ProductsServicesIcon = ({ className }: { className?: string }) => (
 	<Icon icon="solar:box-bold" className={className} />
 );
 
+const TasksIcon = ({ className }: { className?: string }) => (
+	<Icon icon="lucide:list-todo" className={className} />
+);
+
 const AgentIcon = ({ className }: { className?: string }) => (
 	<Icon icon="solar:users-group-rounded-bold" className={className} />
 );
@@ -49,6 +53,11 @@ export const MENU_ITEMS = [
 		label: "Products & Services",
 		icon: ProductsServicesIcon,
 		href: ROUTES.PRODUCTS_SERVICES,
+	},
+	{
+		label: "All Tasks",
+		icon: TasksIcon,
+		href: ROUTES.ALL_TASKS,
 	},
 	{
 		label: "Agent Management",

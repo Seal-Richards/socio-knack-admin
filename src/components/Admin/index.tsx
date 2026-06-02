@@ -2,12 +2,12 @@
 
 import React from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import AgentsWidget from "@/components/_widgets/Agents";
 import TerritorySalesWidget from "@/components/_widgets/TerritorySales";
 import ComplianceWidget from "@/components/_widgets/ComplianceSales";
 import PendingActionsWidget from "@/components/_widgets/PendingActions";
 import Table from "@/components/Tables";
-import { AGENT_LIST } from "@/constants/dashboard";
 import TableLayoutWrapper from "@/components/List/TableLayoutWrapper";
 import SearchBar from "@/components/_atoms/SearchBar";
 import {
@@ -15,19 +15,34 @@ import {
 	type Agent,
 } from "@/components/Tables/columns/dashboardAgentColumns";
 import TaskStatusTab from "@/components/Task/TaskStatusTab";
-import { Button } from "@/components/ui/button";
-import { Icon } from "@iconify/react";
+import { useGetDashboardStats } from "@/hooks/useDashboard";
+import { useSocketAgentTracking } from "@/hooks/useDashboard/useSocketAgentTracking";
+import { useGetAgents } from "@/hooks/useAgent";
+import { useGetMe } from "@/hooks/useProfile";
 import DashboardQuickActions from "../_widgets/DashboardQuickActions";
-import CreateTaskModal from "../_modals/CreateTaskModal";
-import AllTaskModal from "../_modals/AllTaskModal";
 
 export default function Admin() {
 	const { data: session } = useSession();
-	// Extract first name only (e.g. "Kenny" from "Kenny Osei")
-	const firstName = session?.user?.name?.split(" ")[0] ?? "there";
+	const { data: meRes } = useGetMe();
+	const profile = meRes?.data;
 
-	const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = React.useState(false);
-	const [isAllTaskModalOpen, setIsAllTaskModalOpen] = React.useState(false);
+	const fullName = profile
+		? `${profile.firstName || ""} ${profile.lastName || ""}`.trim()
+		: (session?.user?.name ?? "");
+
+	const router = useRouter();
+
+	// Initialize WebSockets for real-time agent tracking
+	useSocketAgentTracking();
+
+	const { data: dashboardStats } = useGetDashboardStats();
+	const { data: agentsRes } = useGetAgents();
+
+	const stats = dashboardStats?.data;
+	const agents = ((agentsRes?.data as unknown as Agent[]) || []).map((agent) => ({
+		...agent,
+		id: agent._id,
+	}));
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -35,25 +50,31 @@ export default function Admin() {
 			<div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
 				<div className="flex items-center gap-3">
 					<h1 className="text-2xl font-black tracking-tight text-gray-900 lg:text-[32px]">
-						Welcome back, {firstName}
+						Welcome back, {fullName || "there"}
 					</h1>
 					<span className="text-2xl lg:text-[32px]">👋</span>
 				</div>
-				<Button
-					onClick={() => setIsCreateTaskModalOpen(true)}
-					className="h-11 gap-2 rounded-xl bg-[#1d4ea8] px-5 text-[14px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95 lg:h-12 lg:px-6 lg:text-[15px]"
-				>
-					<Icon icon="lucide:plus" className="size-4" />
-					Create New Task
-				</Button>
 			</div>
 
 			{/* Metrics Section */}
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-				<AgentsWidget label="My Agents" value="42" activeCount="40 Active" />
-				<TerritorySalesWidget label="Today's Territory Sales" value="₦850,000" />
-				<ComplianceWidget label="Team Compliance" value="94%" />
-				<PendingActionsWidget label="Pending Actions" value="2" />
+				<AgentsWidget
+					label="My Agents"
+					value={stats?.totalAgents?.toString() || "0"}
+					activeCount={`${stats?.activeAgents || 0} Active`}
+				/>
+				<TerritorySalesWidget
+					label="Today's Territory Sales"
+					value={`₦${(stats?.todayTerritorySales || 0).toLocaleString()}`}
+				/>
+				<ComplianceWidget
+					label="Completed Tasks/Visits"
+					value={stats?.completedVisits?.toString() || "0"}
+				/>
+				<PendingActionsWidget
+					label="Pending Tasks"
+					value={stats?.pendingVisits?.toString() || "0"}
+				/>
 			</div>
 
 			<div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -71,7 +92,7 @@ export default function Admin() {
 					>
 						<Table
 							columns={dashboardAgentColumns}
-							data={AGENT_LIST as Agent[]}
+							data={agents}
 							emptyState={{
 								title: "No Agents Available",
 								description: "You haven't added any agents to your list yet.",
@@ -85,17 +106,7 @@ export default function Admin() {
 				</div>
 			</div>
 
-			<TaskStatusTab onSeeMore={() => setIsAllTaskModalOpen(true)} />
-
-			<CreateTaskModal
-				isOpen={isCreateTaskModalOpen}
-				onClose={() => setIsCreateTaskModalOpen(false)}
-			/>
-
-			<AllTaskModal
-				isOpen={isAllTaskModalOpen}
-				onClose={() => setIsAllTaskModalOpen(false)}
-			/>
+			<TaskStatusTab onSeeMore={() => router.push("/all-task")} />
 		</div>
 	);
 }

@@ -7,9 +7,10 @@ import Empty from "@/components/_atoms/Empty";
 
 interface CompletedTaskListProps {
 	tasks: Omit<TaskItemProps, "statusColor">[];
+	onView?: (task: Omit<TaskItemProps, "statusColor">) => void;
 }
 
-export default function CompletedTaskList({ tasks }: CompletedTaskListProps) {
+export default function CompletedTaskList({ tasks, onView }: CompletedTaskListProps) {
 	if (!tasks || tasks.length === 0) {
 		return (
 			<Empty
@@ -23,7 +24,11 @@ export default function CompletedTaskList({ tasks }: CompletedTaskListProps) {
 	return (
 		<div className="flex flex-col gap-3">
 			{tasks.map((task) => (
-				<TaskListItem key={task.id} task={{ ...task, statusColor: "green" }} />
+				<TaskListItem
+					key={task.id}
+					task={{ ...task, statusColor: "green" }}
+					onView={onView ? () => onView(task) : undefined}
+				/>
 			))}
 		</div>
 	);

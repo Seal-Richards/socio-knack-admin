@@ -1,7 +1,7 @@
 import React from "react";
-import Image from "next/image";
 import { Icon } from "@iconify/react";
 import cn from "@/lib/utils";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 
 export interface TaskItemProps {
 	id: number | string;
@@ -13,9 +13,16 @@ export interface TaskItemProps {
 	subLocation: string;
 	distance: string;
 	statusColor: "blue" | "yellow" | "green" | "red";
+	raw?: Record<string, unknown>;
 }
 
-export default function TaskListItem({ task }: { task: TaskItemProps }) {
+export default function TaskListItem({
+	task,
+	onView,
+}: {
+	task: TaskItemProps;
+	onView?: () => void;
+}) {
 	const statusColors = {
 		blue: "bg-[#1d4ea8] ring-[#1d4ea8]/20",
 		yellow: "bg-[#facc15] ring-[#facc15]/20",
@@ -37,12 +44,11 @@ export default function TaskListItem({ task }: { task: TaskItemProps }) {
 				</div>
 
 				<div className="flex items-center gap-3">
-					<div className="relative size-10 overflow-hidden rounded-full border border-gray-100 shadow-sm">
-						<Image
-							src={task.avatar}
-							alt={task.agentName}
-							fill
-							className="object-cover"
+					<div className="relative flex size-10 items-center justify-center overflow-hidden rounded-full border border-gray-100 shadow-sm">
+						<DynamicAvatar
+							image={task.avatar}
+							name={task.agentName}
+							className="size-full"
 						/>
 					</div>
 					<span className="text-[14px] font-bold text-gray-800">{task.agentName}</span>
@@ -76,7 +82,10 @@ export default function TaskListItem({ task }: { task: TaskItemProps }) {
 						</span>
 					</div>
 				</div>
-				<button className="ml-4 flex size-8 items-center justify-center rounded-full border border-[#1d4ea8]/10 bg-blue-50 text-[#1d4ea8] transition-all hover:bg-[#1d4ea8] hover:text-white">
+				<button
+					onClick={onView}
+					className="ml-4 flex size-8 items-center justify-center rounded-full border border-[#1d4ea8]/10 bg-blue-50 text-[#1d4ea8] transition-all hover:bg-[#1d4ea8] hover:text-white"
+				>
 					<Icon icon="solar:eye-bold" className="size-4" />
 				</button>
 			</div>

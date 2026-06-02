@@ -11,6 +11,7 @@ export const ROUTES = {
 	REPORTS: "/reports-payouts",
 	USERS: "/user-management",
 	SETTINGS: "/settings",
+	ALL_TASKS: "/all-task",
 	HELP: "#",
 	LOGOUT: "/logout",
 

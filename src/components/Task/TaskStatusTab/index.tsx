@@ -3,12 +3,30 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import Tabs from "@/components/Tabs";
-import { ONGOING_TASKS, TASK_TABS } from "@/constants/dashboard";
+import { TASK_TABS } from "@/constants/dashboard";
 import OngoingTaskList from "@/components/List/OngoingTaskList";
 import TodayTaskList from "@/components/List/TodayTaskList";
 import UpcomingTaskList from "@/components/List/UpcomingTaskList";
 import CompletedTaskList from "@/components/List/CompletedTaskList";
 import PendingTaskList from "@/components/List/PendingTaskList";
+import { useGetDashboardVisits } from "@/hooks/useDashboard";
+import VisitDetailsModal from "@/components/_modals/VisitDetailsModal";
+import type { TaskItemProps } from "@/components/Task/TaskListItem";
+import Pagination from "@/components/_atoms/Pagination";
+
+interface AgentData {
+	firstName: string;
+	lastName: string;
+	avatar: string;
+}
+
+interface TerritoryData {
+	name: string;
+}
+
+interface LocationData {
+	address: string;
+}
 
 interface TaskStatusTabProps {
 	isModalView?: boolean;
@@ -17,18 +35,87 @@ interface TaskStatusTabProps {
 
 export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabProps = {}) {
 	const [activeTab, setActiveTab] = useState("Ongoing");
+	const [currentPage, setCurrentPage] = useState(1);
+	const [selectedVisit, setSelectedVisit] = useState<Record<string, unknown> | null>(null);
 
-	// For standardizing mock data to fit the props format
-	const tasks = ONGOING_TASKS.map((task) => ({
-		...task,
-		date: task.date,
-		time: task.time,
-		location: task.location,
-		subLocation: task.subLocation,
-		distance: task.distance,
-		avatar: task.avatar,
-		agentName: task.agentName,
-	}));
+	const ITEMS_PER_PAGE = 5;
+
+	// Reset page when tab changes
+	const handleTabChange = (tab: string) => {
+		setActiveTab(tab);
+		setCurrentPage(1);
+	};
+
+	const { data: visitsRes } = useGetDashboardVisits();
+	const visits = (visitsRes?.data as unknown as Array<Record<string, unknown>>) || [];
+
+	// Format visits to match TaskItemProps
+	const formattedVisits = visits.map((visit) => {
+		const scheduledDate = (visit.scheduledDate as string) || new Date().toISOString();
+		const dt = new Date(scheduledDate);
+		const agentId = visit.agentId as AgentData | undefined;
+		const territoryId = visit.territoryId as TerritoryData | undefined;
+		const location = visit.location as LocationData | undefined;
+
+		return {
+			id: visit._id as string,
+			agentName: agentId ? `${agentId.firstName} ${agentId.lastName}` : "Unknown Agent",
+			avatar: agentId?.avatar || "",
+			date: dt.toLocaleDateString(),
+			time: dt.toLocaleTimeString("en-US", {
+				hour: "numeric",
+				minute: "2-digit",
+				hour12: true,
+			}),
+			location: territoryId?.name || "Unknown Zone",
+			subLocation: location?.address || "N/A",
+			distance: (visit.distanceFromAgent as string) || "0km",
+			status: visit.status as string,
+			raw: visit,
+		};
+	});
+
+	const ongoingTasks = formattedVisits.filter((v) => v.status === "inProgress");
+	const todayTasks = formattedVisits.filter(
+		(v) =>
+			new Date(v.raw.scheduledDate as string).toDateString() === new Date().toDateString() &&
+			v.status !== "completed",
+	);
+	const upcomingTasks = formattedVisits.filter(
+		(v) => v.status === "upcoming" || v.status === "scheduled",
+	);
+	const completedTasks = formattedVisits.filter((v) => v.status === "completed");
+	const pendingTasks = formattedVisits.filter((v) => v.status === "pending");
+
+	const handleViewVisit = (task: Omit<TaskItemProps, "statusColor">) => {
+		if (task.raw) {
+			setSelectedVisit(task.raw);
+		}
+	};
+
+	const getCurrentTasks = () => {
+		switch (activeTab) {
+			case "Ongoing":
+				return ongoingTasks;
+			case "Today":
+				return todayTasks;
+			case "Upcoming":
+				return upcomingTasks;
+			case "Completed":
+				return completedTasks;
+			case "Pending":
+				return pendingTasks;
+			default:
+				return ongoingTasks;
+		}
+	};
+
+	const currentTasks = getCurrentTasks();
+	const totalPages = Math.ceil(currentTasks.length / ITEMS_PER_PAGE);
+	const paginatedTasks = currentTasks.slice(
+		(currentPage - 1) * ITEMS_PER_PAGE,
+		currentPage * ITEMS_PER_PAGE,
+	);
 
 	return (
 		<div
@@ -46,11 +133,11 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 					<Tabs
 						tabs={TASK_TABS}
 						activeTab={activeTab}
-						onChange={setActiveTab}
+						onChange={handleTabChange}
 						className="w-full overflow-x-auto border-none sm:w-auto"
 					/>
 				</div>
-				{!isModalView && (
+				{onSeeMore && (
 					<button
 						onClick={onSeeMore}
 						className="flex shrink-0 items-center gap-2 text-[13px] font-bold text-[#1d4ea8] hover:underline"
@@ -62,12 +149,38 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 			</div>
 
 			<div className="flex flex-col gap-3">
-				{activeTab === "Ongoing" && <OngoingTaskList tasks={tasks} />}
-				{activeTab === "Today" && <TodayTaskList tasks={tasks} />}
-				{activeTab === "Upcoming" && <UpcomingTaskList tasks={tasks} />}
-				{activeTab === "Completed" && <CompletedTaskList tasks={tasks} />}
-				{activeTab === "Pending" && <PendingTaskList tasks={tasks} />}
+				{activeTab === "Ongoing" && (
+					<OngoingTaskList tasks={paginatedTasks} onView={handleViewVisit} />
+				)}
+				{activeTab === "Today" && (
+					<TodayTaskList tasks={paginatedTasks} onView={handleViewVisit} />
+				)}
+				{activeTab === "Upcoming" && (
+					<UpcomingTaskList tasks={paginatedTasks} onView={handleViewVisit} />
+				)}
+				{activeTab === "Completed" && (
+					<CompletedTaskList tasks={paginatedTasks} onView={handleViewVisit} />
+				)}
+				{activeTab === "Pending" && (
+					<PendingTaskList tasks={paginatedTasks} onView={handleViewVisit} />
+				)}
+
+				{totalPages > 1 && (
+					<Pagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						onPageChange={setCurrentPage}
+					/>
+				)}
 			</div>
+
+			{selectedVisit && (
+				<VisitDetailsModal
+					isOpen={!!selectedVisit}
+					onClose={() => setSelectedVisit(null)}
+					visit={selectedVisit}
+				/>
+			)}
 		</div>
 	);
 }

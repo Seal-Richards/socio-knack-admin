@@ -7,9 +7,10 @@ import Empty from "@/components/_atoms/Empty";
 
 interface PendingTaskListProps {
 	tasks: Omit<TaskItemProps, "statusColor">[];
+	onView?: (task: Omit<TaskItemProps, "statusColor">) => void;
 }
 
-export default function PendingTaskList({ tasks }: PendingTaskListProps) {
+export default function PendingTaskList({ tasks, onView }: PendingTaskListProps) {
 	if (!tasks || tasks.length === 0) {
 		return (
 			<Empty
@@ -23,7 +24,11 @@ export default function PendingTaskList({ tasks }: PendingTaskListProps) {
 	return (
 		<div className="flex flex-col gap-3">
 			{tasks.map((task) => (
-				<TaskListItem key={task.id} task={{ ...task, statusColor: "red" }} />
+				<TaskListItem
+					key={task.id}
+					task={{ ...task, statusColor: "red" }}
+					onView={onView ? () => onView(task) : undefined}
+				/>
 			))}
 		</div>
 	);
