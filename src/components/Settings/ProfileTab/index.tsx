@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useForm, Controller } from "react-hook-form";
@@ -31,7 +31,7 @@ export default function ProfileTab() {
 	const { data: session, update: updateSession } = useSession();
 	const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
-	const fileInputRef = React.useRef<HTMLInputElement>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const updateProfileMutation = useUpdateProfile();
 	const changePasswordMutation = useChangePassword();
@@ -208,18 +208,20 @@ export default function ProfileTab() {
 										/>
 									)}
 								</div>
+								{/* Hidden file input — triggered imperatively via ref */}
 								<input
-									type="file"
 									ref={fileInputRef}
-									onChange={handlePhotoUpload}
+									type="file"
 									accept="image/*"
-									className="hidden"
+									onChange={handlePhotoUpload}
+									className="sr-only"
 									aria-label="Upload Profile Photo"
 								/>
 								<button
 									type="button"
 									onClick={() => fileInputRef.current?.click()}
-									className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full border border-white bg-[#1d4ea8] text-white shadow-sm transition-all hover:bg-[#153a82] active:scale-95"
+									className="absolute -bottom-1 -right-1 flex size-8 cursor-pointer items-center justify-center rounded-full border border-white bg-[#1d4ea8] text-white shadow-sm transition-all hover:bg-[#153a82] active:scale-95"
+									aria-label="Edit profile photo"
 								>
 									<Icon icon="lucide:edit-3" className="size-4" />
 								</button>

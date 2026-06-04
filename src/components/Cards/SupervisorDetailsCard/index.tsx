@@ -4,18 +4,27 @@ import React from "react";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
+import Link from "next/link";
 
 interface SupervisorDetailsCardProps {
+	id?: string;
 	name: string;
 	designation: string;
 	avatar: string;
 }
 
 export default function SupervisorDetailsCard({
+	id,
 	name,
 	designation,
 	avatar,
 }: SupervisorDetailsCardProps) {
+	const buttonEl = (
+		<Button className="h-10 cursor-pointer rounded-xl bg-[#1d4ea8] px-6 text-xs font-bold text-white transition-all hover:bg-[#153a82]">
+			View Profile
+		</Button>
+	);
+
 	return (
 		<div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
 			<div className="flex items-center gap-3">
@@ -32,9 +41,13 @@ export default function SupervisorDetailsCard({
 					</div>
 				</div>
 			</div>
-			<Button className="h-10 rounded-xl bg-[#1d4ea8] px-6 text-xs font-bold text-white transition-all hover:bg-[#153a82]">
-				Manage Profile
-			</Button>
+			{id ? (
+				<Link href={`/supervisor-management/${id}`} passHref>
+					{buttonEl}
+				</Link>
+			) : (
+				buttonEl
+			)}
 		</div>
 	);
 }

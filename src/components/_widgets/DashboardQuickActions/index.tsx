@@ -3,6 +3,9 @@
 import React from "react";
 import Map from "@/components/Map";
 import { useGetPendingKYC } from "@/hooks/useDashboard";
+import { useGetTerritories } from "@/hooks/useTerritory";
+import { useGetAgents } from "@/hooks/useAgent";
+import { useSocketAgentTracking } from "@/hooks/useDashboard/useSocketAgentTracking";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import Empty from "@/components/_atoms/Empty";
 import Link from "next/link";
@@ -11,11 +14,19 @@ export default function DashboardQuickActions() {
 	const { data: kycRes } = useGetPendingKYC();
 	const pendingUsers = kycRes?.data || [];
 
+	const { data: territoriesRes } = useGetTerritories();
+	const zones = territoriesRes?.data || [];
+
+	const { data: agentsRes } = useGetAgents();
+	const agents = agentsRes?.data || [];
+
+	useSocketAgentTracking();
+
 	return (
 		<div className="flex flex-col gap-6 rounded-3xl border border-gray-50 bg-white p-6 shadow-sm lg:rounded-[2.5rem] lg:p-10">
 			<h3 className="text-xl font-black tracking-tight text-gray-900">Live Territory Map</h3>
 			<div className="relative min-h-[300px] flex-1 overflow-hidden rounded-3xl border border-gray-100 bg-[#f4f7fc]">
-				<Map className="size-full" readOnly />
+				<Map className="size-full" readOnly zones={zones} agents={agents} />
 			</div>
 
 			<div className="mt-4 flex min-h-[250px] flex-col border-t border-gray-50 pt-6">

@@ -46,6 +46,8 @@ export type UserProfileData = {
 	createdAt?: string;
 	isOnline?: boolean;
 	lastLogoutTime?: string;
+	lastCheckInTime?: string;
+	territoryId?: any;
 	territoryCount?: number;
 	agentCount?: number;
 	assignedZones?: string;
@@ -54,6 +56,11 @@ export type UserProfileData = {
 		latitude?: number;
 		longitude?: number;
 	} | null;
+	lastKnownLocation?: {
+		latitude: number;
+		longitude: number;
+		lastUpdated?: string;
+	};
 	compliance?: {
 		termsAccepted: boolean;
 		dataProcessingConsent: boolean;

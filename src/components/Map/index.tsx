@@ -8,8 +8,33 @@ import {
 	MarkerF,
 	InfoWindowF,
 	DrawingManager,
+	PolygonF,
 } from "@react-google-maps/api";
-import { toast } from "sonner";
+import type { TerritoryData } from "@/types/territory";
+import type { UserProfileData } from "@/types/profile";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
+
+export interface MapAgent {
+	id?: string;
+	_id?: string;
+	firstName?: string;
+	lastName?: string;
+	name?: string;
+	email?: string;
+	phone?: string;
+	isOnline?: boolean;
+	status?: string;
+	statusColor?: string;
+	lastCheckIn?: string;
+	lastCheckInTime?: string;
+	avatar?: string;
+	territoryId?: string | { _id: string } | null;
+	lastKnownLocation?: {
+		latitude: number;
+		longitude: number;
+		lastUpdated?: string;
+	};
+}
 
 const containerStyle = {
 	width: "100%",
@@ -26,65 +51,145 @@ interface LatLng {
 	lng: number;
 }
 
-interface Zone {
-	id: number;
-	name: string;
-	position: LatLng;
-	color: string;
-}
-
 interface MapProps {
 	className?: string;
 	readOnly?: boolean;
+	zones?: TerritoryData[];
+	selectedZoneId?: string | null;
+	isDrawing?: boolean;
+	setIsDrawing?: (drawing: boolean) => void;
+	onSaveTerritory?: (coords: LatLng[]) => void;
+	agents?: MapAgent[];
 }
 
-export default function Map({ className, readOnly = false }: MapProps) {
+const GOOGLE_MAPS_LIBRARIES: ("drawing" | "places")[] = ["drawing", "places"];
+
+export default function Map({
+	className,
+	readOnly = false,
+	zones = [],
+	selectedZoneId = null,
+	isDrawing = false,
+	setIsDrawing,
+	onSaveTerritory,
+	agents = [],
+}: MapProps) {
 	const { isLoaded, loadError } = useJsApiLoader({
 		id: "google-map-script",
 		googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAP_API || "",
-		libraries: ["drawing", "places"],
+		libraries: GOOGLE_MAPS_LIBRARIES,
 	});
 
-	const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
-	const [isDrawing, setIsDrawing] = useState(false);
-	const [newTerritory, setNewTerritory] = useState<LatLng[] | null>(null);
+	const [selectedMapZone, setSelectedMapZone] = useState<TerritoryData | null>(null);
+	const [selectedAgent, setSelectedAgent] = useState<MapAgent | null>(null);
 
-	const zones = useMemo<Zone[]>(
-		() => [
-			{
-				id: 1,
-				name: "Yaba Zone",
-				position: { lat: 6.5244, lng: 3.3792 },
-				color: "#10b981",
-			},
-			{
-				id: 2,
-				name: "Ikeja Zone",
-				position: { lat: 6.6018, lng: 3.3484 },
-				color: "#f59e0b",
-			},
-			{
-				id: 3,
-				name: "V.I Zone",
-				position: { lat: 6.4281, lng: 3.4244 },
-				color: "#1d4ea8",
-			},
-		],
-		[],
+	// Helper to extract polygon paths from GeoJSON format [longitude, latitude]
+	const getPolygonCoords = useCallback((zone: TerritoryData): LatLng[] => {
+		if (!zone.boundary?.coordinates?.[0]) return [];
+		return zone.boundary.coordinates[0].map((coord) => {
+			const lng = coord[0] !== undefined ? coord[0] : 0;
+			const lat = coord[1] !== undefined ? coord[1] : 0;
+			return { lat, lng };
+		});
+	}, []);
+
+	// Calculate the center centroid of the polygon coordinates
+	const getCentroid = useCallback((coords: LatLng[]): LatLng => {
+		if (coords.length === 0) return center;
+		let latSum = 0;
+		let lngSum = 0;
+		coords.forEach((c) => {
+			latSum += c.lat;
+			lngSum += c.lng;
+		});
+		return {
+			lat: latSum / coords.length,
+			lng: lngSum / coords.length,
+		};
+	}, []);
+
+	// Get active list of zones to display on map
+	const zonesToDraw = useMemo(() => {
+		if (selectedZoneId) {
+			return zones.filter((z) => z._id === selectedZoneId);
+		}
+		return zones;
+	}, [zones, selectedZoneId]);
+
+	const isAgentInAssignedZone = useCallback(
+		(agent: MapAgent): boolean => {
+			if (!agent.lastKnownLocation?.latitude || !agent.lastKnownLocation?.longitude) {
+				return false;
+			}
+
+			// Find the agent's assigned zone
+			const territory = agent.territoryId;
+			let agentZoneId: string | null = null;
+			if (territory) {
+				if (typeof territory === "string") {
+					agentZoneId = territory;
+				} else if (typeof territory === "object" && "_id" in territory) {
+					agentZoneId = territory._id;
+				}
+			}
+			if (!agentZoneId) return false;
+
+			const zone = zones.find((z) => z._id === agentZoneId);
+			if (!zone?.boundary?.coordinates?.[0]) {
+				return false;
+			}
+
+			const x = agent.lastKnownLocation.longitude;
+			const y = agent.lastKnownLocation.latitude;
+			const vs = zone.boundary.coordinates[0]; // Array of [longitude, latitude]
+
+			let inside = false;
+			for (let i = 0, j = vs.length - 1; i < vs.length; ) {
+				const vi = vs[i];
+				const vj = vs[j];
+				if (vi && vj) {
+					const xi = vi[0];
+					const yi = vi[1];
+					const xj = vj[0];
+					const yj = vj[1];
+					if (
+						xi !== undefined &&
+						yi !== undefined &&
+						xj !== undefined &&
+						yj !== undefined
+					) {
+						const intersect =
+							yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+						if (intersect) {
+							inside = !inside;
+						}
+					}
+				}
+				j = i;
+				i += 1;
+			}
+			return inside;
+		},
+		[zones],
 	);
 
-	const onPolygonComplete = useCallback((polygon: google.maps.Polygon) => {
-		const path = polygon.getPath();
-		const coordinates: LatLng[] = [];
-		for (let i = 0; i < path.getLength(); i += 1) {
-			const point = path.getAt(i);
-			coordinates.push({ lat: point.lat(), lng: point.lng() });
-		}
+	const onPolygonComplete = useCallback(
+		(polygon: google.maps.Polygon) => {
+			const path = polygon.getPath();
+			const coordinates: LatLng[] = [];
+			for (let i = 0; i < path.getLength(); i += 1) {
+				const point = path.getAt(i);
+				coordinates.push({ lat: point.lat(), lng: point.lng() });
+			}
 
-		setNewTerritory(coordinates);
-		setIsDrawing(false);
-		// Note: Usually we would show a modal here to name the territory
-	}, []);
+			if (onSaveTerritory) {
+				onSaveTerritory(coordinates);
+			}
+			// Clean up drawn outline from map to let React render it
+			polygon.setMap(null);
+		},
+		[onSaveTerritory],
+	);
 
 	if (loadError) {
 		return (
@@ -95,7 +200,7 @@ export default function Map({ className, readOnly = false }: MapProps) {
 	}
 
 	return (
-		<div className={cn("relative overflow-hidden bg-gray-50", className)}>
+		<div className={cn("relative overflow-hidden bg-gray-50 h-full w-full", className)}>
 			{isLoaded ? (
 				<>
 					<GoogleMap
@@ -115,22 +220,235 @@ export default function Map({ className, readOnly = false }: MapProps) {
 							streetViewControl: false,
 						}}
 					>
-						{zones.map((zone) => (
-							<MarkerF
-								key={zone.id}
-								position={zone.position}
-								onClick={() => setSelectedZone(zone)}
-							/>
-						))}
+						{/* Draw Polygons for Zones */}
+						{zonesToDraw.map((zone) => {
+							const coords = getPolygonCoords(zone);
+							if (coords.length === 0) return null;
+							return (
+								<PolygonF
+									key={zone._id}
+									paths={coords}
+									options={{
+										fillColor: zone.color,
+										fillOpacity: 0.15,
+										strokeColor: zone.color,
+										strokeOpacity: 0.8,
+										strokeWeight: 2,
+									}}
+								/>
+							);
+						})}
 
-						{selectedZone && (
+						{/* Draw Markers at Centroid of Zones */}
+						{zonesToDraw.map((zone) => {
+							const coords = getPolygonCoords(zone);
+							if (coords.length === 0) return null;
+							const centroid = getCentroid(coords);
+							return (
+								<MarkerF
+									key={`zone-pin-${zone._id}`}
+									position={centroid}
+									onClick={() => {
+										setSelectedMapZone(zone);
+										setSelectedAgent(null);
+									}}
+									icon={{
+										path: google.maps.SymbolPath.CIRCLE,
+										scale: 12,
+										fillColor: zone.color,
+										fillOpacity: 0.9,
+										strokeColor: "#ffffff",
+										strokeWeight: 2,
+									}}
+									label={{
+										text: String(zone.assignedAgents?.length || 0),
+										color: "#ffffff",
+										fontSize: "11px",
+										fontWeight: "bold",
+									}}
+								/>
+							);
+						})}
+
+						{/* Draw Markers for Online/Offline Agents */}
+						{agents.map((agent) => {
+							if (
+								!agent.lastKnownLocation?.latitude ||
+								!agent.lastKnownLocation?.longitude
+							) {
+								return null;
+							}
+
+							const { latitude, longitude } = agent.lastKnownLocation;
+							const isOnline = agent.isOnline || false;
+							const isInside = isAgentInAssignedZone(agent);
+
+							let pinUrl = "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"; // Offline
+							if (isOnline) {
+								pinUrl = isInside
+									? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Online & In-Zone
+									: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"; // Online & Out-of-Zone
+							}
+
+							const agentKey = agent._id || agent.id || "";
+
+							return (
+								<MarkerF
+									key={`agent-pin-${agentKey}`}
+									position={{
+										lat: latitude,
+										lng: longitude,
+									}}
+									onClick={() => {
+										setSelectedAgent(agent);
+										setSelectedMapZone(null);
+									}}
+									icon={{
+										url: pinUrl,
+									}}
+								/>
+							);
+						})}
+
+						{/* Info Window for Zones */}
+						{selectedMapZone && (
 							<InfoWindowF
-								position={selectedZone.position}
-								onCloseClick={() => setSelectedZone(null)}
+								position={getCentroid(getPolygonCoords(selectedMapZone))}
+								onCloseClick={() => setSelectedMapZone(null)}
 							>
-								<div className="p-2">
-									<h3 className="font-bold text-gray-900">{selectedZone.name}</h3>
-									<p className="text-xs text-gray-500">Active Territory</p>
+								<div className="min-w-[200px] p-3 text-gray-800">
+									<h3
+										className="text-[14px] font-bold"
+										style={{ color: selectedMapZone.color }}
+									>
+										{selectedMapZone.name}
+									</h3>
+									<p className="mt-1 text-xs text-gray-500">
+										<strong>Supervisor:</strong>{" "}
+										{selectedMapZone.assignedSupervisor
+											? `${selectedMapZone.assignedSupervisor.firstName || ""} ${selectedMapZone.assignedSupervisor.lastName || ""}`.trim()
+											: "None"}
+									</p>
+									{selectedMapZone.assignedSupervisor && (
+										<p className="mt-0.5 text-xs text-gray-500">
+											<strong>Supervisor Status:</strong>{" "}
+											<span
+												className={cn(
+													"font-semibold",
+													selectedMapZone.assignedSupervisor.isOnline
+														? "text-green-600"
+														: "text-orange-500",
+												)}
+											>
+												{selectedMapZone.assignedSupervisor.isOnline
+													? "Online"
+													: "Offline"}
+											</span>
+										</p>
+									)}
+									<p className="mt-0.5 text-xs text-gray-500">
+										<strong>Assigned Agents:</strong>{" "}
+										{selectedMapZone.assignedAgents?.length || 0}
+									</p>
+									{selectedMapZone.assignedAgents &&
+										selectedMapZone.assignedAgents.length > 0 && (
+											<div className="mt-2.5 border-t border-gray-100 pt-2">
+												<strong className="mb-1 block text-[11px] text-gray-400">
+													Assigned Agents Status:
+												</strong>
+												<div className="mt-1 flex flex-wrap gap-1.5">
+													{selectedMapZone.assignedAgents.map(
+														(agent: UserProfileData) => {
+															const fullName =
+																`${agent.firstName || ""} ${agent.lastName || ""}`.trim() ||
+																agent.email ||
+																"Agent";
+															const isOnline =
+																agent.isOnline || false;
+															return (
+																<div
+																	key={agent._id || agent.id}
+																	className={cn(
+																		"relative rounded-full border p-0.5 shadow-sm bg-white",
+																		isOnline
+																			? "border-green-500"
+																			: "border-red-500",
+																	)}
+																	title={`${fullName} (${isOnline ? "Online" : "Offline"})`}
+																>
+																	<DynamicAvatar
+																		name={fullName}
+																		image={agent.avatar}
+																		className="size-6 rounded-full"
+																	/>
+																</div>
+															);
+														},
+													)}
+												</div>
+											</div>
+										)}
+								</div>
+							</InfoWindowF>
+						)}
+
+						{/* Info Window for Agents */}
+						{selectedAgent && (
+							<InfoWindowF
+								position={{
+									lat: selectedAgent.lastKnownLocation?.latitude || 0,
+									lng: selectedAgent.lastKnownLocation?.longitude || 0,
+								}}
+								onCloseClick={() => setSelectedAgent(null)}
+							>
+								<div className="min-w-[180px] p-3 text-gray-800">
+									<h3 className="text-[13px] font-bold">
+										{`${selectedAgent.firstName || ""} ${selectedAgent.lastName || ""}`.trim() ||
+											selectedAgent.name ||
+											selectedAgent.email ||
+											""}
+									</h3>
+									<p className="mt-1 text-xs text-gray-500">
+										<strong>Status:</strong>{" "}
+										<span
+											className={cn(
+												"font-semibold",
+												selectedAgent.isOnline
+													? "text-green-600"
+													: "text-orange-500",
+											)}
+										>
+											{selectedAgent.isOnline ? "Online" : "Offline"}
+										</span>
+									</p>
+									{selectedAgent.isOnline && (
+										<p className="mt-0.5 text-xs text-gray-500">
+											<strong>Zone Check:</strong>{" "}
+											<span
+												className={cn(
+													"font-bold",
+													isAgentInAssignedZone(selectedAgent)
+														? "text-green-600"
+														: "text-red-500",
+												)}
+											>
+												{isAgentInAssignedZone(selectedAgent)
+													? "In Assigned Zone"
+													: "Out of Zone"}
+											</span>
+										</p>
+									)}
+									{(selectedAgent.lastCheckInTime ||
+										selectedAgent.lastCheckIn) && (
+										<p className="mt-0.5 text-xs text-gray-500">
+											<strong>Last Checkin:</strong>{" "}
+											{new Date(
+												selectedAgent.lastCheckInTime ||
+													selectedAgent.lastCheckIn ||
+													"",
+											).toLocaleTimeString()}
+										</p>
+									)}
 								</div>
 							</InfoWindowF>
 						)}
@@ -145,10 +463,10 @@ export default function Map({ className, readOnly = false }: MapProps) {
 										drawingModes: [google.maps.drawing.OverlayType.POLYGON],
 									},
 									polygonOptions: {
-										fillColor: "#2C38B2",
+										fillColor: "#1d4ea8",
 										fillOpacity: 0.3,
 										strokeWeight: 2,
-										strokeColor: "#2C38B2",
+										strokeColor: "#1d4ea8",
 										editable: true,
 										zIndex: 1,
 									},
@@ -157,40 +475,26 @@ export default function Map({ className, readOnly = false }: MapProps) {
 						)}
 					</GoogleMap>
 
-					{/* UI Overlays */}
-					{!readOnly && (
-						<div className="absolute bottom-6 left-6 flex space-x-3">
+					{/* Floating control buttons */}
+					{!readOnly && setIsDrawing && (
+						<div className="absolute bottom-6 left-6 z-10 flex space-x-3">
 							<button
 								onClick={() => setIsDrawing(!isDrawing)}
 								className={cn(
-									"flex items-center px-6 py-3 rounded-full font-bold shadow-lg transition-all",
+									"flex items-center px-6 py-3 rounded-full font-bold shadow-lg transition-all text-sm",
 									isDrawing
 										? "bg-red-500 text-white"
-										: "bg-primary text-white hover:bg-secondary",
+										: "bg-[#1d4ea8] text-white hover:bg-[#153a82]",
 								)}
 							>
 								{isDrawing ? "Cancel Drawing" : "Draw New Territory"}
 							</button>
-
-							{newTerritory && (
-								<button
-									onClick={() => {
-										toast.success(
-											"Territory coordinates captured! Ready to save to backend.",
-										);
-										setNewTerritory(null);
-									}}
-									className="bg-accent flex items-center rounded-full px-6 py-3 font-bold text-white shadow-lg"
-								>
-									Save Territory
-								</button>
-							)}
 						</div>
 					)}
 				</>
 			) : (
 				<div className="flex h-full animate-pulse items-center justify-center bg-gray-100">
-					<p className="font-medium text-gray-400">Initializing Google Maps...</p>
+					<p className="text-sm font-medium text-gray-400">Initializing Google Maps...</p>
 				</div>
 			)}
 

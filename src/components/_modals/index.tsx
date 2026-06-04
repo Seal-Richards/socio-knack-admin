@@ -31,6 +31,12 @@ export default function Modal({
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<DialogContent
+				onInteractOutside={(e) => {
+					const target = e.target as HTMLElement;
+					if (target?.closest(".pac-container")) {
+						e.preventDefault();
+					}
+				}}
 				className={cn(
 					"w-full border-none p-0 overflow-hidden rounded-[2rem] max-h-[90vh] flex flex-col bg-white",
 					!hasCustomMaxWidth && "sm:max-w-[500px]",

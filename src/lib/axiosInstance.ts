@@ -6,6 +6,7 @@ import axios, { type AxiosError } from "axios";
 import { getAuthToken, clearAuth } from "@/utils/auth";
 import { toast } from "sonner";
 import env from "@src/env";
+import { signOut } from "next-auth/react";
 
 const axiosInstance = axios.create({
 	baseURL: env.NEXT_PUBLIC_ADMIN_API_BASE_URL,
@@ -25,17 +26,26 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
 	(response) => response,
-	(error: AxiosError<{ message?: string }>) => {
+	async (error: AxiosError<{ message?: string }>) => {
 		const errResponse = error.response;
 
-		// Only handle 401 if token exists (i.e., user is logged in)
-		const tokenExists = !!localStorage.getItem("token"); // same as AUTH_TOKEN_KEY
-		if (errResponse?.status === 401 && tokenExists) {
+		const isAuthRoute =
+			error.config?.url?.includes("/auth/login") ||
+			error.config?.url?.includes("/auth/verify-email") ||
+			error.config?.url?.includes("/auth/resend-otp") ||
+			error.config?.url?.includes("/auth/forgot-password") ||
+			error.config?.url?.includes("/auth/forgot-verify-otp") ||
+			error.config?.url?.includes("/auth/reset-password") ||
+			error.config?.url?.includes("/auth/verify-invite");
+
+		if (errResponse?.status === 401 && !isAuthRoute) {
 			const errorMessage =
 				errResponse.data?.message ?? "Session expired, please log in again.";
 			clearAuth();
 			toast.error(errorMessage);
-			if (typeof window !== "undefined") window.location.href = "/login";
+			if (typeof window !== "undefined") {
+				await signOut({ redirect: true, callbackUrl: "/login" });
+			}
 		}
 
 		return Promise.reject(error);

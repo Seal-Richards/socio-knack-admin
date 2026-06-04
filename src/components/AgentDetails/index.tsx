@@ -4,6 +4,7 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useGetAgentById } from "@/hooks/useAgent";
+import { useGetTerritories } from "@/hooks/useTerritory";
 import ProfileHeader from "./ProfileHeader";
 import ProfileSettings from "./ProfileSettings";
 import PerformanceMetrics from "./PerformanceMetrics";
@@ -15,8 +16,20 @@ interface AgentDetailsProps {
 }
 
 export default function AgentDetails({ id }: AgentDetailsProps) {
-	const { data: agentRes, isLoading } = useGetAgentById(id);
+	const { data: agentRes, isLoading: loadingAgent } = useGetAgentById(id);
+	const { data: territoriesRes, isLoading: loadingTerritories } = useGetTerritories();
+
+	const isLoading = loadingAgent || loadingTerritories;
 	const rawAgent = agentRes?.data;
+	const territories = territoriesRes?.data || [];
+
+	const agentTerritories = rawAgent
+		? territories.filter((t) =>
+				t.assignedAgents?.some(
+					(a) => (a._id || a.id) === rawAgent._id || (a._id || a.id) === rawAgent.id,
+				),
+			)
+		: [];
 
 	if (isLoading) {
 		return (
@@ -90,7 +103,7 @@ export default function AgentDetails({ id }: AgentDetailsProps) {
 				</TabsContent>
 
 				<TabsContent value="performance-metrics" className="mt-0 outline-none">
-					<PerformanceMetrics metrics={rawAgent.metrics} />
+					<PerformanceMetrics metrics={rawAgent.metrics} territories={agentTerritories} />
 				</TabsContent>
 
 				<TabsContent value="kyc-status" className="mt-0 outline-none">

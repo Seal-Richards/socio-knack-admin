@@ -78,7 +78,13 @@ export default function TaskListItem({
 							{task.subLocation}
 						</span>
 						<span className="text-[11px] font-medium text-gray-500">
-							{task.distance}
+							{(() => {
+								const d = task.distance;
+								if (!d || d === "--" || d === "N/A" || d.trim() === "")
+									return "N/A";
+								if (d.toLowerCase().includes("km")) return d;
+								return `${d} km`;
+							})()}
 						</span>
 					</div>
 				</div>

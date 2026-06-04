@@ -6,6 +6,9 @@ import { Icon } from "@iconify/react";
 import Map from "@/components/Map";
 import Empty from "@/components/_atoms/Empty";
 import { type UserProfileData } from "@/types/profile";
+import { useGetTerritories } from "@/hooks/useTerritory";
+import { useGetAgents } from "@/hooks/useAgent";
+import { useSocketAgentTracking } from "@/hooks/useDashboard/useSocketAgentTracking";
 
 interface TerritoryAndTeamProps {
 	supervisor: {
@@ -16,6 +19,32 @@ interface TerritoryAndTeamProps {
 export default function TerritoryAndTeam({ supervisor }: TerritoryAndTeamProps) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const agents = supervisor?.raw?.agents || [];
+
+	const { data: territoriesRes } = useGetTerritories();
+	const zones = territoriesRes?.data || [];
+
+	const { data: agentsRes } = useGetAgents();
+	const agentsData = agentsRes?.data || [];
+
+	useSocketAgentTracking();
+
+	const supervisorId = supervisor?.raw?._id || supervisor?.raw?.id;
+	const supervisorTerritories = zones.filter(
+		(t) =>
+			t.assignedSupervisor?._id === supervisorId ||
+			t.assignedSupervisor?.id === supervisorId ||
+			t.createdBy?._id === supervisorId ||
+			t.createdBy?.id === supervisorId,
+	);
+	const supervisorTerritoryIds = new Set(supervisorTerritories.map((t) => t._id));
+
+	const liveMapAgents = agentsData.filter((agent) => {
+		const agentTerritoryId =
+			typeof agent.territoryId === "object" && agent.territoryId !== null
+				? agent.territoryId._id
+				: agent.territoryId;
+		return agentTerritoryId && supervisorTerritoryIds.has(agentTerritoryId);
+	});
 
 	const filteredAgents = agents.filter(
 		(agent) =>
@@ -35,7 +64,12 @@ export default function TerritoryAndTeam({ supervisor }: TerritoryAndTeamProps) 
 						Live Territory Map
 					</h4>
 					<div className="relative min-h-[300px] w-full flex-1 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
-						<Map className="size-full" readOnly />
+						<Map
+							className="size-full"
+							readOnly
+							zones={supervisorTerritories}
+							agents={liveMapAgents as any[]}
+						/>
 					</div>
 				</div>
 
@@ -119,6 +153,86 @@ export default function TerritoryAndTeam({ supervisor }: TerritoryAndTeamProps) 
 						</div>
 					</div>
 				</div>
+			</div>
+
+			<div className="h-px w-full bg-gray-100" />
+
+			<div className="flex flex-col gap-6">
+				<h4 className="text-[16px] font-bold text-gray-800 sm:text-[18px]">
+					Supervised Zones of Operation
+				</h4>
+				{supervisorTerritories.length === 0 ? (
+					<div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-100 bg-gray-50/50 p-8 text-center">
+						<Icon
+							icon="solar:map-arrow-square-bold-duotone"
+							className="size-10 text-gray-300"
+						/>
+						<p className="mt-2 text-xs font-bold text-gray-400">
+							No zones assigned or created yet
+						</p>
+					</div>
+				) : (
+					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+						{supervisorTerritories.map((zone) => {
+							const supervisorName = zone.assignedSupervisor
+								? `${zone.assignedSupervisor.firstName || ""} ${zone.assignedSupervisor.lastName || ""}`.trim()
+								: "No Supervisor";
+							return (
+								<div
+									key={zone._id}
+									className="group flex flex-col justify-between rounded-2xl border border-gray-100 bg-white p-5 transition-all duration-200 hover:-translate-y-1 hover:border-gray-200 hover:shadow-md"
+								>
+									<div>
+										<div className="flex items-center gap-2.5">
+											<span
+												className="size-3 rounded-full border border-white shadow-sm"
+												style={{ backgroundColor: zone.color || "#1d4ea8" }}
+											/>
+											<h5 className="font-bold text-gray-900 transition-colors group-hover:text-[#1d4ea8]">
+												{zone.name}
+											</h5>
+										</div>
+										<p className="mt-1.5 line-clamp-2 text-xs font-medium text-gray-500">
+											{zone.description ||
+												"Active operations and coverage zone."}
+										</p>
+									</div>
+
+									<div className="mt-5 flex items-center justify-between border-t border-gray-50 pt-4">
+										{zone.assignedSupervisor ? (
+											<div className="flex items-center gap-2">
+												<DynamicAvatar
+													name={supervisorName}
+													image={zone.assignedSupervisor.avatar}
+													className="size-7 rounded-full border border-gray-100"
+												/>
+												<div>
+													<p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+														Supervisor
+													</p>
+													<p className="text-[11px] font-bold text-gray-700">
+														{supervisorName}
+													</p>
+												</div>
+											</div>
+										) : (
+											<span className="text-[11px] font-semibold text-gray-400">
+												No Supervisor
+											</span>
+										)}
+										<div className="flex items-center gap-1 text-[11px] font-bold text-gray-500">
+											<Icon
+												icon="solar:users-group-two-round-bold"
+												className="size-4 text-gray-400"
+											/>
+											<span>{zone.assignedAgents?.length || 0} Agents</span>
+										</div>
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				)}
 			</div>
 		</div>
 	);

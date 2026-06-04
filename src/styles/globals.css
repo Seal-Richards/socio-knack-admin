@@ -109,3 +109,8 @@
 		@apply text-[15px] leading-relaxed text-muted-foreground font-medium;
 	}
 }
+
+.pac-container {
+	pointer-events: auto !important;
+	z-index: 9999 !important;
+}

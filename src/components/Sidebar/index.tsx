@@ -4,21 +4,31 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner"; // Import sonner
 import { clearAuth } from "@/utils/auth"; // Import your existing auth util
 import { MENU_ITEMS, BOTTOM_MENU_ITEMS, LOGOUT_ITEM } from "@/constants/SidebarMenuItems";
 import cn from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { signOut } from "next-auth/react";
+import { teamRequests } from "@/lib/requests/team";
 
 export default function Sidebar({ className }: { className?: string }) {
 	const pathname = usePathname();
-	const router = useRouter();
+	const queryClient = useQueryClient();
 
-	const handleLogout = () => {
-		clearAuth();
-		toast.success("Logged out successfully");
-		router.push("/");
+	const handleLogout = async () => {
+		try {
+			await teamRequests.logout();
+		} catch (error) {
+			console.error("Backend logout error:", error);
+		} finally {
+			clearAuth();
+			queryClient.clear();
+			toast.success("Logged out successfully");
+			await signOut({ callbackUrl: "/login" });
+		}
 	};
 
 	const NavItem = ({ item, isLogout = false }: { item: any; isLogout?: boolean }) => {

@@ -12,6 +12,7 @@ import {
 } from "@/components/Tables/columns/agentManagementColumns";
 import { STATUS_OPTIONS } from "@/constants/agentManagement";
 import { useGetAgents } from "@/hooks/useAgent";
+import { useGetTerritories } from "@/hooks/useTerritory";
 import Pagination from "@/components/_atoms/Pagination";
 import TableLayoutWrapper from "../TableLayoutWrapper";
 
@@ -23,13 +24,27 @@ export default function AgentManagementList() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
 
-	const { data: agentsRes, isLoading } = useGetAgents();
+	const { data: agentsRes, isLoading: loadingAgents } = useGetAgents();
+	const { data: territoriesRes, isLoading: loadingTerritories } = useGetTerritories();
+
+	const isLoading = loadingAgents || loadingTerritories;
+	const territories = territoriesRes?.data || [];
 
 	const formattedAgents: Agent[] = (agentsRes?.data || []).map((agent) => {
 		const name = `${agent.firstName || ""} ${agent.lastName || ""}`.trim();
 
-		// Formatted territory
-		const territory = agent.territoryId?.name || "Unassigned";
+		// Calculate zones from territories list
+		const agentId = agent._id || agent.id;
+		const agentTerritories = territories.filter((t) =>
+			t.assignedAgents?.some((a) => (a._id || a.id) === agentId),
+		);
+
+		let territory = "Unassigned";
+		if (agentTerritories.length === 1) {
+			territory = agentTerritories[0]?.name || "Unnamed Zone";
+		} else if (agentTerritories.length > 1) {
+			territory = `${agentTerritories.length} Zones`;
+		}
 
 		// Formatted last activity date
 		let lastActivity = "No activity yet";
@@ -47,7 +62,7 @@ export default function AgentManagementList() {
 		}
 
 		return {
-			id: agent._id || agent.id,
+			id: agentId,
 			name,
 			email: agent.email || "",
 			territory,
@@ -69,10 +84,17 @@ export default function AgentManagementList() {
 			selectedStatus === "all" ||
 			u.profileStatus.toLowerCase() === selectedStatus.toLowerCase();
 
+		// Find actual territories this agent is assigned to for matching
+		const agentId = u.id;
+		const agentTerrs = territories.filter((t) =>
+			t.assignedAgents?.some((a) => (a._id || a.id) === agentId),
+		);
+
 		const matchesTerritory =
 			!selectedTerritory ||
 			selectedTerritory === "all" ||
-			u.territory.toLowerCase() === selectedTerritory.toLowerCase();
+			(selectedTerritory === "Unassigned" && agentTerrs.length === 0) ||
+			agentTerrs.some((t) => t.name.toLowerCase() === selectedTerritory.toLowerCase());
 
 		return matchesSearch && matchesStatus && matchesTerritory;
 	});
@@ -82,13 +104,11 @@ export default function AgentManagementList() {
 		filteredTeam = [...filteredTeam].sort((a, b) => a.name.localeCompare(b.name));
 	}
 
-	// Dynamically build territory list from loaded agents
-	const uniqueTerritories = Array.from(
-		new Set((agentsRes?.data || []).map((agent) => agent.territoryId?.name || "Unassigned")),
-	);
+	// Dynamically build territory list from territories API list
 	const territoryOptions = [
 		{ label: "All Territories", value: "all" },
-		...uniqueTerritories.map((t) => ({ label: t, value: t })),
+		...territories.map((t) => ({ label: t.name, value: t.name })),
+		{ label: "Unassigned", value: "Unassigned" },
 	];
 
 	// Pagination Math

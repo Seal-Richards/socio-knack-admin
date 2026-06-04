@@ -69,7 +69,7 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 			}),
 			location: territoryId?.name || "Unknown Zone",
 			subLocation: location?.address || "N/A",
-			distance: (visit.distanceFromAgent as string) || "0km",
+			distance: (visit.distanceFromAgent as string) || "",
 			status: visit.status as string,
 			raw: visit,
 		};

@@ -1,91 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import Table from "@/components/Tables";
-import { type ColumnDef } from "@tanstack/react-table";
+import { assignedAgentColumns } from "@/components/Tables/columns/assignedAgentColumns";
 import Pagination from "@/components/_atoms/Pagination";
+import type { UserProfileData } from "@/types/profile";
 
-interface Agent {
-	id: string;
-	name: string;
-	avatar: string;
-	status: "Active" | "Idle";
-	lastCheckIn: string;
+interface AssignedAgentListProps {
+	agents: UserProfileData[];
 }
 
-const agents: Agent[] = [
-	{
-		id: "1",
-		name: "Sharon C.",
-		avatar: "/assets/images/admin-avatar.png",
-		status: "Active",
-		lastCheckIn: "5m ago @Total Ikeja",
-	},
-	{
-		id: "2",
-		name: "Adewole G.",
-		avatar: "/assets/images/admin-avatar.png",
-		status: "Idle",
-		lastCheckIn: "4m ago @Mary Land",
-	},
-	{
-		id: "3",
-		name: "Kolawole J.",
-		avatar: "/assets/images/admin-avatar.png",
-		status: "Active",
-		lastCheckIn: "23m ago @Total Ikeja",
-	},
-	{
-		id: "4",
-		name: "Kelvin O.",
-		avatar: "/assets/images/admin-avatar.png",
-		status: "Idle",
-		lastCheckIn: "14m ago @Total Ikeja",
-	},
-];
-
-const columns: ColumnDef<Agent>[] = [
-	{
-		accessorKey: "name",
-		header: "Agent Name",
-		cell: ({ row }) => (
-			<div className="flex items-center gap-3">
-				<DynamicAvatar
-					name={row.original.name}
-					image={row.original.avatar}
-					className="size-8 shrink-0 rounded-full"
-				/>
-				<span className="text-[13px] font-bold text-gray-700">{row.original.name}</span>
-			</div>
-		),
-	},
-	{
-		accessorKey: "status",
-		header: "Status",
-		cell: ({ row }) => (
-			<div className="flex items-center gap-2">
-				<div
-					className={`size-2 rounded-full ${
-						row.original.status === "Active" ? "bg-[#10b981]" : "bg-[#f59e0b]"
-					}`}
-				/>
-				<span className="text-[13px] font-medium text-gray-600">{row.original.status}</span>
-			</div>
-		),
-	},
-	{
-		accessorKey: "lastCheckIn",
-		header: "Last Check-in",
-		cell: ({ row }) => (
-			<span className="text-[13px] font-medium text-gray-500">
-				{row.original.lastCheckIn}
-			</span>
-		),
-	},
-];
-
-export default function AssignedAgentList() {
+export default function AssignedAgentList({ agents = [] }: AssignedAgentListProps) {
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
 
@@ -98,7 +23,7 @@ export default function AssignedAgentList() {
 	return (
 		<>
 			<Table
-				columns={columns}
+				columns={assignedAgentColumns}
 				data={paginatedAgents}
 				className="mt-4"
 				emptyState={{

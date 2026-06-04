@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import Tabs from "@/components/Tabs";
 import OrganisationTab from "./OrganisationTab";
 import ProfileTab from "./ProfileTab";
@@ -15,7 +16,25 @@ const SETTINGS_TABS = [
 ];
 
 export default function Settings() {
-	const [activeTab, setActiveTab] = useState("organisation");
+	const { data: session } = useSession();
+	const role = session?.user?.role;
+
+	const filteredTabs = useMemo(() => {
+		if (role === "supervisor" || role === "staffs") {
+			return SETTINGS_TABS.filter((tab) => tab.id === "profile");
+		}
+		return SETTINGS_TABS;
+	}, [role]);
+
+	const [activeTab, setActiveTab] = useState("profile");
+
+	useEffect(() => {
+		if (role === "supervisor" || role === "staffs") {
+			setActiveTab("profile");
+		} else {
+			setActiveTab("organisation");
+		}
+	}, [role]);
 
 	const renderTabContent = () => {
 		switch (activeTab) {
@@ -28,7 +47,11 @@ export default function Settings() {
 			case "billing":
 				return <BillingsConfigTab />;
 			default:
-				return <OrganisationTab />;
+				return role === "supervisor" || role === "staffs" ? (
+					<ProfileTab />
+				) : (
+					<OrganisationTab />
+				);
 		}
 	};
 
@@ -37,7 +60,7 @@ export default function Settings() {
 			{/* Tabs Navigation */}
 			<div className="flex flex-col gap-8">
 				<Tabs
-					tabs={SETTINGS_TABS}
+					tabs={filteredTabs}
 					activeTab={activeTab}
 					onChange={setActiveTab}
 					className="w-full border-b border-gray-100 pb-0"

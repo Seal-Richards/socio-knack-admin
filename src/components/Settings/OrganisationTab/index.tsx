@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import Image from "next/image";
 import { useForm, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -39,8 +39,6 @@ interface OrganisationFormValues {
 }
 
 export default function OrganisationTab() {
-	const fileInputRef = useRef<HTMLInputElement>(null);
-
 	const { data: settingsRes, isLoading, refetch } = useGetBusinessSettings();
 	const updateSettingsMutation = useUpdateBusinessSettings();
 
@@ -212,19 +210,18 @@ export default function OrganisationTab() {
 							</div>
 							<input
 								type="file"
-								ref={fileInputRef}
+								id="company-logo-upload"
 								onChange={handleLogoUpload}
 								accept="image/*"
-								className="hidden"
+								className="sr-only"
 								aria-label="Upload Company Logo"
 							/>
-							<button
-								type="button"
-								onClick={() => fileInputRef.current?.click()}
-								className="flex size-11 items-center justify-center rounded-xl border border-gray-100 text-[#1d4ea8] transition-all hover:bg-gray-50 active:scale-95"
+							<label
+								htmlFor="company-logo-upload"
+								className="flex size-11 cursor-pointer items-center justify-center rounded-xl border border-gray-100 text-[#1d4ea8] transition-all hover:bg-gray-50 active:scale-95"
 							>
 								<Icon icon="lucide:edit-3" className="size-5" />
-							</button>
+							</label>
 						</div>
 					</div>
 
