@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Icon } from "@iconify/react";
 import { toast } from "sonner";
 import Modal from "@/components/_modals";
+import PricingModal from "@/components/_modals/PricingModal";
 import { useGetBusinessSettings, useUpdateBusinessIncentive } from "@/hooks/useBusiness";
 import { useGetWalletBalance, useActivateWallet } from "@/hooks/useWallet";
 import {
@@ -33,6 +34,7 @@ export default function BillingsConfigTab() {
 
 	// Wallet activation modal state
 	const [isActivateModalOpen, setIsActivateModalOpen] = useState(false);
+	const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 	const [bvn, setBvn] = useState("");
 	const [bvnError, setBvnError] = useState("");
 
@@ -170,6 +172,7 @@ export default function BillingsConfigTab() {
 					<div className="flex justify-end pt-4">
 						<Button
 							variant="outline"
+							onClick={() => setIsPricingModalOpen(true)}
 							className="h-11 rounded-xl border-gray-100 bg-white font-bold text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:text-gray-800 active:scale-95"
 						>
 							Upgrade Plan
@@ -365,6 +368,12 @@ export default function BillingsConfigTab() {
 					</div>
 				</form>
 			</Modal>
+
+			<PricingModal
+				isOpen={isPricingModalOpen}
+				onClose={() => setIsPricingModalOpen(false)}
+				currentPlan={business?.subscriptionPlan}
+			/>
 		</div>
 	);
 }

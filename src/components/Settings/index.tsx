@@ -47,7 +47,7 @@ export default function Settings() {
 
 	const tabsWithDisabled = useMemo(() => {
 		return filteredTabs.map((tab) => {
-			if (shouldLockSettings && tab.id !== "organisation") {
+			if (shouldLockSettings && tab.id !== "organisation" && tab.id !== "billing") {
 				return { ...tab, disabled: true };
 			}
 			return tab;

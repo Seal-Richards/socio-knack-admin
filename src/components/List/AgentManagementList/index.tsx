@@ -183,7 +183,7 @@ export default function AgentManagementList() {
 
 			<Button className="h-11 w-full gap-2 rounded-xl bg-[#1d4ea8] px-6 text-[14px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95 lg:w-auto">
 				<Icon icon="solar:export-bold" className="size-4 text-white" />
-				Export Active List
+				Export
 			</Button>
 		</div>
 	);
