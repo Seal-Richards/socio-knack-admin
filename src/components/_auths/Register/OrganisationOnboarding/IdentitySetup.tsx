@@ -10,6 +10,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { adminIdentitySchema, type AdminIdentityFormData } from "@/schemas/auth";
 import { useRegisterAdmin } from "@/hooks/useAuth";
 import { authRequests } from "@/lib/requests/auth";
+import { businessRequests } from "@/lib/requests/business";
+import { profileRequests } from "@/lib/requests/profile";
 import { toast } from "sonner";
 import StepProgressBar from "../Shared/StepProgressBar";
 
@@ -56,24 +58,126 @@ export default function IdentitySetup({
 
 	const onSubmit = async (data: AdminIdentityFormData) => {
 		try {
-			// 1. Check if email is already verified
-			const emailCheck = await authRequests.checkEmail(data.email);
-			if (emailCheck.success && emailCheck.data?.exists) {
-				if (emailCheck.data.isVerified && emailCheck.data.role === "admin") {
-					// Automatically log them in using password to bypass OTP
-					const loginRes = await authRequests.login({
-						email: data.email,
-						password: data.password,
-					});
-					if (loginRes.success && loginRes.data?.token) {
-						toast.success("Email already verified. Resuming your setup.");
+			type CheckEmailResponse = {
+				success: boolean;
+				exists: boolean;
+				isVerified: boolean;
+				role: string | null;
+			};
+			type LoginResponse = {
+				success: boolean;
+				message: string;
+				token?: string;
+				user?: any;
+				otpSent?: boolean;
+				data?: {
+					token?: string;
+					user?: any;
+					otpSent?: boolean;
+				};
+			};
+
+			// 1. Check if email is already verified or registered
+			const emailCheck = (await authRequests.checkEmail(
+				data.email,
+			)) as unknown as CheckEmailResponse;
+			if (emailCheck.success && emailCheck.exists) {
+				if (emailCheck.role === "admin") {
+					if (emailCheck.isVerified) {
+						// Automatically log them in using password to bypass OTP
+						try {
+							const loginRes = (await authRequests.login({
+								email: data.email,
+								password: data.password,
+							})) as unknown as LoginResponse;
+							const token = loginRes.token || loginRes.data?.token;
+							if (loginRes.success && token) {
+								toast.success("Email already verified. Resuming your setup.");
+								if (typeof window !== "undefined") {
+									localStorage.setItem("token", token);
+									localStorage.setItem("register_email", data.email);
+								}
+
+								let targetStep = 3;
+								try {
+									const profileRes = await profileRequests.getMe();
+									const business = profileRes?.data?.business;
+									if (business) {
+										const settingsRes = await businessRequests.getSettings();
+										const settings = settingsRes?.data;
+										if (settings) {
+											type OnboardingBusinessData = {
+												corporateDocuments?: {
+													cacCertificate?: string | null;
+													taxIdCertificate?: string | null;
+													utilityBill?: string | null;
+												} | null;
+												fincraAccountNumber?: string | null;
+												subscriptionStatus?: string | null;
+												hasBankDetails?: boolean;
+											};
+											const settingsObj =
+												settings as unknown as OnboardingBusinessData;
+											const docs = settingsObj.corporateDocuments || {};
+											const hasOwnerId =
+												!!profileRes?.data?.kycDocuments?.idFront;
+
+											if (!hasOwnerId) {
+												targetStep = 3;
+											} else if (
+												!docs.cacCertificate ||
+												!docs.taxIdCertificate ||
+												!docs.utilityBill
+											) {
+												targetStep = 4;
+											} else if (
+												!settingsObj.fincraAccountNumber &&
+												!settingsObj.hasBankDetails
+											) {
+												targetStep = 5;
+											} else if (
+												settingsObj.subscriptionStatus !== "active"
+											) {
+												targetStep = 6;
+											} else {
+												targetStep = 7;
+											}
+										}
+									}
+								} catch (err) {
+									console.error("Failed to determine continuation step:", err);
+								}
+
+								// Save data to parent state & skip OTP straight to detected step
+								onNext(data);
+								onSkipToStep(targetStep);
+								return;
+							}
+							toast.error(
+								"Incorrect password for this registered email. Please enter the correct password to resume setup.",
+							);
+							return;
+						} catch (loginErr) {
+							toast.error(
+								"Incorrect password for this registered email. Please enter the correct password to resume setup.",
+							);
+							return;
+						}
+					}
+					// Email is registered but NOT verified yet. Send OTP and redirect to step 2
+					try {
+						await authRequests.resendOtp({ email: data.email });
+						toast.success(
+							"Registration pending email verification. Resending verification code.",
+						);
 						if (typeof window !== "undefined") {
-							localStorage.setItem("token", loginRes.data.token);
 							localStorage.setItem("register_email", data.email);
 						}
-						// Save data to parent state & skip OTP straight to step 3 (Ownership Verification)
 						onNext(data);
-						onSkipToStep(3);
+						onSkipToStep(2);
+						return;
+					} catch (resendErr) {
+						toast.error("Verification code could not be sent. Please try again.");
 						return;
 					}
 				}

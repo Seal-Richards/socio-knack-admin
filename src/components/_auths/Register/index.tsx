@@ -6,9 +6,11 @@ import Image from "next/image";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { useVerifyInvite } from "@/hooks/useAuth";
+import { businessRequests } from "@/lib/requests/business";
+import { profileRequests } from "@/lib/requests/profile";
+import type { RegisterSupervisorPayload } from "@/types/auth";
 
 // Phase 1: Admin & Organization Setup (Steps 1-6)
-import type { RegisterSupervisorPayload } from "@/types/auth";
 import AdminIdentitySetup from "./OrganisationOnboarding/IdentitySetup";
 import AdminOwnershipVerification from "./OrganisationOnboarding/OwnershipVerification";
 import AdminOrganisationSetup from "./OrganisationOnboarding/OrganisationSetup";
@@ -113,12 +115,77 @@ export default function Register() {
 		} else {
 			const savedAdminStep = sessionStorage.getItem("onboarding_admin_step");
 			const savedAdminData = sessionStorage.getItem("onboarding_admin_data");
+			const storedToken =
+				typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
 			if (urlStep) {
 				setCurrentStep(parseInt(urlStep, 10));
+			} else if (storedToken) {
+				// We have a token. Let's auto-resolve step resumption from DB to avoid session storage stale step
+				(async () => {
+					try {
+						// Temporarily set a step from sessionStorage while we fetch DB (so we don't flash step 1 if we were on a saved step)
+						if (savedAdminStep) {
+							setCurrentStep(parseInt(savedAdminStep, 10));
+						} else {
+							setCurrentStep(3); // Default for logged-in user
+						}
+
+						const profileRes = await profileRequests.getMe();
+						const business = profileRes?.data?.business;
+						if (business) {
+							const settingsRes = await businessRequests.getSettings();
+							const settings = settingsRes?.data;
+							if (settings) {
+								type OnboardingBusinessData = {
+									corporateDocuments?: {
+										cacCertificate?: string | null;
+										taxIdCertificate?: string | null;
+										utilityBill?: string | null;
+									} | null;
+									fincraAccountNumber?: string | null;
+									subscriptionStatus?: string | null;
+									hasBankDetails?: boolean;
+								};
+								const settingsObj = settings as unknown as OnboardingBusinessData;
+								const docs = settingsObj.corporateDocuments || {};
+								let targetStep = 3;
+								const hasOwnerId = !!profileRes?.data?.kycDocuments?.idFront;
+
+								if (!hasOwnerId) {
+									targetStep = 3;
+								} else if (
+									!docs.cacCertificate ||
+									!docs.taxIdCertificate ||
+									!docs.utilityBill
+								) {
+									targetStep = 4;
+								} else if (
+									!settingsObj.fincraAccountNumber &&
+									!settingsObj.hasBankDetails
+								) {
+									targetStep = 5;
+								} else if (settingsObj.subscriptionStatus !== "active") {
+									targetStep = 6;
+								} else {
+									targetStep = 7;
+								}
+								setCurrentStep(targetStep);
+							}
+						} else {
+							setCurrentStep(3);
+						}
+					} catch (err) {
+						console.error("Failed to auto-resolve progress on mount:", err);
+						if (savedAdminStep) {
+							setCurrentStep(parseInt(savedAdminStep, 10));
+						}
+					}
+				})().catch(() => undefined);
 			} else if (savedAdminStep) {
 				setCurrentStep(parseInt(savedAdminStep, 10));
 			}
+
 			if (savedAdminData) {
 				try {
 					setAdminData(JSON.parse(savedAdminData) as typeof adminData);
@@ -210,7 +277,7 @@ export default function Register() {
 	const invitedRole =
 		inviteInfo?.role === "staff" ? `Staff (${inviteInfo.position})` : "Supervisor";
 
-	const isOnSuccessStep = isInvitedFlow ? onboardStep === totalOnboardSteps : currentStep === 6;
+	const isOnSuccessStep = isInvitedFlow ? onboardStep === totalOnboardSteps : currentStep === 7;
 	let containerMaxWidth = "max-w-3xl";
 	if (!isOnSuccessStep && currentStep === 6) {
 		containerMaxWidth = "max-w-6xl";
