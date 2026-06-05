@@ -6,6 +6,9 @@ import type {
 	BusinessSettingsData,
 	UpdateBusinessSettingsPayload,
 	UpdateBusinessIncentivePayload,
+	SetupBusinessPayload,
+	LinkBankPayload,
+	InitializeSubscriptionPayload,
 } from "@/types/business";
 
 export const businessRequests = {
@@ -33,6 +36,48 @@ export const businessRequests = {
 			"/admin/business/incentive",
 			body,
 			"Failed to update incentive configuration.",
+		);
+	},
+
+	async setupBusiness(body: SetupBusinessPayload): Promise<ApiResponse<any>> {
+		return apiClient.post<ApiResponse<any>, SetupBusinessPayload>(
+			"/admin/setup-business",
+			body,
+			"Failed to set up business details.",
+		);
+	},
+
+	async uploadBusinessKyc(formData: FormData): Promise<ApiResponse<any>> {
+		return apiClient.post<ApiResponse<any>, FormData>(
+			"/admin/kyc/upload",
+			formData,
+			"Failed to upload business KYC documents.",
+		);
+	},
+
+	async uploadOwnerId(formData: FormData): Promise<ApiResponse<any>> {
+		return apiClient.post<ApiResponse<any>, FormData>(
+			"/admin/kyc/owner-upload",
+			formData,
+			"Failed to upload owner ID document.",
+		);
+	},
+
+	async linkBank(body: LinkBankPayload): Promise<ApiResponse<any>> {
+		return apiClient.post<ApiResponse<any>, LinkBankPayload>(
+			"/admin/link-bank",
+			body,
+			"Failed to link settlement bank details.",
+		);
+	},
+
+	async initializeSubscription(
+		body: InitializeSubscriptionPayload,
+	): Promise<ApiResponse<{ link: string }>> {
+		return apiClient.post<ApiResponse<{ link: string }>, InitializeSubscriptionPayload>(
+			"/admin/subscription/initialize",
+			body,
+			"Failed to initialize subscription payment.",
 		);
 	},
 };

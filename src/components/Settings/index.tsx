@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import Tabs from "@/components/Tabs";
+import { useGetMe } from "@/hooks/useProfile";
 import OrganisationTab from "./OrganisationTab";
 import ProfileTab from "./ProfileTab";
 import AccessTab from "./AccessTab";
@@ -19,6 +20,24 @@ export default function Settings() {
 	const { data: session } = useSession();
 	const role = session?.user?.role;
 
+	const { data: meRes } = useGetMe();
+	const business = meRes?.data?.business;
+
+	const shouldLockSettings = useMemo(() => {
+		if (role !== "admin" || !business) return false;
+
+		const createdAtDate = business.createdAt ? new Date(business.createdAt) : null;
+		const isTrialActive = createdAtDate
+			? new Date().getTime() - createdAtDate.getTime() < 14 * 24 * 60 * 60 * 1000
+			: false;
+
+		const isSubscriptionActive = business.subscriptionStatus === "active";
+		const isSubscribedOrTrial = isSubscriptionActive || isTrialActive;
+		const isKycVerified = business.isVerified === true;
+
+		return !isSubscribedOrTrial || !isKycVerified;
+	}, [role, business]);
+
 	const filteredTabs = useMemo(() => {
 		if (role === "supervisor" || role === "staffs") {
 			return SETTINGS_TABS.filter((tab) => tab.id === "profile");
@@ -26,7 +45,16 @@ export default function Settings() {
 		return SETTINGS_TABS;
 	}, [role]);
 
-	const [activeTab, setActiveTab] = useState("profile");
+	const tabsWithDisabled = useMemo(() => {
+		return filteredTabs.map((tab) => {
+			if (shouldLockSettings && tab.id !== "organisation") {
+				return { ...tab, disabled: true };
+			}
+			return tab;
+		});
+	}, [filteredTabs, shouldLockSettings]);
+
+	const [activeTab, setActiveTab] = useState("organisation");
 
 	useEffect(() => {
 		if (role === "supervisor" || role === "staffs") {
@@ -60,7 +88,7 @@ export default function Settings() {
 			{/* Tabs Navigation */}
 			<div className="flex flex-col gap-8">
 				<Tabs
-					tabs={filteredTabs}
+					tabs={tabsWithDisabled}
 					activeTab={activeTab}
 					onChange={setActiveTab}
 					className="w-full border-b border-gray-100 pb-0"

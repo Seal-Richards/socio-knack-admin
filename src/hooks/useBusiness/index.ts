@@ -1,10 +1,11 @@
-// src/hooks/useBusiness/index.ts
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { businessRequests } from "@/lib/requests/business";
 import type {
 	UpdateBusinessSettingsPayload,
 	UpdateBusinessIncentivePayload,
+	SetupBusinessPayload,
+	LinkBankPayload,
+	InitializeSubscriptionPayload,
 } from "@/types/business";
 
 export function useGetBusinessSettings() {
@@ -41,5 +42,63 @@ export function useUpdateBusinessIncentive() {
 				console.error("Failed to invalidate businessSettings query:", err);
 			});
 		},
+	});
+}
+
+export function useSetupBusiness() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (body: SetupBusinessPayload) => businessRequests.setupBusiness(body),
+		onSuccess: () => {
+			queryClient
+				.invalidateQueries({ queryKey: ["businessSettings"] })
+				.catch(() => undefined);
+			queryClient.invalidateQueries({ queryKey: ["me"] }).catch(() => undefined);
+		},
+	});
+}
+
+export function useUploadBusinessKyc() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (formData: FormData) => businessRequests.uploadBusinessKyc(formData),
+		onSuccess: () => {
+			queryClient
+				.invalidateQueries({ queryKey: ["businessSettings"] })
+				.catch(() => undefined);
+			queryClient.invalidateQueries({ queryKey: ["me"] }).catch(() => undefined);
+		},
+	});
+}
+
+export function useUploadOwnerId() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (formData: FormData) => businessRequests.uploadOwnerId(formData),
+		onSuccess: () => {
+			queryClient
+				.invalidateQueries({ queryKey: ["businessSettings"] })
+				.catch(() => undefined);
+			queryClient.invalidateQueries({ queryKey: ["me"] }).catch(() => undefined);
+		},
+	});
+}
+
+export function useLinkBank() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (body: LinkBankPayload) => businessRequests.linkBank(body),
+		onSuccess: () => {
+			queryClient
+				.invalidateQueries({ queryKey: ["businessSettings"] })
+				.catch(() => undefined);
+		},
+	});
+}
+
+export function useInitializeSubscription() {
+	return useMutation({
+		mutationFn: (body: InitializeSubscriptionPayload) =>
+			businessRequests.initializeSubscription(body),
 	});
 }

@@ -22,6 +22,13 @@ export const walletRequests = {
 		);
 	},
 
+	async getBanks(): Promise<ApiResponse<{ name: string; code: string }[]>> {
+		return apiClient.get<ApiResponse<{ name: string; code: string }[]>>(
+			"/wallet/banks",
+			"Failed to load bank list.",
+		);
+	},
+
 	async activateWallet(bvn: string): Promise<ApiResponse<WalletData>> {
 		return apiClient.post<ApiResponse<WalletData>, { bvn }>(
 			"/wallet/activate",

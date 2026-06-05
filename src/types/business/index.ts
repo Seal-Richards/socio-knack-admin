@@ -81,3 +81,26 @@ export type UpdateBusinessIncentivePayload = {
 	defaultIncentiveType: "flat" | "percentage";
 	defaultIncentiveValue: number;
 };
+
+export type SetupBusinessPayload = {
+	name: string;
+	domain?: string;
+	country?: string;
+	currency?: string;
+	timeZone?: string;
+	regulatoryRegion?: string;
+};
+
+export type LinkBankPayload = {
+	bankName: string;
+	accountNumber: string;
+	accountName: string;
+	bvn?: string;
+	bankCode: string;
+};
+
+export type InitializeSubscriptionPayload = {
+	planKey: string;
+	agentCount: number;
+	redirectUrl?: string;
+};

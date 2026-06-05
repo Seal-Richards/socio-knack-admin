@@ -4,19 +4,19 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
-interface PricingCardProps {
+type PricingCardProps = {
 	title: string;
 	subtitle: string;
 	price?: string;
 	setupFee?: string;
-	featuresCount: number;
+	features: string[];
 	isCustom?: boolean;
 	buttonText: string;
 	theme: "green" | "blue" | "purple" | "orange";
 	isSelected: boolean;
 	onSelect: () => void;
 	onAction: () => void;
-}
+};
 
 const colorThemes = {
 	green: {
@@ -54,7 +54,7 @@ export default function PricingCard({
 	subtitle,
 	price,
 	setupFee,
-	featuresCount,
+	features,
 	isCustom = false,
 	buttonText,
 	theme,
@@ -127,9 +127,9 @@ export default function PricingCard({
 				{/* Divider line removed to match the uploaded design clean look, or kept invisible to space correctly */}
 				<div className="h-4 w-full" />
 
-				{/* Features List (Added generous vertical gap to fix the clustered look) */}
+				{/* Features List */}
 				<div className="mb-10 flex flex-1 flex-col gap-[15px]">
-					{Array.from({ length: featuresCount }).map((_, i) => (
+					{features.map((feature, i) => (
 						// eslint-disable-next-line react/no-array-index-key
 						<div key={i} className="flex items-center gap-3.5">
 							<div
@@ -141,7 +141,7 @@ export default function PricingCard({
 								/>
 							</div>
 							<span className="text-[13px] font-medium tracking-tight text-gray-500">
-								Features
+								{feature}
 							</span>
 						</div>
 					))}

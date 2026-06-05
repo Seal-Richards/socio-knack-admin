@@ -4,26 +4,75 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
+import { useUploadOwnerId } from "@/hooks/useBusiness";
+import { toast } from "sonner";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function OwnershipVerification({
 	onNext,
 	onPrev,
-	step = 2,
+	initialValues,
+	step = 3,
 	totalSteps = 6,
 }: {
-	onNext?: () => void;
+	onNext: (data: { ownerIdDocName: string }) => void;
 	onPrev?: () => void;
+	initialValues: {
+		ownerIdDocName?: string;
+	};
 	step?: number;
 	totalSteps?: number;
 }) {
-	const [fileName, setFileName] = useState("");
+	const [fileName, setFileName] = useState(initialValues.ownerIdDocName || "");
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+	const uploadOwnerIdMutation = useUploadOwnerId();
+
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			setFileName(file.name);
+			setSelectedFile(file);
+		}
+	};
+
+	const handleNext = async () => {
+		if (!fileName) {
+			toast.error("Please upload a government-issued ID to continue.");
+			return;
+		}
+
+		if (selectedFile) {
+			const formData = new FormData();
+			formData.append("idDocument", selectedFile);
+			formData.append("idType", "Government-issued ID");
+			formData.append("idNumber", "N/A");
+
+			try {
+				const res = await uploadOwnerIdMutation.mutateAsync(formData);
+				if (res.success) {
+					toast.success("ID document uploaded successfully!");
+					onNext({ ownerIdDocName: fileName });
+				} else {
+					toast.error(res.message);
+				}
+			} catch (error: unknown) {
+				toast.error(
+					error instanceof Error ? error.message : "Failed to upload ID document.",
+				);
+			}
+		} else {
+			// File was already uploaded in a previous attempt, proceed
+			onNext({ ownerIdDocName: fileName });
+		}
+	};
 
 	return (
 		<div className="w-full">
 			<button
 				onClick={onPrev}
 				className="absolute right-0 top-0 flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-500 transition-colors hover:bg-blue-100"
+				aria-label="Go back"
 			>
 				<Icon icon="lucide:arrow-left" className="size-5" />
 			</button>
@@ -60,7 +109,7 @@ export default function OwnershipVerification({
 								type="file"
 								aria-label="Upload Document File"
 								className="hidden"
-								onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
+								onChange={handleFileChange}
 								accept=".png,.jpeg,.jpg,.pdf"
 							/>
 						</label>
@@ -68,10 +117,11 @@ export default function OwnershipVerification({
 				</div>
 
 				<Button
-					onClick={onNext}
-					className="text-md mt-8 h-12 w-full bg-yellow-500 font-sans font-semibold text-white hover:bg-yellow-600"
+					onClick={handleNext}
+					disabled={uploadOwnerIdMutation.isPending}
+					className="text-md mt-8 h-12 w-full bg-yellow-500 font-sans font-semibold text-white hover:bg-yellow-600 disabled:opacity-50"
 				>
-					Next
+					{uploadOwnerIdMutation.isPending ? "Uploading..." : "Next"}
 				</Button>
 			</div>
 		</div>

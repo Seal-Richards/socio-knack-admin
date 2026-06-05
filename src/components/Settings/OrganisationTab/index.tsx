@@ -14,10 +14,14 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { useGetBusinessSettings, useUpdateBusinessSettings } from "@/hooks/useBusiness";
+import {
+	useGetBusinessSettings,
+	useUpdateBusinessSettings,
+	useUploadBusinessKyc,
+} from "@/hooks/useBusiness";
 import { toast } from "sonner";
 
-interface OrganisationFormValues {
+type OrganisationFormValues = {
 	name: string;
 	legalName: string;
 	taxId: string;
@@ -36,11 +40,12 @@ interface OrganisationFormValues {
 	currency: string;
 	timeZone: string;
 	primaryLanguage: string;
-}
+};
 
 export default function OrganisationTab() {
 	const { data: settingsRes, isLoading, refetch } = useGetBusinessSettings();
 	const updateSettingsMutation = useUpdateBusinessSettings();
+	const uploadKycMutation = useUploadBusinessKyc();
 
 	const businessSettings = settingsRes?.data;
 
@@ -65,6 +70,29 @@ export default function OrganisationTab() {
 			return;
 		}
 		window.open(url, "_blank", "noopener,noreferrer");
+	};
+
+	const handleFileUpload = async (
+		field: "cacCertificate" | "taxIdCertificate" | "utilityBill",
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		const formData = new FormData();
+		formData.append(field, file);
+
+		try {
+			const res = await uploadKycMutation.mutateAsync(formData);
+			if (res.success) {
+				toast.success("Document uploaded successfully!");
+				refetch().catch(() => undefined);
+			} else {
+				toast.error(res.message || "Failed to upload document.");
+			}
+		} catch (err: unknown) {
+			toast.error(err instanceof Error ? err.message : "Failed to upload document.");
+		}
 	};
 
 	const { register, handleSubmit, control, reset, setValue, watch } =
@@ -405,18 +433,49 @@ export default function OrganisationTab() {
 									</span>
 								</div>
 							</div>
-							<button
-								type="button"
-								onClick={() => handleDownload(cacUrl)}
-								disabled={!cacUrl}
-								className={`transition-colors ${
-									cacUrl
-										? "text-gray-400 hover:text-[#1d4ea8]"
-										: "cursor-not-allowed text-gray-200"
-								}`}
-							>
-								<Icon icon="solar:download-bold" className="size-5" />
-							</button>
+							<div className="flex items-center gap-3">
+								<input
+									type="file"
+									id="cac-upload-settings"
+									aria-label="Upload CAC Certificate"
+									className="sr-only"
+									accept=".png,.jpeg,.jpg,.pdf"
+									disabled={uploadKycMutation.isPending}
+									onChange={(e) => handleFileUpload("cacCertificate", e)}
+								/>
+								<label
+									htmlFor="cac-upload-settings"
+									className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
+								>
+									<Icon icon="solar:upload-bold" className="size-5" />
+								</label>
+								<button
+									type="button"
+									onClick={() => handleDownload(cacUrl)}
+									disabled={!cacUrl}
+									className={`transition-colors ${
+										cacUrl
+											? "text-gray-400 hover:text-[#1d4ea8]"
+											: "cursor-not-allowed text-gray-200"
+									}`}
+									aria-label="View CAC Certificate"
+								>
+									<Icon icon="solar:eye-bold" className="size-5" />
+								</button>
+								<button
+									type="button"
+									onClick={() => handleDownload(cacUrl)}
+									disabled={!cacUrl}
+									className={`transition-colors ${
+										cacUrl
+											? "text-gray-400 hover:text-[#1d4ea8]"
+											: "cursor-not-allowed text-gray-200"
+									}`}
+									aria-label="Download CAC Certificate"
+								>
+									<Icon icon="solar:download-bold" className="size-5" />
+								</button>
+							</div>
 						</div>
 
 						{/* Tax ID Certificate */}
@@ -434,18 +493,49 @@ export default function OrganisationTab() {
 									</span>
 								</div>
 							</div>
-							<button
-								type="button"
-								onClick={() => handleDownload(taxUrl)}
-								disabled={!taxUrl}
-								className={`transition-colors ${
-									taxUrl
-										? "text-gray-400 hover:text-[#1d4ea8]"
-										: "cursor-not-allowed text-gray-200"
-								}`}
-							>
-								<Icon icon="solar:download-bold" className="size-5" />
-							</button>
+							<div className="flex items-center gap-3">
+								<input
+									type="file"
+									id="tax-upload-settings"
+									aria-label="Upload Tax ID Certificate"
+									className="sr-only"
+									accept=".png,.jpeg,.jpg,.pdf"
+									disabled={uploadKycMutation.isPending}
+									onChange={(e) => handleFileUpload("taxIdCertificate", e)}
+								/>
+								<label
+									htmlFor="tax-upload-settings"
+									className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
+								>
+									<Icon icon="solar:upload-bold" className="size-5" />
+								</label>
+								<button
+									type="button"
+									onClick={() => handleDownload(taxUrl)}
+									disabled={!taxUrl}
+									className={`transition-colors ${
+										taxUrl
+											? "text-gray-400 hover:text-[#1d4ea8]"
+											: "cursor-not-allowed text-gray-200"
+									}`}
+									aria-label="View Tax ID Certificate"
+								>
+									<Icon icon="solar:eye-bold" className="size-5" />
+								</button>
+								<button
+									type="button"
+									onClick={() => handleDownload(taxUrl)}
+									disabled={!taxUrl}
+									className={`transition-colors ${
+										taxUrl
+											? "text-gray-400 hover:text-[#1d4ea8]"
+											: "cursor-not-allowed text-gray-200"
+									}`}
+									aria-label="Download Tax ID Certificate"
+								>
+									<Icon icon="solar:download-bold" className="size-5" />
+								</button>
+							</div>
 						</div>
 
 						{/* Proof of Address */}
@@ -463,18 +553,49 @@ export default function OrganisationTab() {
 									</span>
 								</div>
 							</div>
-							<button
-								type="button"
-								onClick={() => handleDownload(utilityUrl)}
-								disabled={!utilityUrl}
-								className={`transition-colors ${
-									utilityUrl
-										? "text-gray-400 hover:text-[#1d4ea8]"
-										: "cursor-not-allowed text-gray-200"
-								}`}
-							>
-								<Icon icon="solar:download-bold" className="size-5" />
-							</button>
+							<div className="flex items-center gap-3">
+								<input
+									type="file"
+									id="utility-upload-settings"
+									aria-label="Upload Utility Bill"
+									className="sr-only"
+									accept=".png,.jpeg,.jpg,.pdf"
+									disabled={uploadKycMutation.isPending}
+									onChange={(e) => handleFileUpload("utilityBill", e)}
+								/>
+								<label
+									htmlFor="utility-upload-settings"
+									className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
+								>
+									<Icon icon="solar:upload-bold" className="size-5" />
+								</label>
+								<button
+									type="button"
+									onClick={() => handleDownload(utilityUrl)}
+									disabled={!utilityUrl}
+									className={`transition-colors ${
+										utilityUrl
+											? "text-gray-400 hover:text-[#1d4ea8]"
+											: "cursor-not-allowed text-gray-200"
+									}`}
+									aria-label="View Proof of Address"
+								>
+									<Icon icon="solar:eye-bold" className="size-5" />
+								</button>
+								<button
+									type="button"
+									onClick={() => handleDownload(utilityUrl)}
+									disabled={!utilityUrl}
+									className={`transition-colors ${
+										utilityUrl
+											? "text-gray-400 hover:text-[#1d4ea8]"
+											: "cursor-not-allowed text-gray-200"
+									}`}
+									aria-label="Download Proof of Address"
+								>
+									<Icon icon="solar:download-bold" className="size-5" />
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>

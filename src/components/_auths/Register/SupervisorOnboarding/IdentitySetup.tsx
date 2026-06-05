@@ -24,6 +24,7 @@ export default function IdentitySetup({
 			<button
 				onClick={onPrev}
 				className="absolute right-0 top-0 flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-500 transition-colors hover:bg-blue-100"
+				aria-label="Go back"
 			>
 				<Icon icon="lucide:arrow-left" className="size-5" />
 			</button>

@@ -16,12 +16,22 @@ import type {
 } from "@/types/auth";
 
 export const authRequests = {
-	async login(body: LoginPayload): Promise<ApiResponse<null>> {
-		return apiClient.post<ApiResponse<null>, LoginPayload>(
-			"/auth/login",
-			body,
-			"Failed to log in. Please try again.",
-		);
+	async checkEmail(
+		email: string,
+	): Promise<ApiResponse<{ exists: boolean; isVerified: boolean; role: string | null }>> {
+		return apiClient.post<
+			ApiResponse<{ exists: boolean; isVerified: boolean; role: string | null }>,
+			{ email: string }
+		>("/auth/check-email", { email }, "Failed to check email status.");
+	},
+
+	async login(
+		body: LoginPayload,
+	): Promise<ApiResponse<{ token?: string; user?: any; otpSent?: boolean }>> {
+		return apiClient.post<
+			ApiResponse<{ token?: string; user?: any; otpSent?: boolean }>,
+			LoginPayload
+		>("/auth/login", body, "Failed to log in. Please try again.");
 	},
 
 	async registerAdmin(body: RegisterAdminPayload): Promise<ApiResponse<RegisterAdminResponse>> {

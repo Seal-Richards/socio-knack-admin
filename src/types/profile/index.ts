@@ -7,6 +7,8 @@ export type UserProfileBusiness = {
 	logo?: string;
 	subscriptionPlan?: string;
 	subscriptionStatus?: string;
+	isVerified?: boolean;
+	createdAt?: string;
 };
 
 export type UserProfileTerritory = {

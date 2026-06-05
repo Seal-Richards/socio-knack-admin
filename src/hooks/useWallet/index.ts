@@ -22,3 +22,11 @@ export function useActivateWallet() {
 		},
 	});
 }
+
+export function useGetBankList() {
+	return useQuery({
+		queryKey: ["bankList"],
+		queryFn: () => walletRequests.getBanks(),
+		staleTime: 24 * 60 * 60 * 1000, // Static data, cache it for 24 hours
+	});
+}

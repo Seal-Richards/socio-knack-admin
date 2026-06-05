@@ -43,6 +43,32 @@ export default function Register() {
 	const [currentStep, setCurrentStep] = useState(1);
 	const totalSteps = 7; // 1: Identity, 2: OTP, 3: Ownership, 4: Org, 5: Wallet, 6: Activation, 7: Success
 
+	// Standard Admin cumulative data state
+	const [adminData, setAdminData] = useState({
+		firstName: "",
+		lastName: "",
+		email: "",
+		phoneNumber: "",
+		password: "",
+		confirmPassword: "",
+		ownerIdDocName: "",
+		orgName: "",
+		orgDomain: "",
+		orgCountry: "NG",
+		orgCurrency: "NGN",
+		orgTimeZone: "WAT",
+		orgRegulatoryRegion: "Africa",
+		cacCertificateName: "",
+		taxIdCertificateName: "",
+		utilityBillName: "",
+		bankName: "",
+		bankCode: "",
+		accountNumber: "",
+		accountName: "",
+		bvn: "",
+		selectedPlan: "",
+	});
+
 	// Invited User Onboarding Flow Step Tracker
 	const [onboardStep, setOnboardStep] = useState(1);
 	const totalOnboardSteps = 4; // 1: Personal Info, 2: Identity, 3: Security, 4: Success
@@ -61,6 +87,59 @@ export default function Register() {
 		country: "",
 		password: "",
 	});
+
+	// Load step & data from sessionStorage and query parameters on mount
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+
+		// URL steps take priority
+		const urlStep = searchParams?.get("step");
+
+		if (isInvitedFlow) {
+			const savedInvitedStep = sessionStorage.getItem("onboarding_invited_step");
+			const savedInvitedData = sessionStorage.getItem("onboarding_invited_data");
+			if (urlStep) {
+				setOnboardStep(parseInt(urlStep, 10));
+			} else if (savedInvitedStep) {
+				setOnboardStep(parseInt(savedInvitedStep, 10));
+			}
+			if (savedInvitedData) {
+				try {
+					setOnboardData(JSON.parse(savedInvitedData) as RegisterSupervisorPayload);
+				} catch (e) {
+					console.error("Failed to parse onboarding_invited_data", e);
+				}
+			}
+		} else {
+			const savedAdminStep = sessionStorage.getItem("onboarding_admin_step");
+			const savedAdminData = sessionStorage.getItem("onboarding_admin_data");
+
+			if (urlStep) {
+				setCurrentStep(parseInt(urlStep, 10));
+			} else if (savedAdminStep) {
+				setCurrentStep(parseInt(savedAdminStep, 10));
+			}
+			if (savedAdminData) {
+				try {
+					setAdminData(JSON.parse(savedAdminData) as typeof adminData);
+				} catch (e) {
+					console.error("Failed to parse onboarding_admin_data", e);
+				}
+			}
+		}
+	}, [searchParams, isInvitedFlow]);
+
+	// Save steps & data to sessionStorage on change
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		if (isInvitedFlow) {
+			sessionStorage.setItem("onboarding_invited_step", String(onboardStep));
+			sessionStorage.setItem("onboarding_invited_data", JSON.stringify(onboardData));
+		} else {
+			sessionStorage.setItem("onboarding_admin_step", String(currentStep));
+			sessionStorage.setItem("onboarding_admin_data", JSON.stringify(adminData));
+		}
+	}, [currentStep, adminData, onboardStep, onboardData, isInvitedFlow]);
 
 	// Sync query params when they load
 	useEffect(() => {
@@ -169,6 +248,7 @@ export default function Register() {
 						<button
 							onClick={() => router.push("/login")}
 							className="flex size-8 items-center justify-center self-end rounded-full bg-blue-50 text-blue-500 transition-colors hover:bg-blue-100 md:self-auto"
+							aria-label="Close"
 						>
 							<Icon icon="lucide:x" className="size-5" />
 						</button>
@@ -208,14 +288,12 @@ export default function Register() {
 											onPrev={() => router.push("/login")}
 											step={onboardStep}
 											totalSteps={totalOnboardSteps - 1}
-											prefilledEmail={email}
+											prefilledEmail={onboardData?.email}
 										/>
 									)}
 									{onboardStep === 2 && (
 										<SupervisorIdentitySetup
-											onNext={() => {
-												nextOnboardStep();
-											}}
+											onNext={nextOnboardStep}
 											onPrev={prevOnboardStep}
 											step={onboardStep}
 											totalSteps={totalOnboardSteps - 1}
@@ -241,7 +319,15 @@ export default function Register() {
 								<>
 									{currentStep === 1 && (
 										<AdminIdentitySetup
-											onNext={nextStep}
+											onNext={(data) => {
+												setAdminData(
+													(prev) =>
+														({ ...prev, ...data }) as typeof adminData,
+												);
+												nextStep();
+											}}
+											onSkipToStep={(s) => setCurrentStep(s)}
+											initialValues={adminData}
 											step={currentStep}
 											totalSteps={totalSteps - 1}
 										/>
@@ -251,30 +337,63 @@ export default function Register() {
 									)}
 									{currentStep === 3 && (
 										<AdminOwnershipVerification
-											onNext={nextStep}
+											onNext={(data) => {
+												setAdminData(
+													(prev) =>
+														({ ...prev, ...data }) as typeof adminData,
+												);
+												nextStep();
+											}}
 											onPrev={prevStep}
+											initialValues={adminData}
 										/>
 									)}
 									{currentStep === 4 && (
 										<AdminOrganisationSetup
-											onNext={nextStep}
+											onNext={(data) => {
+												setAdminData(
+													(prev) =>
+														({ ...prev, ...data }) as typeof adminData,
+												);
+												nextStep();
+											}}
 											onPrev={prevStep}
+											initialValues={adminData}
 											step={currentStep}
 											totalSteps={totalSteps - 1}
 										/>
 									)}
 									{currentStep === 5 && (
 										<AdminWalletSetup
-											onNext={nextStep}
+											onNext={(data) => {
+												setAdminData(
+													(prev) =>
+														({ ...prev, ...data }) as typeof adminData,
+												);
+												nextStep();
+											}}
 											onPrev={prevStep}
+											initialValues={adminData}
 											step={currentStep}
 											totalSteps={totalSteps - 1}
 										/>
 									)}
 									{currentStep === 6 && (
 										<AdminPlatformActivation
-											onNext={nextStep}
+											onNext={(data) => {
+												if (data) {
+													setAdminData(
+														(prev) =>
+															({
+																...prev,
+																...data,
+															}) as typeof adminData,
+													);
+												}
+												nextStep();
+											}}
 											_onPrev={prevStep}
+											initialValues={adminData}
 											step={currentStep}
 											totalSteps={totalSteps - 1}
 										/>
