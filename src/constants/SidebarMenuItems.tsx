@@ -31,9 +31,9 @@ const ReportsIcon = ({ className }: { className?: string }) => (
 	<Icon icon="solar:document-text-bold" className={className} />
 );
 
-const UsersIcon = ({ className }: { className?: string }) => (
-	<Icon icon="solar:user-rounded-bold" className={className} />
-);
+// const UsersIcon = ({ className }: { className?: string }) => (
+// 	<Icon icon="solar:user-rounded-bold" className={className} />
+// );
 
 const SettingsIcon = ({ className }: { className?: string }) => (
 	<Icon icon="solar:settings-bold" className={className} />
@@ -79,11 +79,11 @@ export const MENU_ITEMS = [
 		icon: ReportsIcon,
 		href: ROUTES.REPORTS,
 	},
-	{
-		label: "User Management",
-		icon: UsersIcon,
-		href: ROUTES.USERS,
-	},
+	// 	{
+	// 		label: "User Management",
+	// 		icon: UsersIcon,
+	// 		href: ROUTES.USERS,
+	// 	},
 ];
 
 export const BOTTOM_MENU_ITEMS = [
