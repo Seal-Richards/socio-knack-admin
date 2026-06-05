@@ -90,6 +90,7 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 		id: "google-map-script",
 		googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAP_API || "",
 		libraries: GOOGLE_MAPS_LIBRARIES,
+		version: "3.64",
 	});
 
 	const [isEditing, setIsEditing] = React.useState(false);
@@ -290,13 +291,18 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 									onClick={() => setIsEditing(true)}
 									className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
 									title="Edit Task"
+									aria-label="Edit Task"
 								>
 									<Icon icon="solar:pen-bold" className="size-4" />
 								</button>
 							)}
 						</Dialog.Title>
 						<Dialog.Close asChild>
-							<button className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900">
+							<button
+								title="Close"
+								aria-label="Close"
+								className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+							>
 								<Icon icon="lucide:x" className="size-4" />
 							</button>
 						</Dialog.Close>

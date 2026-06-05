@@ -78,6 +78,7 @@ export default function Map({
 		id: "google-map-script",
 		googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAP_API || "",
 		libraries: GOOGLE_MAPS_LIBRARIES,
+		version: "3.64",
 	});
 
 	const [selectedMapZone, setSelectedMapZone] = useState<TerritoryData | null>(null);
@@ -317,10 +318,8 @@ export default function Map({
 								onCloseClick={() => setSelectedMapZone(null)}
 							>
 								<div className="min-w-[200px] p-3 text-gray-800">
-									<h3
-										className="text-[14px] font-bold"
-										style={{ color: selectedMapZone.color }}
-									>
+									<style>{`.selected-zone-title-color { color: ${selectedMapZone.color}; }`}</style>
+									<h3 className="selected-zone-title-color text-[14px] font-bold">
 										{selectedMapZone.name}
 									</h3>
 									<p className="mt-1 text-xs text-gray-500">
