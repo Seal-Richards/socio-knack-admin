@@ -139,12 +139,12 @@ export default function SecuritySetup({
 					)}
 				</div>
 
-				<Button
+				{/* <Button
 					type="button"
 					className="bg-darkBlue-900 hover:bg-darkBlue-800 my-6 h-12 w-full rounded-md font-semibold text-white shadow-md"
 				>
 					Set Two-Factor Authenticator (Optional)
-				</Button>
+				</Button> */}
 
 				<div className="space-y-4 border-t border-gray-100 pt-2">
 					<div className="flex items-start space-x-3">

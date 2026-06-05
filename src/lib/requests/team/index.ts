@@ -2,7 +2,7 @@
 
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types/generic";
-import type { UserProfileData } from "@/types/profile";
+import type { UserProfileData, InvitationData } from "@/types/profile";
 
 export const teamRequests = {
 	async getSupervisors(): Promise<ApiResponse<UserProfileData[]>> {
@@ -60,5 +60,34 @@ export const teamRequests = {
 			ApiResponse<{ id: string; status: string }>,
 			{ status?: string; kycStatus?: string }
 		>(`/admin/users/${userId}/status`, payload, "Failed to update user status.");
+	},
+
+	async getInvitations(): Promise<ApiResponse<InvitationData[]>> {
+		return apiClient.get<ApiResponse<InvitationData[]>>(
+			"/admin/invitations",
+			"Failed to load invitations list.",
+		);
+	},
+
+	async cancelInvitation(invitationId: string): Promise<ApiResponse<InvitationData>> {
+		return apiClient.post<ApiResponse<InvitationData>, undefined>(
+			`/admin/invitations/${invitationId}/cancel`,
+			undefined,
+			"Failed to cancel invitation.",
+		);
+	},
+
+	async deleteInvitation(invitationId: string): Promise<ApiResponse<unknown>> {
+		return apiClient.delete<ApiResponse<unknown>>(
+			`/admin/invitations/${invitationId}`,
+			"Failed to delete invitation.",
+		);
+	},
+
+	async revokeTeamAccess(userId: string): Promise<ApiResponse<unknown>> {
+		return apiClient.delete<ApiResponse<unknown>>(
+			`/admin/users/${userId}`,
+			"Failed to revoke team access.",
+		);
 	},
 };

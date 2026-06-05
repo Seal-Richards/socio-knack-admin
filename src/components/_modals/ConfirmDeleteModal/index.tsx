@@ -12,6 +12,8 @@ interface ConfirmDeleteModalProps {
 	title?: string;
 	description?: string;
 	isLoading?: boolean;
+	confirmText?: string;
+	loadingText?: string;
 }
 
 export default function ConfirmDeleteModal({
@@ -21,6 +23,8 @@ export default function ConfirmDeleteModal({
 	title = "Delete Item",
 	description = "Are you sure you want to delete this item? This action cannot be undone.",
 	isLoading = false,
+	confirmText,
+	loadingText,
 }: ConfirmDeleteModalProps) {
 	return (
 		<Modal isOpen={isOpen} onClose={onClose} className="text-gray-800 sm:max-w-[420px]">
@@ -37,7 +41,7 @@ export default function ConfirmDeleteModal({
 						disabled={isLoading}
 						className="h-12 w-full rounded-xl bg-red-500 font-bold text-white transition-all hover:bg-red-600 active:scale-95 disabled:opacity-50"
 					>
-						{isLoading ? "Deleting..." : "Yes, Delete"}
+						{isLoading ? loadingText || "Deleting..." : confirmText || "Yes, Delete"}
 					</Button>
 					<Button
 						type="button"

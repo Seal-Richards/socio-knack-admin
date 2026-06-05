@@ -104,3 +104,12 @@ export type UpdatePasswordPayload = {
 	oldPassword?: string;
 	newPassword?: string;
 };
+
+export type InvitationData = {
+	_id: string;
+	email: string;
+	role: string;
+	position?: string;
+	status: string;
+	expiresAt: string;
+};

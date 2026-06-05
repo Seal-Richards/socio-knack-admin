@@ -87,3 +87,53 @@ export function useLogoutUser() {
 		mutationFn: () => teamRequests.logout(),
 	});
 }
+
+export function useGetInvitations() {
+	return useQuery({
+		queryKey: ["invitations"],
+		queryFn: () => teamRequests.getInvitations(),
+		staleTime: 1000 * 60 * 5,
+	});
+}
+
+export function useCancelInvitation() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (invitationId: string) => teamRequests.cancelInvitation(invitationId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["invitations"] }).catch((err) => {
+				console.error("Failed to invalidate invitations query:", err);
+			});
+		},
+	});
+}
+
+export function useDeleteInvitation() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (invitationId: string) => teamRequests.deleteInvitation(invitationId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["invitations"] }).catch((err) => {
+				console.error("Failed to invalidate invitations query:", err);
+			});
+		},
+	});
+}
+
+export function useRevokeTeamAccess() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (userId: string) => teamRequests.revokeTeamAccess(userId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["admins"] }).catch((err) => {
+				console.error("Failed to invalidate admins query:", err);
+			});
+			queryClient.invalidateQueries({ queryKey: ["supervisors"] }).catch((err) => {
+				console.error("Failed to invalidate supervisors query:", err);
+			});
+			queryClient.invalidateQueries({ queryKey: ["staff"] }).catch((err) => {
+				console.error("Failed to invalidate staff query:", err);
+			});
+		},
+	});
+}

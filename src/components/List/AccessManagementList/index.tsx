@@ -10,12 +10,22 @@ import {
 	type AccessManagementData,
 } from "@/components/Tables/columns/accessManagementColumns";
 import InviteTeamModal from "@/components/_modals/InviteTeamModal";
+import ConfirmDeleteModal from "@/components/_modals/ConfirmDeleteModal";
 import DynamicFilter from "@/components/_atoms/DynamicFilter";
-import { useGetAdmins, useGetSupervisors, useGetStaff, useUpdateUserRole } from "@/hooks/useTeam";
+import {
+	useGetAdmins,
+	useGetSupervisors,
+	useGetStaff,
+	useUpdateUserRole,
+	useGetInvitations,
+	useCancelInvitation,
+	useDeleteInvitation,
+	useRevokeTeamAccess,
+} from "@/hooks/useTeam";
 import { toast } from "sonner";
 import Pagination from "@/components/_atoms/Pagination";
 
-interface RawTeamUser {
+type RawTeamUser = {
 	id?: string;
 	_id?: string;
 	firstName?: string;
@@ -26,7 +36,7 @@ interface RawTeamUser {
 	status?: string;
 	avatar?: string;
 	position?: string | null;
-}
+};
 
 const toStatus = (raw?: string): "Active" | "Inactive" =>
 	raw === "active" ? "Active" : "Inactive";
@@ -39,7 +49,6 @@ export default function AccessManagementList() {
 	const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>();
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
-
 	// Local temporary state for modified roles before saving
 	const [tempRoles, setTempRoles] = useState<Record<string | number, string>>({});
 
@@ -47,9 +56,90 @@ export default function AccessManagementList() {
 	const { data: adminsRes, isLoading: isLoadingAdmins } = useGetAdmins();
 	const { data: supervisorsRes, isLoading: isLoadingSupervisors } = useGetSupervisors();
 	const { data: staffRes, isLoading: isLoadingStaff } = useGetStaff();
+	const { data: invitationsRes, isLoading: isLoadingInvitations } = useGetInvitations();
 
 	// Hook to update user role
 	const updateRoleMutation = useUpdateUserRole();
+
+	// Cancel/Delete/Revoke mutations
+	const cancelMutation = useCancelInvitation();
+	const deleteMutation = useDeleteInvitation();
+	const revokeMutation = useRevokeTeamAccess();
+
+	// State for reusable custom ConfirmDeleteModal
+	const [confirmModal, setConfirmModal] = useState<{
+		isOpen: boolean;
+		type: "cancel" | "delete" | "revoke" | null;
+		id: string | number | null;
+	}>({
+		isOpen: false,
+		type: null,
+		id: null,
+	});
+
+	const handleCancelInvite = (id: string | number) => {
+		setConfirmModal({
+			isOpen: true,
+			type: "cancel",
+			id,
+		});
+	};
+
+	const handleDeleteInvite = (id: string | number) => {
+		setConfirmModal({
+			isOpen: true,
+			type: "delete",
+			id,
+		});
+	};
+
+	const handleRevokeAccess = (id: string | number) => {
+		setConfirmModal({
+			isOpen: true,
+			type: "revoke",
+			id,
+		});
+	};
+
+	const handleConfirmAction = () => {
+		const { type, id } = confirmModal;
+		if (!id || !type) return;
+
+		if (type === "cancel") {
+			cancelMutation
+				.mutateAsync(String(id))
+				.then((res) => {
+					if (res.success) toast.success(res.message);
+					else toast.error(res.message);
+					setConfirmModal({ isOpen: false, type: null, id: null });
+				})
+				.catch((err: unknown) => {
+					toast.error(err instanceof Error ? err.message : "Failed to cancel invitation");
+				});
+		} else if (type === "delete") {
+			deleteMutation
+				.mutateAsync(String(id))
+				.then((res) => {
+					if (res.success) toast.success(res.message);
+					else toast.error(res.message);
+					setConfirmModal({ isOpen: false, type: null, id: null });
+				})
+				.catch((err: unknown) => {
+					toast.error(err instanceof Error ? err.message : "Failed to delete invitation");
+				});
+		} else if (type === "revoke") {
+			revokeMutation
+				.mutateAsync(String(id))
+				.then((res) => {
+					if (res.success) toast.success(res.message);
+					else toast.error(res.message);
+					setConfirmModal({ isOpen: false, type: null, id: null });
+				})
+				.catch((err: unknown) => {
+					toast.error(err instanceof Error ? err.message : "Failed to revoke access");
+				});
+		}
+	};
 
 	const handleSave = async (userId: string | number, role: string) => {
 		try {
@@ -135,10 +225,32 @@ export default function AccessManagementList() {
 		};
 	});
 
+	const invitations = (invitationsRes?.data || []).map((inv) => {
+		return {
+			id: inv._id || Math.random().toString(),
+			name: "Invited Member",
+			email: inv.email || "",
+			location: "-",
+			role: (() => {
+				if (inv.role === "staff" || inv.role === "staffs") return "Staff";
+				if (inv.role === "supervisor") return "Supervisor";
+				return "Admin";
+			})(),
+			position: inv.position || undefined,
+			status: inv.status === "cancelled" ? ("Cancelled" as const) : ("Pending" as const),
+			avatar: "/assets/images/admin-avatar.png",
+			rawRole:
+				inv.role === "staffs"
+					? ("staff" as const)
+					: (inv.role as "admin" | "supervisor" | "staff"),
+		};
+	});
+
 	const combinedTeam: (AccessManagementData & { rawRole: string })[] = [
 		...admins,
 		...supervisors,
 		...staffs,
+		...invitations,
 	];
 
 	// Filter team members based on search queries and selected filters
@@ -187,8 +299,8 @@ export default function AccessManagementList() {
 		setSelectedRoleFilter(val);
 		setCurrentPage(1);
 	};
-
-	const isLoading = isLoadingAdmins || isLoadingSupervisors || isLoadingStaff;
+	const isLoading =
+		isLoadingAdmins || isLoadingSupervisors || isLoadingStaff || isLoadingInvitations;
 
 	// Construct dynamic columns passing callback and temporary state
 	const columns = getAccessManagementColumns(
@@ -196,6 +308,9 @@ export default function AccessManagementList() {
 		setTempRoles,
 		handleSaveClick,
 		updateRoleMutation.isPending,
+		handleCancelInvite,
+		handleDeleteInvite,
+		handleRevokeAccess,
 	);
 
 	return (
@@ -245,6 +360,8 @@ export default function AccessManagementList() {
 								{ label: "All Status", value: "all" },
 								{ label: "Active", value: "active" },
 								{ label: "Inactive", value: "inactive" },
+								{ label: "Pending", value: "pending" },
+								{ label: "Cancelled", value: "cancelled" },
 							]}
 							selected={selectedStatus}
 							onSelect={handleStatusSelect}
@@ -299,10 +416,48 @@ export default function AccessManagementList() {
 					)}
 				</div>
 			</div>
-
 			<InviteTeamModal
 				isOpen={isInviteModalOpen}
 				onClose={() => setIsInviteModalOpen(false)}
+			/>
+
+			<ConfirmDeleteModal
+				isOpen={confirmModal.isOpen}
+				onClose={() => setConfirmModal({ isOpen: false, type: null, id: null })}
+				onConfirm={handleConfirmAction}
+				isLoading={
+					cancelMutation.isPending || deleteMutation.isPending || revokeMutation.isPending
+				}
+				title={(() => {
+					if (confirmModal.type === "cancel") return "Cancel Invitation";
+					if (confirmModal.type === "delete") return "Delete Invitation";
+					if (confirmModal.type === "revoke") return "Revoke Team Access";
+					return "";
+				})()}
+				description={(() => {
+					if (confirmModal.type === "cancel") {
+						return "Are you sure you want to cancel this invitation?";
+					}
+					if (confirmModal.type === "delete") {
+						return "Are you sure you want to delete this cancelled invitation? This action cannot be undone.";
+					}
+					if (confirmModal.type === "revoke") {
+						return "Are you sure you want to revoke this team member's access? All associated tasks, zones, and logs will fall back to the business owner/admin.";
+					}
+					return "";
+				})()}
+				confirmText={(() => {
+					if (confirmModal.type === "cancel") return "Yes, Cancel";
+					if (confirmModal.type === "delete") return "Yes, Delete";
+					if (confirmModal.type === "revoke") return "Yes, Revoke";
+					return undefined;
+				})()}
+				loadingText={(() => {
+					if (confirmModal.type === "cancel") return "Cancelling...";
+					if (confirmModal.type === "delete") return "Deleting...";
+					if (confirmModal.type === "revoke") return "Revoking...";
+					return undefined;
+				})()}
 			/>
 		</div>
 	);
