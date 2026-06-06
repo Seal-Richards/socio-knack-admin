@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import { getProductServiceColumns } from "@/components/Tables/columns/productServiceColumns";
 import ProductFormModal from "@/components/_modals/ProductFormModal";
+import ConfirmDeleteModal from "@/components/_modals/ConfirmDeleteModal";
 import DynamicFilter from "@/components/_atoms/DynamicFilter";
 import { useGetProducts, useDeleteProduct } from "@/hooks/useProduct";
 import { useGetCategories } from "@/hooks/useCategory";
@@ -17,6 +18,8 @@ import Pagination from "@/components/_atoms/Pagination";
 export default function ProductServiceList() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [productToEdit, setProductToEdit] = useState<ProductData | null>(null);
+	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+	const [productToDeleteId, setProductToDeleteId] = useState<string | null>(null);
 
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filterType, setFilterType] = useState("all");
@@ -43,21 +46,25 @@ export default function ProductServiceList() {
 	};
 
 	const handleDelete = (id: string) => {
-		// eslint-disable-next-line no-alert
-		if (!window.confirm("Are you sure you want to delete this product/service?")) return;
-		(async () => {
-			try {
-				const res = await deleteProductMutation.mutateAsync(id);
-				if (res.success) {
-					toast.success("Product/service deleted successfully");
-					refetchProducts().catch(() => undefined);
-				} else {
-					toast.error(res.message);
-				}
-			} catch (error: any) {
-				toast.error((error as { message?: string })?.message || "Failed to delete product");
+		setProductToDeleteId(id);
+		setIsDeleteModalOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!productToDeleteId) return;
+		try {
+			const res = await deleteProductMutation.mutateAsync(productToDeleteId);
+			if (res.success) {
+				toast.success("Product/service deleted successfully");
+				setIsDeleteModalOpen(false);
+				setProductToDeleteId(null);
+				refetchProducts().catch(() => undefined);
+			} else {
+				toast.error(res.message);
 			}
-		})().catch(() => undefined);
+		} catch (error: any) {
+			toast.error((error as { message?: string })?.message || "Failed to delete product");
+		}
 	};
 
 	// Filter & search products
@@ -219,6 +226,18 @@ export default function ProductServiceList() {
 					refetchProducts().catch(() => undefined);
 				}}
 				productToEdit={productToEdit}
+			/>
+
+			<ConfirmDeleteModal
+				isOpen={isDeleteModalOpen}
+				onClose={() => {
+					setIsDeleteModalOpen(false);
+					setProductToDeleteId(null);
+				}}
+				onConfirm={handleConfirmDelete}
+				isLoading={deleteProductMutation.isPending}
+				title="Delete Product / Service"
+				description="Are you sure you want to delete this product/service? This action cannot be undone."
 			/>
 		</div>
 	);
