@@ -4,6 +4,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import Tabs from "@/components/Tabs";
 import { useGetMe } from "@/hooks/useProfile";
+import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useVerifySubscription } from "@/hooks/useBusiness";
 import OrganisationTab from "./OrganisationTab";
 import ProfileTab from "./ProfileTab";
 import AccessTab from "./AccessTab";
@@ -19,6 +22,11 @@ const SETTINGS_TABS = [
 export default function Settings() {
 	const { data: session } = useSession();
 	const role = session?.user?.role;
+	const searchParams = useSearchParams();
+	const router = useRouter();
+	const verifySubscriptionMutation = useVerifySubscription();
+	const [isVerifying, setIsVerifying] = useState(false);
+	const verifiedTxIds = React.useRef<Record<string, boolean>>({});
 
 	const { data: meRes } = useGetMe();
 	const business = meRes?.data?.business;
@@ -55,6 +63,43 @@ export default function Settings() {
 	}, [filteredTabs, shouldLockSettings]);
 
 	const [activeTab, setActiveTab] = useState("organisation");
+
+	useEffect(() => {
+		const status = searchParams?.get("status");
+		const transactionId = searchParams?.get("transaction_id");
+
+		if (
+			status === "successful" &&
+			transactionId &&
+			!verifiedTxIds.current[transactionId] &&
+			!isVerifying
+		) {
+			verifiedTxIds.current[transactionId] = true;
+			setIsVerifying(true);
+			const toastId = toast.loading("Verifying your subscription payment, please wait...");
+			verifySubscriptionMutation.mutate(transactionId, {
+				onSuccess: (res) => {
+					toast.dismiss(toastId);
+					if (res.success) {
+						toast.success("Subscription activated successfully!");
+						setActiveTab("billing");
+					} else {
+						toast.error(res.message || "Failed to verify subscription.");
+					}
+					router.replace("/settings");
+					setIsVerifying(false);
+				},
+				onError: (err: unknown) => {
+					toast.dismiss(toastId);
+					const errorMsg =
+						err instanceof Error ? err.message : "Error verifying subscription.";
+					toast.error(errorMsg);
+					router.replace("/settings");
+					setIsVerifying(false);
+				},
+			});
+		}
+	}, [searchParams, router, verifySubscriptionMutation, isVerifying]);
 
 	useEffect(() => {
 		if (role === "supervisor" || role === "staffs") {

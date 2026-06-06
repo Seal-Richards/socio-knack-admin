@@ -56,6 +56,9 @@ export type BusinessSettingsData = {
 	supportContact?: SupportContact;
 	subscriptionPlan: string;
 	subscriptionStatus: string;
+	agentCount?: number;
+	lastPaymentDate?: string | null;
+	createdAt?: string | null;
 	isVerified?: boolean;
 	corporateDocuments?: CorporateDocuments | null;
 	teamMembers?: TeamMembers | null;

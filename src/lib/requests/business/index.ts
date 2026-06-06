@@ -80,4 +80,11 @@ export const businessRequests = {
 			"Failed to initialize subscription payment.",
 		);
 	},
+
+	async verifySubscription(transactionId: string): Promise<ApiResponse<any>> {
+		return apiClient.get<ApiResponse<any>>(
+			`/admin/subscription/verify?transaction_id=${transactionId}`,
+			"Failed to verify subscription status.",
+		);
+	},
 };

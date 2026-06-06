@@ -49,8 +49,24 @@ export default function Login() {
 
 			if (res.success) {
 				toast.success(res.message);
-				setLoginEmail(data.email);
-				setStep("otp");
+				if (res.token) {
+					// Direct login flow (Bypassed OTP)
+					const result = await signIn("credentials", {
+						email: data.email,
+						password: data.password,
+						redirect: false,
+					});
+					if (result?.error) {
+						toast.error("Standard credentials authentication failed.");
+					} else {
+						toast.success("Login successful! Redirecting...");
+						router.push("/dashboard");
+					}
+				} else {
+					// OTP flow
+					setLoginEmail(data.email);
+					setStep("otp");
+				}
 			} else {
 				toast.error(res.message);
 			}

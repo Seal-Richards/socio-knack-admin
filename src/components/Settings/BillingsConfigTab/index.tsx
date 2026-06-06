@@ -32,6 +32,42 @@ export default function BillingsConfigTab() {
 	const business = businessRes?.data;
 	const wallet = walletRes?.data;
 
+	const formatDate = (dateString?: string | null) => {
+		if (!dateString) return "N/A";
+		const date = new Date(dateString);
+		return date.toLocaleDateString("en-US", {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+		});
+	};
+
+	const renewsOn = React.useMemo(() => {
+		if (business?.lastPaymentDate) {
+			const paymentDate = new Date(business.lastPaymentDate);
+			paymentDate.setDate(paymentDate.getDate() + 30);
+			return formatDate(paymentDate.toISOString());
+		}
+		if (business?.createdAt) {
+			const trialDate = new Date(business.createdAt);
+			trialDate.setDate(trialDate.getDate() + 14);
+			return formatDate(trialDate.toISOString());
+		}
+		return "N/A";
+	}, [business]);
+
+	const subscriptionCost = React.useMemo(() => {
+		const agentCount = business?.agentCount || 10;
+		const price = agentCount * 4000;
+		return `₦${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+	}, [business]);
+
+	const isActive = business?.subscriptionStatus === "active";
+
+	const planName = business?.subscriptionPlan
+		? `${business.subscriptionPlan.charAt(0).toUpperCase()}${business.subscriptionPlan.slice(1)} Plan`
+		: "Basic Plan";
+
 	// Wallet activation modal state
 	const [isActivateModalOpen, setIsActivateModalOpen] = useState(false);
 	const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
@@ -110,11 +146,6 @@ export default function BillingsConfigTab() {
 		);
 	}
 
-	// Format expiration and renewals
-	const planName = business?.subscriptionPlan
-		? `${business.subscriptionPlan.charAt(0).toUpperCase()}${business.subscriptionPlan.slice(1)} Plan`
-		: "Basic Plan";
-
 	return (
 		<div className="flex flex-col gap-8 text-gray-800">
 			{/* Billings Cards section */}
@@ -141,10 +172,17 @@ export default function BillingsConfigTab() {
 								<p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
 									Current Status
 								</p>
-								<p className="mt-1 flex items-center gap-1.5 text-sm font-black text-green-600">
-									<span className="inline-block size-2 animate-pulse rounded-full bg-green-500" />
-									Active
-								</p>
+								{isActive ? (
+									<p className="mt-1 flex items-center gap-1.5 text-sm font-black text-green-600">
+										<span className="inline-block size-2 animate-pulse rounded-full bg-green-500" />
+										Active
+									</p>
+								) : (
+									<p className="mt-1 flex items-center gap-1.5 text-sm font-black text-red-600">
+										<span className="inline-block size-2 rounded-full bg-red-500" />
+										Inactive
+									</p>
+								)}
 							</div>
 							<div className="rounded-2xl bg-gray-50/50 p-4">
 								<p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
@@ -156,15 +194,15 @@ export default function BillingsConfigTab() {
 								<p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
 									Renews On
 								</p>
-								<p className="mt-1 text-sm font-black text-gray-800">
-									June 28, 2026
-								</p>
+								<p className="mt-1 text-sm font-black text-gray-800">{renewsOn}</p>
 							</div>
 							<div className="rounded-2xl bg-gray-50/50 p-4">
 								<p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
 									Subscription Cost
 								</p>
-								<p className="mt-1 text-sm font-black text-gray-800">₦250,000.00</p>
+								<p className="mt-1 text-sm font-black text-gray-800">
+									{subscriptionCost}
+								</p>
 							</div>
 						</div>
 					</div>

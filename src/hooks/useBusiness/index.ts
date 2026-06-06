@@ -102,3 +102,16 @@ export function useInitializeSubscription() {
 			businessRequests.initializeSubscription(body),
 	});
 }
+
+export function useVerifySubscription() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (transactionId: string) => businessRequests.verifySubscription(transactionId),
+		onSuccess: () => {
+			queryClient
+				.invalidateQueries({ queryKey: ["businessSettings"] })
+				.catch(() => undefined);
+			queryClient.invalidateQueries({ queryKey: ["me"] }).catch(() => undefined);
+		},
+	});
+}
