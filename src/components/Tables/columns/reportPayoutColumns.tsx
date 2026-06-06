@@ -1,25 +1,26 @@
 "use client";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { ROUTES } from "@/constants/routes";
 import { createColumns } from "./columnFactory";
 import type { TableColumns } from "./definitions";
+import { ActionCell } from "../cells/ActionCells";
 
 export type ReportPayout = {
 	id: string;
+	taskTitle: string;
 	agentName: string;
+	agentEmail: string;
 	territory: string;
-	kpiScore: string;
-	basePay: string;
-	bonuses: string;
-	deductions: string;
-	netPayout: string;
-	status: "Ready" | "Pending";
+	successRate: string;
+	incentiveAmount: string;
+	status: "paid" | "pending" | "failed";
 };
 
 export const reportPayoutColumns: TableColumns<ReportPayout> = createColumns<ReportPayout>([
 	{
 		id: "select",
-		header: "", // Usually the Select All logic is handled in the table or specific cell
+		header: "",
 		cell: ({ row }) => (
 			<Checkbox
 				checked={row.getIsSelected()}
@@ -28,6 +29,14 @@ export const reportPayoutColumns: TableColumns<ReportPayout> = createColumns<Rep
 			/>
 		),
 		enableSorting: false,
+	},
+	{
+		id: "taskTitle",
+		accessorKey: "taskTitle",
+		header: "Task / Visit",
+		cell: ({ getValue }) => (
+			<span className="text-[14px] font-bold text-gray-800">{getValue() as string}</span>
+		),
 	},
 	{
 		id: "agentName",
@@ -46,43 +55,19 @@ export const reportPayoutColumns: TableColumns<ReportPayout> = createColumns<Rep
 		),
 	},
 	{
-		id: "kpiScore",
-		accessorKey: "kpiScore",
-		header: "KPI Score",
+		id: "successRate",
+		accessorKey: "successRate",
+		header: "Task success rates",
 		cell: ({ getValue }) => (
 			<span className="text-[13px] font-medium text-gray-600">{getValue() as string}</span>
 		),
 	},
 	{
-		id: "basePay",
-		accessorKey: "basePay",
-		header: "Base Pay",
+		id: "incentiveAmount",
+		accessorKey: "incentiveAmount",
+		header: "Incentive Amount",
 		cell: ({ getValue }) => (
 			<span className="text-[13px] font-medium text-gray-600">{getValue() as string}</span>
-		),
-	},
-	{
-		id: "bonuses",
-		accessorKey: "bonuses",
-		header: "Bonuses",
-		cell: ({ getValue }) => (
-			<span className="text-[13px] font-medium text-gray-600">{getValue() as string}</span>
-		),
-	},
-	{
-		id: "deductions",
-		accessorKey: "deductions",
-		header: "Deductions",
-		cell: ({ getValue }) => (
-			<span className="text-[13px] font-medium text-gray-600">{getValue() as string}</span>
-		),
-	},
-	{
-		id: "netPayout",
-		accessorKey: "netPayout",
-		header: "Net Payout",
-		cell: ({ getValue }) => (
-			<span className="text-[13px] font-bold text-gray-900">{getValue() as string}</span>
 		),
 	},
 	{
@@ -90,18 +75,32 @@ export const reportPayoutColumns: TableColumns<ReportPayout> = createColumns<Rep
 		accessorKey: "status",
 		header: "Status",
 		cell: ({ getValue }) => {
-			const status = getValue() as string;
+			const status = (getValue() as string).toLowerCase();
+			let badgeClass = "bg-orange-50 text-orange-600 border border-orange-100";
+			let statusLabel = "Pending";
+
+			if (status === "paid" || status === "completed") {
+				badgeClass = "bg-green-50 text-green-600 border border-green-100";
+				statusLabel = "Paid";
+			} else if (status === "failed") {
+				badgeClass = "bg-red-50 text-red-600 border border-red-100";
+				statusLabel = "Failed";
+			}
+
 			return (
 				<div
-					className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold ${
-						status === "Ready"
-							? "bg-green-50 text-green-600"
-							: "bg-orange-50 text-orange-600"
-					}`}
+					className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold ${badgeClass}`}
 				>
-					{status}
+					{statusLabel}
 				</div>
 			);
 		},
+	},
+	{
+		id: "actions",
+		header: "",
+		cell: ({ row }) => (
+			<ActionCell id={row.original.id} viewHref={ROUTES.REPORT_DETAILS(row.original.id)} />
+		),
 	},
 ]);

@@ -2,17 +2,17 @@
 
 import cn from "@/lib/utils";
 
-interface AgentActivitiesWidgetProps {
+interface TotalTaskVisitWidgetProps {
 	label: string;
 	value: string | number;
 	className?: string;
 }
 
-export default function AgentActivitiesWidget({
+export default function TotalTaskVisitWidget({
 	label,
 	value,
 	className,
-}: AgentActivitiesWidgetProps) {
+}: TotalTaskVisitWidgetProps) {
 	return (
 		<div
 			className={cn(

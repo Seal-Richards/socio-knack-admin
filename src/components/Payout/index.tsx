@@ -6,11 +6,23 @@ import LeadGeneratedRevenue from "@/components/_charts/LeadGeneratedRevenue";
 import ReportPayoutList from "@/components/List/ReportPayoutList";
 import AgentPayoutWidget from "@/components/_widgets/AgentPayout";
 import AgentRevenueWidget from "@/components/_widgets/AgentRevenue";
-import AgentActivitiesWidget from "@/components/_widgets/AgentActivities";
+import TotalTaskVisitWidget from "@/components/_widgets/TotalTaskVisit";
 import AgentRoiWidget from "@/components/_widgets/AgentRoi";
+import { useGetReportsPayoutMetrics } from "@/hooks/useReportsPayout";
 import { Icon } from "@iconify/react";
 
 export default function Payout() {
+	const { data: metricsRes, isLoading } = useGetReportsPayoutMetrics();
+	const metrics = metricsRes?.data;
+
+	if (isLoading) {
+		return (
+			<div className="flex h-64 items-center justify-center">
+				<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
+			</div>
+		);
+	}
+
 	return (
 		<div className="flex flex-col gap-10">
 			{/* Top Actions & Metrics Section */}
@@ -30,10 +42,19 @@ export default function Payout() {
 				</div>
 
 				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-					<AgentPayoutWidget label="Total Agent Payout" value="12.450,000" />
-					<AgentRevenueWidget label="Revenue" value="24,000,900" />
-					<AgentActivitiesWidget label="Verified Activities" value="150" />
-					<AgentRoiWidget label="ROI Efficiency" value="88" />
+					<AgentPayoutWidget
+						label="Total Agent Payout"
+						value={metrics?.totalPayout ? metrics.totalPayout.toLocaleString() : "0"}
+					/>
+					<AgentRevenueWidget
+						label="Revenue"
+						value={metrics?.totalRevenue ? metrics.totalRevenue.toLocaleString() : "0"}
+					/>
+					<TotalTaskVisitWidget
+						label="Approved visits"
+						value={metrics?.totalVisits ?? "0"}
+					/>
+					<AgentRoiWidget label="ROI Efficiency" value={metrics?.roiEfficiency ?? 0} />
 				</div>
 			</div>
 
@@ -45,8 +66,8 @@ export default function Payout() {
 					</h2>
 				</div>
 				<div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-					<HoursInField />
-					<LeadGeneratedRevenue />
+					<HoursInField data={metrics?.hoursInField} />
+					<LeadGeneratedRevenue data={metrics?.revenueLeads} />
 				</div>
 			</div>
 

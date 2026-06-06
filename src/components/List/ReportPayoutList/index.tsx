@@ -5,38 +5,14 @@ import TableLayoutWrapper from "@/components/List/TableLayoutWrapper";
 import Table from "@/components/Tables";
 import SearchBar from "@/components/_atoms/SearchBar";
 import { Icon } from "@iconify/react";
-import {
-	reportPayoutColumns,
-	type ReportPayout,
-} from "@/components/Tables/columns/reportPayoutColumns";
+import { reportPayoutColumns } from "@/components/Tables/columns/reportPayoutColumns";
 import Pagination from "@/components/_atoms/Pagination";
-
-const mockData: ReportPayout[] = [
-	{
-		id: "1",
-		agentName: "Kolawole James",
-		territory: "Yaba Zone",
-		kpiScore: "75%",
-		basePay: "₦15,000",
-		bonuses: "₦2,000",
-		netPayout: "₦17,000",
-		status: "Ready",
-		deductions: "NO",
-	},
-	{
-		id: "2",
-		agentName: "Adewole Grace",
-		territory: "Ikeja Zone",
-		kpiScore: "65%",
-		basePay: "₦15,000",
-		bonuses: "₦800",
-		netPayout: "₦15,800",
-		status: "Pending",
-		deductions: "NO",
-	},
-];
+import { useGetReportsPayoutList } from "@/hooks/useReportsPayout";
 
 export default function ReportPayoutList() {
+	const { data: listRes, isLoading } = useGetReportsPayoutList();
+	const payouts = listRes?.data || [];
+
 	const [searchQuery, setSearchQuery] = useState("");
 	const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
 	const [currentPage, setCurrentPage] = useState(1);
@@ -45,10 +21,11 @@ export default function ReportPayoutList() {
 	const selectedCount = Object.keys(rowSelection).filter((key) => rowSelection[key]).length;
 
 	// Filter data
-	const filteredData = mockData.filter(
+	const filteredData = payouts.filter(
 		(item) =>
 			item.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			item.territory.toLowerCase().includes(searchQuery.toLowerCase()),
+			item.territory.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			item.taskTitle.toLowerCase().includes(searchQuery.toLowerCase()),
 	);
 
 	// Pagination Math
@@ -58,10 +35,24 @@ export default function ReportPayoutList() {
 		currentPage * itemsPerPage,
 	);
 
+	// Calculate total incentive to be paid for selected rows
+	const selectedTotal = Object.keys(rowSelection).reduce((sum, key) => {
+		if (rowSelection[key]) {
+			const index = parseInt(key, 10);
+			const item = paginatedPayouts[index];
+			if (item) {
+				const amountNum = parseFloat(item.incentiveAmount.replace(/[^\d.]/g, "")) || 0;
+				return sum + amountNum;
+			}
+		}
+		return sum;
+	}, 0);
+
 	// Reset page counter
 	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchQuery(e.target.value);
 		setCurrentPage(1);
+		setRowSelection({}); // reset row selection on search
 	};
 
 	const filterActions = (
@@ -79,6 +70,14 @@ export default function ReportPayoutList() {
 			</div>
 		</div>
 	);
+
+	if (isLoading) {
+		return (
+			<div className="flex h-32 items-center justify-center rounded-3xl bg-white p-6 shadow-sm">
+				<div className="size-6 animate-spin rounded-full border-2 border-[#1d4ea8] border-t-transparent" />
+			</div>
+		);
+	}
 
 	return (
 		<TableLayoutWrapper title="" filters={filterActions} className="gap-0">
@@ -104,8 +103,9 @@ export default function ReportPayoutList() {
 				<div className="animate-in fade-in slide-in-from-bottom-4 mt-8 flex items-center justify-between border-t border-gray-50 pt-8 duration-300">
 					<div className="flex flex-col gap-1">
 						<p className="text-[17px] font-black text-gray-900">
-							{selectedCount} Agents selected | Total to be paid: ₦
-							{(selectedCount * 2409).toLocaleString()}
+							{selectedCount} Agent{selectedCount > 1 ? "s" : ""} selected | Total to
+							be paid: ₦
+							{selectedTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
 						</p>
 						<p className="text-sm font-medium text-gray-500">
 							You are about to authorize payment to {selectedCount} agent

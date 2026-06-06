@@ -9,6 +9,7 @@ export const ROUTES = {
 	SUPERVISOR_DETAILS: (id: string | number) => `/supervisor-management/${id}`,
 	TERRITORY: "/territory-control",
 	REPORTS: "/reports-payouts",
+	REPORT_DETAILS: (id: string | number) => `/reports-payouts/${id}`,
 	USERS: "/user-management",
 	SETTINGS: "/settings",
 	ALL_TASKS: "/all-task",

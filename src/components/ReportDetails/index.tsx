@@ -1,0 +1,509 @@
+"use client";
+
+import React from "react";
+import { useRouter } from "next/navigation";
+import { useGetReportDetails, useApproveVisit } from "@/hooks/useReportsPayout";
+import { useGetMe } from "@/hooks/useProfile";
+import { Icon } from "@iconify/react";
+import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
+import cn from "@/lib/utils";
+import Image from "next/image";
+
+interface ReportDetailsProps {
+	id: string;
+}
+
+function getOutcomeClass(outcome?: string) {
+	if (outcome === "sale") {
+		return "bg-green-50 text-green-600 border border-green-100";
+	}
+	if (outcome === "lead") {
+		return "bg-blue-50 text-[#1d4ea8] border border-blue-100";
+	}
+	return "bg-gray-50 text-gray-600 border border-gray-150";
+}
+
+export default function ReportDetails({ id }: ReportDetailsProps) {
+	const router = useRouter();
+
+	const { data: meRes } = useGetMe();
+	const userRole = meRes?.data?.role;
+	const isSupervisor = userRole === "supervisor";
+	const canApprove = userRole === "admin" || userRole === "supervisor";
+
+	const { data: reportRes, isLoading, error } = useGetReportDetails(id);
+	const approveMutation = useApproveVisit();
+	const visit = reportRes?.data;
+
+	if (isLoading) {
+		return (
+			<div className="flex h-96 items-center justify-center">
+				<div className="size-10 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
+			</div>
+		);
+	}
+
+	if (error || !visit) {
+		return (
+			<div className="flex flex-col items-center justify-center p-8 text-center">
+				<div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-red-50 text-red-500">
+					<Icon icon="solar:shield-warning-bold" className="size-8" />
+				</div>
+				<h3 className="text-lg font-bold text-gray-900">Report Details Not Found</h3>
+				<p className="mt-1 text-sm text-gray-500">
+					The requested report does not exist or you do not have permission to view it.
+				</p>
+				<button
+					onClick={() => router.push("/reports-payouts")}
+					className="mt-6 flex items-center gap-2 rounded-xl bg-[#1e288e] px-6 py-2.5 text-sm font-bold text-white transition-all hover:scale-[1.02]"
+				>
+					Back to Reports & Payouts
+				</button>
+			</div>
+		);
+	}
+
+	const { agentId: agent, report, checkInTime: checkIn, checkOutTime: checkOut } = visit;
+	const saleDetails = report?.saleDetails;
+	const product = saleDetails?.productId;
+
+	// Format check-in/out duration
+	let durationStr = "N/A";
+	if (checkIn && checkOut) {
+		const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime();
+		const mins = Math.floor(diff / (1000 * 60));
+		const hrs = Math.floor(mins / 60);
+		if (hrs > 0) {
+			durationStr = `${hrs}h ${mins % 60}m`;
+		} else {
+			durationStr = `${mins}m`;
+		}
+	}
+
+	return (
+		<div className="flex flex-col gap-8 font-sans text-gray-800">
+			{/* Top Navigation Row */}
+			<div className="flex items-center justify-between">
+				<button
+					onClick={() => router.push("/reports-payouts")}
+					className="flex items-center gap-2 text-sm font-bold text-gray-500 transition-colors hover:text-gray-900"
+				>
+					<Icon icon="lucide:arrow-left" className="size-4" />
+					Back to Reports
+				</button>
+				<div className="flex items-center gap-3">
+					<span
+						className={cn(
+							"inline-flex items-center rounded-full px-3.5 py-1 text-xs font-bold capitalize",
+							visit.isApproved
+								? "bg-green-50 text-green-600 border border-green-100"
+								: "bg-orange-50 text-orange-600 border border-orange-100",
+						)}
+					>
+						{visit.isApproved ? "Paid / Approved" : "Pending Approval"}
+					</span>
+
+					{canApprove && !visit.isApproved && (
+						<button
+							onClick={() => approveMutation.mutate({ id, isSupervisor })}
+							disabled={approveMutation.isPending}
+							className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-green-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+						>
+							{approveMutation.isPending ? (
+								<div className="size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+							) : (
+								<Icon icon="lucide:check-circle" className="size-4" />
+							)}
+							Approve Visit
+						</button>
+					)}
+				</div>
+			</div>
+
+			{/* Header Section */}
+			<div className="flex flex-col gap-2">
+				<h1 className="text-3xl font-black text-gray-900">{visit.title}</h1>
+				<p className="text-sm text-gray-500">
+					Report ID:{" "}
+					<span className="font-mono font-bold text-gray-700">{visit._id}</span>
+				</p>
+			</div>
+
+			{/* Main Layout Grid */}
+			<div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+				{/* Left Columns (Details & Customer) */}
+				<div className="flex flex-col gap-8 lg:col-span-2">
+					{/* Card 1: Visit & Outcome Details */}
+					<div className="space-y-6 rounded-[2rem] border border-gray-100 bg-white p-8 shadow-sm">
+						<div className="flex items-center justify-between border-b border-gray-50 pb-4">
+							<h3 className="text-lg font-bold text-gray-900">Task Summary</h3>
+							<div className="flex items-center gap-2">
+								<Icon
+									icon="solar:clipboard-text-bold-duotone"
+									className="size-5 text-[#1d4ea8]"
+								/>
+							</div>
+						</div>
+
+						<div className="grid grid-cols-2 gap-6">
+							<div>
+								<p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+									Outcome Type
+								</p>
+								<span
+									className={cn(
+										"inline-flex items-center rounded-full px-3 py-1 text-xs font-bold capitalize mt-1.5",
+										getOutcomeClass(report?.outcome),
+									)}
+								>
+									{report?.outcome || "sale"}
+								</span>
+							</div>
+							<div>
+								<p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+									Priority
+								</p>
+								<span className="mt-2 block text-sm font-black capitalize text-gray-800">
+									{visit.priority}
+								</span>
+							</div>
+							<div>
+								<p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+									Check In
+								</p>
+								<p className="mt-1 text-sm font-black text-gray-800">
+									{visit.checkInTime
+										? new Date(visit.checkInTime).toLocaleString("en-US", {
+												year: "numeric",
+												month: "numeric",
+												day: "numeric",
+												hour: "numeric",
+												minute: "numeric",
+												hour12: true,
+											})
+										: "N/A"}
+								</p>
+							</div>
+							<div>
+								<p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+									Check Out / Duration
+								</p>
+								<p className="mt-1 text-sm font-black text-gray-800">
+									{visit.checkOutTime
+										? new Date(visit.checkOutTime).toLocaleTimeString("en-US", {
+												hour: "numeric",
+												minute: "numeric",
+												hour12: true,
+											})
+										: "N/A"}{" "}
+									<span className="ml-1 text-xs font-medium text-gray-400">
+										({durationStr})
+									</span>
+								</p>
+							</div>
+						</div>
+
+						<div className="pt-2">
+							<p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+								Agent Notes & Observations
+							</p>
+							<p className="mt-2 rounded-2xl border border-gray-100/50 bg-gray-50/50 p-5 text-sm leading-relaxed text-gray-600">
+								{report?.notes || "No extra notes logged for this visit."}
+							</p>
+						</div>
+					</div>
+
+					{/* Card 2: Customer Contacts */}
+					<div className="space-y-6 rounded-[2rem] border border-gray-100 bg-white p-8 shadow-sm">
+						<div className="flex items-center justify-between border-b border-gray-50 pb-4">
+							<h3 className="text-lg font-bold text-gray-900">
+								Customer Contact Details
+							</h3>
+							<Icon
+								icon="solar:user-speak-bold-duotone"
+								className="size-5 text-green-500"
+							/>
+						</div>
+
+						<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+							<div className="flex items-center gap-3 rounded-2xl border border-gray-100/50 bg-gray-50/50 p-4">
+								<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-500">
+									<Icon icon="solar:user-rounded-bold" className="size-5" />
+								</div>
+								<div>
+									<p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+										Customer Full Name
+									</p>
+									<p className="mt-0.5 text-sm font-black text-gray-800">
+										{report?.customerFullName || "N/A"}
+									</p>
+								</div>
+							</div>
+
+							<div className="flex items-center gap-3 rounded-2xl border border-gray-100/50 bg-gray-50/50 p-4">
+								<div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-500">
+									<Icon icon="solar:phone-bold" className="size-5" />
+								</div>
+								<div>
+									<p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+										Customer Phone Number
+									</p>
+									<p className="mt-0.5 text-sm font-black tracking-wider text-gray-800">
+										{report?.customerPhoneNumber || "N/A"}
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Card 3: Attachments / Media & Documents */}
+					<div className="space-y-6 rounded-[2rem] border border-gray-100 bg-white p-8 shadow-sm">
+						<div className="flex items-center justify-between border-b border-gray-50 pb-4">
+							<h3 className="text-lg font-bold text-gray-900">
+								Media & Document Attachments
+							</h3>
+							<Icon
+								icon="solar:gallery-download-bold-duotone"
+								className="size-5 text-[#1d4ea8]"
+							/>
+						</div>
+
+						{/* Photos Section */}
+						<div className="space-y-3">
+							<p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+								Uploaded Images / Photos
+							</p>
+							{report?.photos && report.photos.length > 0 ? (
+								<div className="flex flex-wrap gap-4 pt-1">
+									{report.photos.map((url: string, idx: number) => (
+										<a
+											key={url}
+											href={url}
+											target="_blank"
+											rel="noopener noreferrer"
+											title={`View attachment ${idx + 1}`}
+											aria-label={`View attachment ${idx + 1}`}
+											className="relative block size-24 overflow-hidden rounded-xl border border-gray-100 shadow-sm transition-all hover:scale-105"
+										>
+											<Image
+												src={url}
+												alt={`Attachment ${idx + 1}`}
+												fill
+												className="object-cover"
+											/>
+										</a>
+									))}
+								</div>
+							) : (
+								<p className="text-xs font-semibold italic text-gray-400">
+									No image files attached.
+								</p>
+							)}
+						</div>
+
+						{/* PDFs & Documents Section */}
+						<div className="space-y-3 border-t border-gray-50 pt-4">
+							<p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+								Document Files (PDF, Word, etc.)
+							</p>
+							{report?.pdfDocuments && report.pdfDocuments.length > 0 ? (
+								<div className="grid grid-cols-1 gap-3 pt-1 md:grid-cols-2">
+									{report.pdfDocuments.map((url: string, idx: number) => {
+										const isPdf = url.toLowerCase().includes(".pdf");
+										return (
+											<a
+												key={url}
+												href={url}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="group flex items-center justify-between rounded-2xl border border-gray-100/50 bg-gray-50/50 p-4 transition-all hover:bg-gray-100/30"
+											>
+												<div className="flex items-center gap-3">
+													<div className="flex size-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+														<Icon
+															icon={
+																isPdf
+																	? "solar:document-text-bold"
+																	: "solar:document-bold"
+															}
+															className="size-5"
+														/>
+													</div>
+													<span className="text-xs font-bold text-gray-700">
+														Attachment_{idx + 1}
+														{isPdf ? ".pdf" : ""}
+													</span>
+												</div>
+												<Icon
+													icon="solar:download-bold"
+													className="size-4 text-gray-400 transition-colors group-hover:text-gray-900"
+												/>
+											</a>
+										);
+									})}
+								</div>
+							) : (
+								<p className="text-xs font-semibold italic text-gray-400">
+									No document files attached.
+								</p>
+							)}
+						</div>
+					</div>
+				</div>
+
+				{/* Right Column (Sales targets, Agent, Checklist) */}
+				<div className="flex flex-col gap-8">
+					{/* Card 4: Sales & Payout Details */}
+					{report?.outcome === "sale" && (
+						<div className="space-y-6 rounded-[2rem] border border-gray-100 bg-[#eaf5eb]/40 p-8 shadow-sm">
+							<div className="flex items-center justify-between border-b border-green-100/50 pb-4">
+								<h3 className="text-lg font-bold text-green-950">
+									Sales & Payout details
+								</h3>
+								<Icon
+									icon="solar:banknote-bold-duotone"
+									className="size-5 text-green-600"
+								/>
+							</div>
+
+							<div className="space-y-4 text-sm text-green-900">
+								<div>
+									<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+										Product / Service Sold
+									</p>
+									<p className="mt-0.5 font-bold text-green-950">
+										{product?.name || "N/A"}
+									</p>
+									<span className="mt-0.5 block text-xs font-medium text-green-700">
+										Category: {product?.category || "General"}
+									</span>
+								</div>
+
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+											Quantity
+										</p>
+										<p className="mt-0.5 font-bold text-green-950">
+											{saleDetails?.quantity || 1}
+										</p>
+									</div>
+									<div>
+										<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+											Sale Value
+										</p>
+										<p className="mt-0.5 font-bold text-green-950">
+											₦{(saleDetails?.saleValue || 0).toLocaleString()}
+										</p>
+									</div>
+								</div>
+
+								<div className="grid grid-cols-2 gap-4 border-t border-green-100/50 pt-4">
+									<div>
+										<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+											Payment Mode
+										</p>
+										<p className="mt-0.5 font-bold capitalize text-green-950">
+											{saleDetails?.paymentMode === "fullPayment"
+												? "Full Payment"
+												: saleDetails?.paymentMode || "N/A"}
+										</p>
+									</div>
+									<div>
+										<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+											Paid Amount
+										</p>
+										<p className="mt-0.5 font-bold text-green-950">
+											₦{(saleDetails?.amount || 0).toLocaleString()}
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
+
+					{/* Card 5: Performed Agent details */}
+					<div className="space-y-6 rounded-[2rem] border border-gray-100 bg-white p-8 shadow-sm">
+						<div className="flex items-center justify-between border-b border-gray-50 pb-4">
+							<h3 className="text-lg font-bold text-gray-900">Performed Agent</h3>
+							<Icon
+								icon="solar:shield-user-bold-duotone"
+								className="size-5 text-[#1d4ea8]"
+							/>
+						</div>
+
+						{agent ? (
+							<div className="flex items-center gap-4">
+								<DynamicAvatar
+									name={`${agent.firstName || ""} ${agent.lastName || ""}`}
+									image={agent.avatar}
+									className="size-14 rounded-full border border-gray-100"
+								/>
+								<div>
+									<h4 className="font-bold text-gray-900">
+										{`${agent.firstName || ""} ${agent.lastName || ""}`.trim() ||
+											"Agent"}
+									</h4>
+									<p className="mt-0.5 text-xs font-semibold text-[#1d4ea8]">
+										Sales Field Agent
+									</p>
+									<p className="mt-0.5 text-xs font-medium text-gray-400">
+										{agent.email}
+									</p>
+								</div>
+							</div>
+						) : (
+							<p className="text-sm text-gray-400">Agent profile not found</p>
+						)}
+					</div>
+
+					{/* Card 6: Task Checklist */}
+					<div className="space-y-6 rounded-[2rem] border border-gray-100 bg-white p-8 shadow-sm">
+						<div className="flex items-center justify-between border-b border-gray-50 pb-4">
+							<h3 className="text-lg font-bold text-gray-900">Checklist Details</h3>
+							<Icon
+								icon="solar:check-square-bold-duotone"
+								className="size-5 text-[#1d4ea8]"
+							/>
+						</div>
+
+						{visit.checklist && visit.checklist.length > 0 ? (
+							<div className="flex flex-col gap-3.5">
+								{visit.checklist.map((item, i) => (
+									<div key={item._id || i} className="flex items-start gap-3">
+										<div
+											className={cn(
+												"flex size-5 shrink-0 items-center justify-center rounded border transition-colors mt-0.5",
+												item.isCompleted
+													? "border-green-500 bg-green-500 text-white"
+													: "border-gray-300 bg-white",
+											)}
+										>
+											{item.isCompleted && (
+												<Icon icon="lucide:check" className="size-3.5" />
+											)}
+										</div>
+										<span
+											className={cn(
+												"text-[13px] font-medium tracking-tight",
+												item.isCompleted
+													? "text-gray-400 line-through"
+													: "text-gray-600",
+											)}
+										>
+											{item.title}
+										</span>
+									</div>
+								))}
+							</div>
+						) : (
+							<p className="text-xs font-semibold italic text-gray-400">
+								No checklist items defined.
+							</p>
+						)}
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
