@@ -9,6 +9,7 @@ export type CreateTerritoryPayload = {
 	color: string;
 	description?: string;
 	salesTarget?: number;
+	warningMessage?: string;
 	boundary: {
 		type: "Polygon";
 		coordinates: number[][][];

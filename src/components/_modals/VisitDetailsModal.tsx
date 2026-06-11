@@ -51,6 +51,7 @@ type VisitRecord = {
 			paymentMode?: string;
 		};
 	};
+	isScheduleApproved?: boolean;
 };
 
 type VisitDetailsModalProps = {
@@ -219,6 +220,24 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 			}
 		} catch (err) {
 			const errorMsg = err instanceof Error ? err.message : "Failed to cancel task.";
+			toast.error(errorMsg);
+		}
+	};
+
+	const handleApproveSchedule = async () => {
+		try {
+			const res = await updateVisitMutation.mutateAsync({
+				visitId: visit._id || visit.id || "",
+				payload: { isScheduleApproved: true, status: "upcoming" },
+			});
+			if (res.success) {
+				toast.success("Schedule approved successfully!");
+				onClose();
+			} else {
+				toast.error(res.message || "Failed to approve schedule.");
+			}
+		} catch (err) {
+			const errorMsg = err instanceof Error ? err.message : "Failed to approve schedule.";
 			toast.error(errorMsg);
 		}
 	};
@@ -597,7 +616,7 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 
 					{!isEditing && (
 						<div className="mt-8 flex items-center justify-between">
-							<div>
+							<div className="flex gap-3">
 								{canEditOrCancel && !isCancelled && !isCompleted && (
 									<Button
 										onClick={handleCancelTask}
@@ -607,6 +626,17 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 										{updateVisitMutation.isPending
 											? "Cancelling..."
 											: "Cancel Task"}
+									</Button>
+								)}
+								{canEditOrCancel && visit.isScheduleApproved === false && (
+									<Button
+										onClick={handleApproveSchedule}
+										disabled={updateVisitMutation.isPending}
+										className="h-11 cursor-pointer rounded-xl bg-green-50 px-6 font-bold text-green-600 transition-colors hover:bg-green-100"
+									>
+										{updateVisitMutation.isPending
+											? "Approving..."
+											: "Approve Schedule"}
 									</Button>
 								)}
 							</div>

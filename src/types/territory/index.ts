@@ -9,6 +9,7 @@ export type TerritoryData = {
 	color: string;
 	description?: string;
 	salesTarget?: number;
+	warningMessage?: string;
 	boundary: {
 		type: "Polygon";
 		coordinates: number[][][]; // Array of arrays of [longitude, latitude]

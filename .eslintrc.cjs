@@ -4,6 +4,7 @@ const config = {
 	parser: "@typescript-eslint/parser",
 	parserOptions: {
 		project: "./tsconfig.json",
+		tsconfigRootDir: __dirname,
 		warnOnUnsupportedTypeScriptVersion: false,
 	},
 	globals: {
@@ -16,7 +17,7 @@ const config = {
 		browser: true,
 	},
 	plugins: ["@typescript-eslint", "import", "prettier"],
-	ignorePatterns: ["node_modules", "public", "dist", "coverage", "IneritaPages"],
+	ignorePatterns: ["node_modules", "public", "dist", "coverage", "IneritaPages", ".eslintrc.cjs"],
 	extends: [
 		"airbnb",
 		"eslint:recommended",

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { io, type Socket } from "socket.io-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetMe } from "@/hooks/useProfile";
+import { toast } from "sonner";
 
 interface SocketAgentData {
 	agentId: string;
@@ -18,6 +19,7 @@ export function useSocketAgentTracking() {
 	const queryClient = useQueryClient();
 	const { data: meRes } = useGetMe();
 	const businessId = (meRes?.data as Record<string, unknown>)?.businessId as string | undefined;
+	const userId = (meRes?.data as Record<string, unknown>)?._id as string | undefined;
 
 	useEffect(() => {
 		if (businessId) {
@@ -33,6 +35,9 @@ export function useSocketAgentTracking() {
 
 			// Join the business room
 			socket.emit("join_business_room", businessId);
+			if (userId) {
+				socket.emit("join_user_room", userId);
+			}
 
 			// Listen for agent status updates (online/offline toggle)
 			const handleAgentStatusUpdate = () => {
@@ -65,14 +70,24 @@ export function useSocketAgentTracking() {
 				);
 			};
 
+			// Listen for new in-app notifications
+			const handleNewNotification = (data: { title: string; body: string }) => {
+				toast.info(data.title, {
+					description: data.body,
+				});
+				queryClient.invalidateQueries({ queryKey: ["notifications"] }).catch(console.error);
+			};
+
 			socket.on("agent_status_update", handleAgentStatusUpdate);
 			socket.on("agent_location_update", handleAgentLocationUpdate);
+			socket.on("new_notification", handleNewNotification);
 
 			return () => {
 				socket?.off("agent_status_update", handleAgentStatusUpdate);
 				socket?.off("agent_location_update", handleAgentLocationUpdate);
+				socket?.off("new_notification", handleNewNotification);
 			};
 		}
 		return undefined;
-	}, [businessId, queryClient]);
+	}, [businessId, userId, queryClient]);
 }

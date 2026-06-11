@@ -2,6 +2,7 @@
 
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import Sidebar from "@/components/Sidebar";
@@ -11,13 +12,39 @@ import Breadcrumbs from "@/components/_atoms/Breadcrumbs";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useGetMe } from "@/hooks/useProfile";
+import {
+	useGetNotifications,
+	useMarkAllNotificationsAsRead,
+	useMarkNotificationAsRead,
+} from "@/hooks/useNotification";
 
 export default function Navbar() {
 	const { data: session } = useSession();
+	const [isOpen, setIsOpen] = useState(false);
+	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	// Fetch live profile via GET /auth/me — works for all roles
 	const { data: ownProfileRes } = useGetMe();
 	const profileData = ownProfileRes?.data;
+
+	// Fetch notifications
+	const { data: notificationsRes } = useGetNotifications();
+	const notifications = notificationsRes?.data || [];
+	const unreadNotifications = notifications.filter((n) => !n.isRead);
+	const unreadCount = unreadNotifications.length;
+
+	const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead();
+	const { mutate: markAsRead } = useMarkNotificationAsRead();
+
+	useEffect(() => {
+		function handleClickOutside(event: MouseEvent) {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+				setIsOpen(false);
+			}
+		}
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
 	// Use backend avatar first, fall back to session image, then null (shows icon)
 	const avatarSrc = profileData?.avatar ?? session?.user?.image ?? null;
@@ -79,14 +106,92 @@ export default function Navbar() {
 						>
 							<Icon icon="solar:magnifer-linear" className="size-5 text-gray-500" />
 						</Button>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="relative size-10 rounded-full bg-gray-50/50 hover:bg-gray-100"
-						>
-							<Icon icon="solar:bell-bing-linear" className="size-5 text-gray-500" />
-							<span className="absolute right-2.5 top-2.5 size-2 rounded-full border-2 border-white bg-red-500" />
-						</Button>
+
+						{/* Notification Dropdown */}
+						<div className="relative" ref={dropdownRef}>
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => setIsOpen(!isOpen)}
+								className="relative size-10 rounded-full bg-gray-50/50 hover:bg-gray-100"
+							>
+								<Icon
+									icon="solar:bell-bing-linear"
+									className="size-5 text-gray-500"
+								/>
+								{unreadCount > 0 && (
+									<span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full border border-white bg-red-500 text-[10px] font-bold text-white">
+										{unreadCount}
+									</span>
+								)}
+							</Button>
+
+							{isOpen && (
+								<div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl ring-1 ring-black/5">
+									<div className="flex items-center justify-between border-b border-gray-50 bg-gray-50/50 p-4">
+										<h4 className="text-sm font-semibold text-gray-800">
+											Notifications
+										</h4>
+										{unreadCount > 0 && (
+											<button
+												onClick={() => markAllAsRead()}
+												className="text-xs font-medium text-[#1d4ea8] hover:underline"
+											>
+												Mark all as read
+											</button>
+										)}
+									</div>
+									<div className="max-h-64 divide-y divide-gray-50 overflow-y-auto">
+										{notifications.length === 0 ? (
+											<div className="p-6 text-center text-xs text-gray-400">
+												No notifications yet
+											</div>
+										) : (
+											notifications.map((notif) => (
+												<button
+													key={notif._id}
+													type="button"
+													onClick={() => {
+														if (!notif.isRead) {
+															markAsRead(notif._id);
+														}
+													}}
+													className={`block w-full cursor-pointer p-4 text-left transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none ${
+														!notif.isRead ? "bg-[#1d4ea8]/5" : ""
+													}`}
+												>
+													<div className="flex items-start justify-between gap-2">
+														<p
+															className={`text-xs ${!notif.isRead ? "font-semibold text-gray-900" : "text-gray-600"}`}
+														>
+															{notif.title}
+														</p>
+														{!notif.isRead && (
+															<span className="mt-1 size-2 shrink-0 rounded-full bg-blue-600" />
+														)}
+													</div>
+													<p className="mt-1 text-[11px] leading-relaxed text-gray-500">
+														{notif.message}
+													</p>
+													<p className="mt-1 text-[9px] text-gray-400">
+														{new Date(
+															notif.createdAt,
+														).toLocaleDateString()}{" "}
+														at{" "}
+														{new Date(
+															notif.createdAt,
+														).toLocaleTimeString([], {
+															hour: "2-digit",
+															minute: "2-digit",
+														})}
+													</p>
+												</button>
+											))
+										)}
+									</div>
+								</div>
+							)}
+						</div>
 
 						{/* Profile Avatar */}
 						<div className="ml-1 flex items-center gap-3">

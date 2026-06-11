@@ -31,12 +31,12 @@ interface CreateZoneModalProps {
 }
 
 const PALETTE = [
-	{ name: "Green", hex: "#10b981" },
-	{ name: "Orange", hex: "#f59e0b" },
-	{ name: "Blue", hex: "#1d4ea8" },
-	{ name: "Red", hex: "#ef4444" },
-	{ name: "Purple", hex: "#8b5cf6" },
-	{ name: "Pink", hex: "#ec4899" },
+	{ name: "Green", hex: "#10b981", bgClass: "bg-[#10b981]" },
+	{ name: "Orange", hex: "#f59e0b", bgClass: "bg-[#f59e0b]" },
+	{ name: "Blue", hex: "#1d4ea8", bgClass: "bg-[#1d4ea8]" },
+	{ name: "Red", hex: "#ef4444", bgClass: "bg-[#ef4444]" },
+	{ name: "Purple", hex: "#8b5cf6", bgClass: "bg-[#8b5cf6]" },
+	{ name: "Pink", hex: "#ec4899", bgClass: "bg-[#ec4899]" },
 ];
 
 export default function CreateZoneModal({
@@ -52,6 +52,7 @@ export default function CreateZoneModal({
 	const [supervisorId, setSupervisorId] = useState<string>("");
 	const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
 	const [salesTarget, setSalesTarget] = useState<string>("");
+	const [warningMessage, setWarningMessage] = useState("");
 
 	const { data: supervisorsRes, isLoading: loadingSupervisors } = useGetSupervisors();
 	const { data: agentsRes, isLoading: loadingAgents } = useGetAgents();
@@ -80,6 +81,7 @@ export default function CreateZoneModal({
 					?.map((a) => a._id || a.id || "")
 					.filter((id) => id !== "") || [],
 			);
+			setWarningMessage(zoneToEdit.warningMessage || "");
 		} else {
 			setName("");
 			setDescription("");
@@ -87,6 +89,7 @@ export default function CreateZoneModal({
 			setSalesTarget("");
 			setSupervisorId("");
 			setSelectedAgents([]);
+			setWarningMessage("");
 		}
 	}, [zoneToEdit, isOpen]);
 
@@ -177,6 +180,7 @@ export default function CreateZoneModal({
 					assignedSupervisor: supervisorId || null,
 					assignedAgents: selectedAgents,
 					salesTarget: salesTarget !== "" ? Number(salesTarget) : undefined,
+					warningMessage: warningMessage.trim(),
 				};
 
 				if (formattedCoordinates.length >= 3) {
@@ -214,6 +218,7 @@ export default function CreateZoneModal({
 					assignedSupervisor: supervisorId || null,
 					assignedAgents: selectedAgents,
 					salesTarget: salesTarget !== "" ? Number(salesTarget) : 0,
+					warningMessage: warningMessage.trim(),
 				};
 
 				const res = await createTerritoryMutation.mutateAsync(payload);
@@ -225,6 +230,7 @@ export default function CreateZoneModal({
 					setSalesTarget("");
 					setSupervisorId("");
 					setSelectedAgents([]);
+					setWarningMessage("");
 					onClose();
 					if (onSuccess) onSuccess();
 				} else {
@@ -309,6 +315,27 @@ export default function CreateZoneModal({
 						</p>
 					</div>
 
+					{/* Warning Message */}
+					<div className="space-y-2">
+						<Label
+							htmlFor="zone-warning-message"
+							className="text-[14px] font-bold text-gray-700"
+						>
+							&quot;Not In Zone&quot; Warning Message
+						</Label>
+						<Input
+							id="zone-warning-message"
+							placeholder="e.g. You are currently outside your assigned zone boundaries. Please move to your assigned zone."
+							value={warningMessage}
+							onChange={(e) => setWarningMessage(e.target.value)}
+							className="h-12 rounded-xl border-gray-100 bg-gray-50/50 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
+						/>
+						<p className="text-[12px] text-gray-400">
+							This message will display as a warning modal to the sales agent if they
+							attempt to start a visit outside this zone&apos;s boundaries.
+						</p>
+					</div>
+
 					{/* Color Selection */}
 					<div className="space-y-2">
 						<Label className="text-[14px] font-bold text-gray-700">
@@ -323,11 +350,11 @@ export default function CreateZoneModal({
 									aria-label={item.name}
 									className={cn(
 										"size-8 rounded-full border-2 transition-all flex items-center justify-center",
+										item.bgClass,
 										color === item.hex
 											? "scale-110 border-gray-900 shadow-sm"
 											: "border-transparent hover:scale-105",
 									)}
-									style={{ backgroundColor: item.hex }}
 								>
 									{color === item.hex && (
 										<Icon icon="lucide:check" className="size-4 text-white" />

@@ -16,6 +16,7 @@ export type ScheduleVisitPayload = {
 	incentiveType?: string;
 	incentiveValue?: number;
 	checklist?: Array<{ title: string; isCompleted?: boolean }>;
+	isScheduleApproved?: boolean;
 };
 
 export const dashboardRequests = {
