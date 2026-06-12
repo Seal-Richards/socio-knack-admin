@@ -37,6 +37,8 @@ export function useApproveVisit() {
 			await queryClient.invalidateQueries({ queryKey: ["reportDetails", variables.id] });
 			await queryClient.invalidateQueries({ queryKey: ["reportsPayoutList"] });
 			await queryClient.invalidateQueries({ queryKey: ["reportsPayoutMetrics"] });
+			await queryClient.invalidateQueries({ queryKey: ["dashboard-visits"] });
+			await queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
 		},
 	});
 }

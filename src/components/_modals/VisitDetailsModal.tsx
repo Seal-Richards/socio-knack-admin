@@ -7,6 +7,7 @@ import { useGetMe } from "@/hooks/useProfile";
 import { useUpdateVisit } from "@/hooks/useDashboard";
 import { useGetAgents } from "@/hooks/useAgent";
 import { useGetTerritories } from "@/hooks/useTerritory";
+import { useApproveVisit } from "@/hooks/useReportsPayout";
 import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
 import { toast } from "sonner";
 
@@ -80,6 +81,7 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 	const { data: meRes } = useGetMe();
 	const currentUser = meRes?.data;
 	const updateVisitMutation = useUpdateVisit();
+	const approveVisitMutation = useApproveVisit();
 
 	const { data: territoriesRes } = useGetTerritories();
 	const territories = territoriesRes?.data || [];
@@ -238,6 +240,24 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 			}
 		} catch (err) {
 			const errorMsg = err instanceof Error ? err.message : "Failed to approve schedule.";
+			toast.error(errorMsg);
+		}
+	};
+
+	const handleApproveReport = async () => {
+		try {
+			const res = await approveVisitMutation.mutateAsync({
+				id: visit._id || visit.id || "",
+				isSupervisor: currentUser?.role === "supervisor",
+			});
+			if (res.success) {
+				toast.success("Visit report approved successfully!");
+				onClose();
+			} else {
+				toast.error(res.message || "Failed to approve visit report.");
+			}
+		} catch (err) {
+			const errorMsg = err instanceof Error ? err.message : "Failed to approve visit report.";
 			toast.error(errorMsg);
 		}
 	};
@@ -639,6 +659,19 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 											: "Approve Schedule"}
 									</Button>
 								)}
+								{canEditOrCancel &&
+									visit.status === "pending" &&
+									visit.isScheduleApproved === true && (
+										<Button
+											onClick={handleApproveReport}
+											disabled={approveVisitMutation.isPending}
+											className="h-11 cursor-pointer rounded-xl bg-green-50 px-6 font-bold text-green-600 transition-colors hover:bg-green-100"
+										>
+											{approveVisitMutation.isPending
+												? "Approving..."
+												: "Approve Report"}
+										</Button>
+									)}
 							</div>
 							<Button
 								onClick={onClose}
