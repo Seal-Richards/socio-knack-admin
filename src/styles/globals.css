@@ -114,3 +114,25 @@
 	pointer-events: auto !important;
 	z-index: 9999 !important;
 }
+
+/* Agent map marker offsets to prevent overlapping and avoid inline styles */
+.agent-offset-0 { transform: translate(calc(-50% - 24px), calc(-100% - 5px)); }
+.agent-offset-1 { transform: translate(calc(-50% - 12px), calc(-100% - 15px)); }
+.agent-offset-2 { transform: translate(calc(-50% + 0px), calc(-100% - 25px)); }
+.agent-offset-3 { transform: translate(calc(-50% + 12px), calc(-100% - 15px)); }
+.agent-offset-4 { transform: translate(calc(-50% + 24px), calc(-100% - 5px)); }
+.agent-offset-5 { transform: translate(calc(-50% - 18px), calc(-100% - 10px)); }
+.agent-offset-6 { transform: translate(calc(-50% - 6px), calc(-100% - 20px)); }
+.agent-offset-7 { transform: translate(calc(-50% + 6px), calc(-100% - 20px)); }
+.agent-offset-8 { transform: translate(calc(-50% + 18px), calc(-100% - 10px)); }
+.agent-offset-9 { transform: translate(calc(-50% + 0px), calc(-100% - 5px)); }
+.agent-offset-10 { transform: translate(calc(-50% - 12px), calc(-100% - 5px)); }
+.agent-offset-11 { transform: translate(calc(-50% - 6px), calc(-100% - 10px)); }
+.agent-offset-12 { transform: translate(calc(-50% + 0px), calc(-100% - 15px)); }
+.agent-offset-13 { transform: translate(calc(-50% + 6px), calc(-100% - 10px)); }
+.agent-offset-14 { transform: translate(calc(-50% + 12px), calc(-100% - 5px)); }
+.agent-offset-15 { transform: translate(calc(-50% - 20px), calc(-100% - 20px)); }
+.agent-offset-16 { transform: translate(calc(-50% - 10px), calc(-100% - 25px)); }
+.agent-offset-17 { transform: translate(calc(-50% + 0px), calc(-100% - 30px)); }
+.agent-offset-18 { transform: translate(calc(-50% + 10px), calc(-100% - 25px)); }
+.agent-offset-19 { transform: translate(calc(-50% + 20px), calc(-100% - 20px)); }

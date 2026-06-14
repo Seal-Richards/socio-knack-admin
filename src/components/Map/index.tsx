@@ -54,6 +54,16 @@ const center = {
 	lng: 3.3792,
 };
 
+const getAgentMarkerOffsetIndex = (id?: string): number => {
+	if (!id) return 0;
+	let hash = 0;
+	for (let i = 0; i < id.length; i += 1) {
+		hash = id.charCodeAt(i) + hash * 33;
+		hash %= 1000000;
+	}
+	return Math.abs(hash) % 20;
+};
+
 interface LatLng {
 	lat: number;
 	lng: number;
@@ -340,8 +350,9 @@ export default function Map({
 												setSelectedMapZone(null);
 											}}
 											className={cn(
-												"absolute -translate-x-1/2 -translate-y-full transform cursor-pointer border-none bg-transparent p-0",
+												"absolute transform cursor-pointer border-none bg-transparent p-0",
 												isOnline ? "z-10" : "z-0",
+												`agent-offset-${getAgentMarkerOffsetIndex(agentKey)}`,
 											)}
 										>
 											<div className="relative flex flex-col items-center">
