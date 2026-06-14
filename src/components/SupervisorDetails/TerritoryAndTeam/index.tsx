@@ -3,8 +3,10 @@
 import React, { useState } from "react";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Icon } from "@iconify/react";
+import { formatCheckInDate } from "@/utils/dateFormatter";
 import Map from "@/components/Map";
 import Empty from "@/components/_atoms/Empty";
+import cn from "@/lib/utils";
 import { type UserProfileData } from "@/types/profile";
 import { useGetTerritories } from "@/hooks/useTerritory";
 import { useGetAgents } from "@/hooks/useAgent";
@@ -137,10 +139,14 @@ export default function TerritoryAndTeam({ supervisor }: TerritoryAndTeamProps) 
 											</span>
 										</div>
 										<div className="col-span-4 truncate text-[12px] font-medium text-gray-500">
-											{agent.lastCheckIn}
+											{formatCheckInDate(agent.lastCheckIn)}
 										</div>
 										<div className="col-span-1 flex justify-end">
-											<button className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-50">
+											<button
+												className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-50"
+												aria-label="More options"
+												title="More options"
+											>
 												<Icon
 													icon="pepicons-pop:dots-y"
 													className="size-5"
@@ -184,9 +190,14 @@ export default function TerritoryAndTeam({ supervisor }: TerritoryAndTeamProps) 
 								>
 									<div>
 										<div className="flex items-center gap-2.5">
+											<style>{`
+												.bg-zone-${zone._id} { background-color: ${zone.color || "#1d4ea8"} !important; }
+											`}</style>
 											<span
-												className="size-3 rounded-full border border-white shadow-sm"
-												style={{ backgroundColor: zone.color || "#1d4ea8" }}
+												className={cn(
+													"size-3 rounded-full border border-white shadow-sm",
+													`bg-zone-${zone._id}`,
+												)}
 											/>
 											<h5 className="font-bold text-gray-900 transition-colors group-hover:text-[#1d4ea8]">
 												{zone.name}

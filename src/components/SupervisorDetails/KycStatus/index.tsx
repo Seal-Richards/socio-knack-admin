@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useUpdateUserStatus } from "@/hooks/useTeam";
 import { useSendAgentKycComment } from "@/hooks/useAgent";
+import { useUploadPersonalKyc } from "@/hooks/useProfile";
 import { toast } from "sonner";
 
 import { type UserProfileData } from "@/types/profile";
@@ -34,11 +35,58 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 	if (hasId) progress += 50;
 	if (hasSelfie) progress += 50;
 
+	let widthClass = "w-0";
+	if (progress === 100) {
+		widthClass = "w-full";
+	} else if (progress === 50) {
+		widthClass = "w-1/2";
+	}
+
 	const [kycStatus, setKycStatus] = useState(rawSupervisor?.kycStatus || "pending");
 	const [comment, setComment] = useState(rawSupervisor?.kycComment || "");
 
 	const updateStatusMutation = useUpdateUserStatus();
 	const sendCommentMutation = useSendAgentKycComment();
+	const uploadMutation = useUploadPersonalKyc();
+
+	const getFileName = (url?: string | null, defaultName = "document.pdf") => {
+		if (!url) return "Not uploaded yet";
+		try {
+			const parts = url.split("/");
+			const lastPart = parts[parts.length - 1] || "";
+			return decodeURIComponent(lastPart.split("?")[0] || "");
+		} catch {
+			return defaultName;
+		}
+	};
+
+	const handleUploadDocument = async (
+		field: "idFront" | "selfie",
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		const formData = new FormData();
+		formData.append(field, file);
+		formData.append("userId", supervisor.id);
+		formData.append("idType", "Government-issued ID");
+		formData.append("idNumber", "N/A");
+
+		try {
+			const res = await uploadMutation.mutateAsync({
+				formData,
+				isSupervisor: true,
+			});
+			if (res.success) {
+				toast.success("Document uploaded successfully!");
+			} else {
+				toast.error(res.message || "Failed to upload document.");
+			}
+		} catch (err: unknown) {
+			toast.error(err instanceof Error ? err.message : "Failed to upload document.");
+		}
+	};
 
 	const handleSaveStatus = async () => {
 		try {
@@ -95,10 +143,7 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 					Verification
 				</span>
 				<div className="h-3.5 w-full flex-1 overflow-hidden rounded-full bg-gray-200">
-					<div
-						style={{ width: `${progress}%` }}
-						className="h-full rounded-full bg-[#1d4ea8]"
-					/>
+					<div className={`h-full rounded-full bg-[#1d4ea8] ${widthClass}`} />
 				</div>
 				<span className="text-[14px] font-bold text-gray-800">{progress}%</span>
 			</div>
@@ -106,34 +151,122 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 			<div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:gap-16">
 				{/* Left Column: Verification Steps */}
 				<div className="flex flex-col gap-4 sm:gap-6">
+					{/* Identity Verification */}
 					<div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 sm:p-5">
-						<span className="text-[14px] font-bold text-gray-700 sm:text-[15px]">
-							Identity Verification
-						</span>
-						<button
-							onClick={() =>
-								viewDocument(rawSupervisor?.kycDocuments?.idFront ?? undefined)
-							}
-							className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[12px] font-bold text-gray-600 transition-colors hover:bg-gray-50"
-						>
-							<Icon icon="solar:eye-bold" className="size-4" />
-							View ID Card
-						</button>
+						<div className="flex flex-col gap-1">
+							<span className="text-[14px] font-bold text-gray-700 sm:text-[15px]">
+								Identity Verification
+							</span>
+							<span className="text-[10px] font-medium text-gray-400">
+								{getFileName(rawSupervisor?.kycDocuments?.idFront, "ID-CARD.pdf")}
+							</span>
+						</div>
+						<div className="flex items-center gap-3">
+							<input
+								type="file"
+								id="supervisor-id-upload"
+								aria-label="Upload Supervisor ID"
+								className="sr-only"
+								accept=".png,.jpeg,.jpg,.pdf"
+								disabled={uploadMutation.isPending}
+								onChange={(e) => handleUploadDocument("idFront", e)}
+							/>
+							<label
+								htmlFor="supervisor-id-upload"
+								className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
+							>
+								<Icon icon="solar:upload-bold" className="size-5" />
+							</label>
+							<button
+								type="button"
+								onClick={() =>
+									viewDocument(rawSupervisor?.kycDocuments?.idFront ?? undefined)
+								}
+								disabled={!rawSupervisor?.kycDocuments?.idFront}
+								className={`transition-colors ${
+									rawSupervisor?.kycDocuments?.idFront
+										? "text-gray-400 hover:text-[#1d4ea8]"
+										: "cursor-not-allowed text-gray-200"
+								}`}
+								aria-label="View ID Card"
+							>
+								<Icon icon="solar:eye-bold" className="size-5" />
+							</button>
+							<button
+								type="button"
+								onClick={() =>
+									viewDocument(rawSupervisor?.kycDocuments?.idFront ?? undefined)
+								}
+								disabled={!rawSupervisor?.kycDocuments?.idFront}
+								className={`transition-colors ${
+									rawSupervisor?.kycDocuments?.idFront
+										? "text-gray-400 hover:text-[#1d4ea8]"
+										: "cursor-not-allowed text-gray-200"
+								}`}
+								aria-label="Download ID Card"
+							>
+								<Icon icon="solar:download-bold" className="size-5" />
+							</button>
+						</div>
 					</div>
 
+					{/* Proof of address / Selfie */}
 					<div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 sm:p-5">
-						<span className="text-[14px] font-bold text-gray-700 sm:text-[15px]">
-							Proof of address / Selfie
-						</span>
-						<button
-							onClick={() =>
-								viewDocument(rawSupervisor?.kycDocuments?.selfie ?? undefined)
-							}
-							className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[12px] font-bold text-gray-600 transition-colors hover:bg-gray-50"
-						>
-							<Icon icon="solar:eye-bold" className="size-4" />
-							View Selfie
-						</button>
+						<div className="flex flex-col gap-1">
+							<span className="text-[14px] font-bold text-gray-700 sm:text-[15px]">
+								Proof of address / Selfie
+							</span>
+							<span className="text-[10px] font-medium text-gray-400">
+								{getFileName(rawSupervisor?.kycDocuments?.selfie, "SELFIE.jpg")}
+							</span>
+						</div>
+						<div className="flex items-center gap-3">
+							<input
+								type="file"
+								id="supervisor-selfie-upload"
+								aria-label="Upload Supervisor Selfie"
+								className="sr-only"
+								accept=".png,.jpeg,.jpg,.pdf"
+								disabled={uploadMutation.isPending}
+								onChange={(e) => handleUploadDocument("selfie", e)}
+							/>
+							<label
+								htmlFor="supervisor-selfie-upload"
+								className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
+							>
+								<Icon icon="solar:upload-bold" className="size-5" />
+							</label>
+							<button
+								type="button"
+								onClick={() =>
+									viewDocument(rawSupervisor?.kycDocuments?.selfie ?? undefined)
+								}
+								disabled={!rawSupervisor?.kycDocuments?.selfie}
+								className={`transition-colors ${
+									rawSupervisor?.kycDocuments?.selfie
+										? "text-gray-400 hover:text-[#1d4ea8]"
+										: "cursor-not-allowed text-gray-200"
+								}`}
+								aria-label="View Selfie"
+							>
+								<Icon icon="solar:eye-bold" className="size-5" />
+							</button>
+							<button
+								type="button"
+								onClick={() =>
+									viewDocument(rawSupervisor?.kycDocuments?.selfie ?? undefined)
+								}
+								disabled={!rawSupervisor?.kycDocuments?.selfie}
+								className={`transition-colors ${
+									rawSupervisor?.kycDocuments?.selfie
+										? "text-gray-400 hover:text-[#1d4ea8]"
+										: "cursor-not-allowed text-gray-200"
+								}`}
+								aria-label="Download Selfie"
+							>
+								<Icon icon="solar:download-bold" className="size-5" />
+							</button>
+						</div>
 					</div>
 				</div>
 

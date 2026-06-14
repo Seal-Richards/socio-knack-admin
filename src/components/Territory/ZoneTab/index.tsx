@@ -7,13 +7,13 @@ import { Icon } from "@iconify/react";
 import cn from "@/lib/utils";
 import type { TerritoryData } from "@/types/territory";
 
-interface ZoneTabProps {
+type ZoneTabProps = {
 	zones: TerritoryData[];
 	isLoading: boolean;
 	selectedZoneId: string | null;
 	setSelectedZoneId: (id: string | null) => void;
 	onAddZoneClick: () => void;
-}
+};
 
 export default function ZoneTab({
 	zones,
@@ -58,15 +58,25 @@ export default function ZoneTab({
 					)}
 				>
 					<div className="flex items-center gap-3">
+						<style>{`
+							.bg-zone-${zone._id} { background-color: ${zone.color || "#1d4ea8"} !important; }
+						`}</style>
 						<div
-							className="h-12 w-1.5 rounded-full"
-							style={{ backgroundColor: zone.color }}
+							className={cn(
+								"h-12 w-1.5 shrink-0 rounded-full",
+								`bg-zone-${zone._id}`,
+							)}
 						/>
 						<div className="text-left">
 							<div className="flex items-center gap-2">
+								<style>{`
+									.bg-status-${zone._id} { background-color: ${statusColor} !important; }
+								`}</style>
 								<div
-									className="size-2 rounded-full"
-									style={{ backgroundColor: statusColor }}
+									className={cn(
+										"size-2 shrink-0 rounded-full",
+										`bg-status-${zone._id}`,
+									)}
 								/>
 								<h3 className="max-w-[130px] truncate text-sm font-bold text-gray-900">
 									{zone.name}
@@ -90,8 +100,8 @@ export default function ZoneTab({
 	}
 
 	return (
-		<div className="flex size-full flex-col rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-			<div className="mb-6 flex items-center justify-between">
+		<div className="flex size-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+			<div className="mb-6 flex shrink-0 items-center justify-between">
 				<div className="flex items-center gap-2">
 					<Icon icon="solar:map-point-bold-duotone" className="size-5 text-[#1d4ea8]" />
 					<h2 className="text-lg font-bold text-gray-900">Zones</h2>
@@ -106,7 +116,7 @@ export default function ZoneTab({
 				</button>
 			</div>
 
-			<div className="mb-4 flex gap-2">
+			<div className="mb-4 flex shrink-0 gap-2">
 				<SearchBar
 					placeholder="Search"
 					value={searchQuery}
@@ -121,8 +131,8 @@ export default function ZoneTab({
 				</Button>
 			</div>
 
-			<div className="custom-scrollbar flex max-h-[300px] flex-col gap-3 overflow-y-auto pr-1 lg:max-h-[calc(100vh-320px)]">
-				{content}
+			<div className="custom-scrollbar flex-1 overflow-y-auto pr-1">
+				<div className="flex flex-col gap-3 pb-2">{content}</div>
 			</div>
 		</div>
 	);

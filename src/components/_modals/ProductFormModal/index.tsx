@@ -63,6 +63,7 @@ export default function ProductFormModal({
 	const [customIncentiveType, setCustomIncentiveType] = useState<"flat" | "percentage">("flat");
 	const [customIncentiveValue, setCustomIncentiveValue] = useState("");
 	const [avatar, setAvatar] = useState("");
+	const [status, setStatus] = useState<"active" | "inactive">("active");
 
 	// Category management dropdown state
 	const dropdownRef = useRef<HTMLDivElement>(null);
@@ -88,6 +89,7 @@ export default function ProductFormModal({
 				setCost(String(productToEdit.cost || ""));
 				setIncentiveEligible(productToEdit.incentiveEligible ? "Yes" : "No");
 				setAvatar(productToEdit.avatar || "");
+				setStatus(productToEdit.status || "active");
 
 				if (productToEdit.incentiveEligible) {
 					// Detect custom incentive overrides
@@ -110,6 +112,7 @@ export default function ProductFormModal({
 				setCustomIncentiveType("flat");
 				setCustomIncentiveValue("");
 				setAvatar("");
+				setStatus("active");
 			}
 		}
 	}, [isOpen, productToEdit]);
@@ -212,6 +215,7 @@ export default function ProductFormModal({
 			category: selectedCategoryId || null,
 			incentiveEligible: isEligible,
 			avatar,
+			status,
 			...(isEligible && incentiveValueType === "custom"
 				? {
 						incentiveType: customIncentiveType,
@@ -345,27 +349,7 @@ export default function ProductFormModal({
 												categories.map((cat) => (
 													<div
 														key={cat._id}
-														onClick={() => {
-															if (editingCategoryId !== cat._id) {
-																setSelectedCategoryId(cat._id);
-																setIsDropdownOpen(false);
-															}
-														}}
-														onKeyDown={(e) => {
-															if (
-																e.key === "Enter" ||
-																e.key === " "
-															) {
-																e.preventDefault();
-																if (editingCategoryId !== cat._id) {
-																	setSelectedCategoryId(cat._id);
-																	setIsDropdownOpen(false);
-																}
-															}
-														}}
-														role="button"
-														tabIndex={0}
-														className={`group flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+														className={`group flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all ${
 															selectedCategoryId === cat._id
 																? "bg-blue-50/50 text-[#1d4ea8]"
 																: "text-gray-600 hover:bg-gray-50"
@@ -397,6 +381,8 @@ export default function ProductFormModal({
 																		)
 																	}
 																	className="rounded-md p-1 text-green-600 hover:bg-green-50"
+																	title="Save Category"
+																	aria-label="Save Category"
 																>
 																	<Icon
 																		icon="solar:check-circle-bold"
@@ -409,6 +395,8 @@ export default function ProductFormModal({
 																		setEditingCategoryId(null)
 																	}
 																	className="rounded-md p-1 text-gray-400 hover:bg-gray-50"
+																	title="Cancel Edit"
+																	aria-label="Cancel Edit"
 																>
 																	<Icon
 																		icon="solar:close-circle-bold"
@@ -418,7 +406,25 @@ export default function ProductFormModal({
 															</div>
 														) : (
 															<>
-																<span>{cat.name}</span>
+																<button
+																	type="button"
+																	className="flex-1 text-left outline-none"
+																	onClick={() => {
+																		if (
+																			editingCategoryId !==
+																			cat._id
+																		) {
+																			setSelectedCategoryId(
+																				cat._id,
+																			);
+																			setIsDropdownOpen(
+																				false,
+																			);
+																		}
+																	}}
+																>
+																	{cat.name}
+																</button>
 																<div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
 																	<button
 																		type="button"
@@ -432,6 +438,8 @@ export default function ProductFormModal({
 																			);
 																		}}
 																		className="rounded-md p-1 text-blue-600 hover:bg-blue-50/30"
+																		title="Edit Category"
+																		aria-label="Edit Category"
 																	>
 																		<Icon
 																			icon="solar:pen-bold"
@@ -447,6 +455,8 @@ export default function ProductFormModal({
 																			)
 																		}
 																		className="rounded-md p-1 text-red-500 hover:bg-red-50"
+																		title="Delete Category"
+																		aria-label="Delete Category"
 																	>
 																		<Icon
 																			icon="solar:trash-bin-trash-bold"
@@ -474,6 +484,8 @@ export default function ProductFormModal({
 												onClick={handleAddCategory}
 												disabled={createCategoryMutation.isPending}
 												className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1d4ea8] text-white transition-all hover:bg-[#153a82] active:scale-90 disabled:opacity-50"
+												title="Add Category"
+												aria-label="Add Category"
 											>
 												<Icon icon="lucide:plus" className="size-4" />
 											</button>
@@ -533,6 +545,45 @@ export default function ProductFormModal({
 									onChange={(e) => setCost(e.target.value)}
 									className="h-12 rounded-xl border-gray-100 bg-gray-50/20 pl-8 pr-4 font-bold text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
 								/>
+							</div>
+						</div>
+
+						{/* Product Status */}
+						<div className="space-y-2">
+							<label className="text-[13px] font-bold text-gray-600">
+								Product Status
+							</label>
+							<div className="flex gap-4">
+								<button
+									type="button"
+									onClick={() => setStatus("active")}
+									className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border text-xs font-bold transition-all ${
+										status === "active"
+											? "border-[#1d4ea8] bg-[#1d4ea8] text-white shadow-md active:scale-95"
+											: "border-gray-200 bg-white text-gray-500 hover:bg-gray-50 active:scale-95"
+									}`}
+								>
+									<Icon
+										icon="solar:check-circle-bold-duotone"
+										className="size-4.5"
+									/>
+									Active
+								</button>
+								<button
+									type="button"
+									onClick={() => setStatus("inactive")}
+									className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border text-xs font-bold transition-all ${
+										status === "inactive"
+											? "border-gray-800 bg-gray-800 text-white shadow-md active:scale-95"
+											: "border-gray-200 bg-white text-gray-500 hover:bg-gray-50 active:scale-95"
+									}`}
+								>
+									<Icon
+										icon="solar:close-circle-bold-duotone"
+										className="size-4.5"
+									/>
+									Inactive
+								</button>
 							</div>
 						</div>
 

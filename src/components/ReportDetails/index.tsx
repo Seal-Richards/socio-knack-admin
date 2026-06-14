@@ -6,6 +6,7 @@ import { useGetReportDetails, useApproveVisit } from "@/hooks/useReportsPayout";
 import { useGetMe } from "@/hooks/useProfile";
 import { Icon } from "@iconify/react";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
+import { formatCheckInDate } from "@/utils/dateFormatter";
 import cn from "@/lib/utils";
 import Image from "next/image";
 
@@ -173,14 +174,7 @@ export default function ReportDetails({ id }: ReportDetailsProps) {
 								</p>
 								<p className="mt-1 text-sm font-black text-gray-800">
 									{visit.checkInTime
-										? new Date(visit.checkInTime).toLocaleString("en-US", {
-												year: "numeric",
-												month: "numeric",
-												day: "numeric",
-												hour: "numeric",
-												minute: "numeric",
-												hour12: true,
-											})
+										? formatCheckInDate(visit.checkInTime)
 										: "N/A"}
 								</p>
 							</div>

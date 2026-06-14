@@ -15,6 +15,7 @@ export type ReportPayout = {
 	successRate: string;
 	incentiveAmount: string;
 	status: "paid" | "pending" | "failed";
+	date?: string;
 };
 
 export const reportPayoutColumns: TableColumns<ReportPayout> = createColumns<ReportPayout>([

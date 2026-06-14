@@ -13,6 +13,7 @@ import {
 import type { TerritoryData } from "@/types/territory";
 import type { UserProfileData } from "@/types/profile";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
+import { formatCheckInDate } from "@/utils/dateFormatter";
 
 export interface MapAgent {
 	id?: string;
@@ -181,6 +182,10 @@ export default function Map({
 			for (let i = 0; i < path.getLength(); i += 1) {
 				const point = path.getAt(i);
 				coordinates.push({ lat: point.lat(), lng: point.lng() });
+			}
+
+			if (document.fullscreenElement) {
+				document.exitFullscreen().catch((err) => console.warn(err));
 			}
 
 			if (onSaveTerritory) {
@@ -441,11 +446,10 @@ export default function Map({
 										selectedAgent.lastCheckIn) && (
 										<p className="mt-0.5 text-xs text-gray-500">
 											<strong>Last Checkin:</strong>{" "}
-											{new Date(
+											{formatCheckInDate(
 												selectedAgent.lastCheckInTime ||
-													selectedAgent.lastCheckIn ||
-													"",
-											).toLocaleTimeString()}
+													selectedAgent.lastCheckIn,
+											)}
 										</p>
 									)}
 								</div>

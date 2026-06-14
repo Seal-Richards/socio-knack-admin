@@ -1,6 +1,6 @@
 // src/hooks/useProfile/index.ts
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { profileRequests } from "@/lib/requests/profile";
 import type { UpdateProfilePayload, UpdatePasswordPayload } from "@/types/profile";
@@ -23,13 +23,30 @@ export function useGetMe() {
 }
 
 export function useUpdateProfile() {
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (body: UpdateProfilePayload) => profileRequests.updateProfile(body),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["me"] }).catch(() => undefined);
+			queryClient.invalidateQueries({ queryKey: ["supervisor"] }).catch(() => undefined);
+		},
 	});
 }
 
 export function useChangePassword() {
 	return useMutation({
 		mutationFn: (body: UpdatePasswordPayload) => profileRequests.updatePassword(body),
+	});
+}
+
+export function useUploadPersonalKyc() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ formData, isSupervisor }: { formData: FormData; isSupervisor: boolean }) =>
+			profileRequests.uploadPersonalKyc(formData, isSupervisor),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["me"] }).catch(() => undefined);
+			queryClient.invalidateQueries({ queryKey: ["supervisor"] }).catch(() => undefined);
+		},
 	});
 }

@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
+import { formatCheckInDate } from "@/utils/dateFormatter";
 
 export interface Agent {
 	_id: string;
@@ -53,11 +54,7 @@ export const dashboardAgentColumns: ColumnDef<Agent>[] = [
 		accessorKey: "lastCheckInTime",
 		cell: ({ row }) => {
 			const time = row.original.lastCheckInTime;
-			let displayTime = "N/A";
-			if (time) {
-				const date = new Date(time);
-				displayTime = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-			}
+			const displayTime = formatCheckInDate(time);
 			return <span className="text-[13px] font-bold text-gray-400">{displayTime}</span>;
 		},
 	},

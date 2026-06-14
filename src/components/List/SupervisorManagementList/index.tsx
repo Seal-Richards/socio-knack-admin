@@ -137,14 +137,14 @@ export default function SupervisorManagementList() {
 			</div>
 
 			<div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
-				<Button className="h-11 w-full gap-2 rounded-xl border border-gray-200 bg-white px-6 text-[14px] font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 sm:w-auto">
+				{/* <Button className="h-11 w-full gap-2 rounded-xl border border-gray-200 bg-white px-6 text-[14px] font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 sm:w-auto">
 					<Icon icon="solar:user-plus-bold" className="size-4 text-gray-500" />
 					Bulk Invite via CSV
 				</Button>
 				<Button className="h-11 w-full gap-2 rounded-xl bg-[#1d4ea8] px-6 text-[14px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95 lg:w-auto">
 					<Icon icon="solar:export-bold" className="size-4 text-white" />
 					Export
-				</Button>
+				</Button> */}
 			</div>
 		</div>
 	);

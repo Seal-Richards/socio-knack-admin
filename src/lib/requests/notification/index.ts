@@ -36,4 +36,18 @@ export const notificationRequests = {
 			"Failed to mark notification as read.",
 		);
 	},
+
+	async delete(id: string): Promise<ApiResponse<null>> {
+		return apiClient.delete<ApiResponse<null>>(
+			`/notifications/${id}`,
+			"Failed to delete notification.",
+		);
+	},
+
+	async deleteAll(): Promise<ApiResponse<null>> {
+		return apiClient.delete<ApiResponse<null>>(
+			"/notifications",
+			"Failed to clear notifications.",
+		);
+	},
 };

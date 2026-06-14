@@ -393,7 +393,7 @@ export default function Register() {
 												);
 												nextStep();
 											}}
-											onSkipToStep={(s) => setCurrentStep(s)}
+											_onSkipToStep={(s: number) => setCurrentStep(s)}
 											initialValues={adminData}
 											step={currentStep}
 											totalSteps={totalSteps - 1}

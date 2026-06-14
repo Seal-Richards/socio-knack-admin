@@ -83,7 +83,10 @@ export default function ProfileTab() {
 				fullName: `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim(),
 				email: profileData.email || "",
 				phone: profileData.phone || "",
-				gender: profileData.gender || "",
+				gender: profileData.gender
+					? profileData.gender.charAt(0).toUpperCase() +
+						profileData.gender.slice(1).toLowerCase()
+					: "",
 				dob: profileData.dob ? new Date(profileData.dob).toISOString().split("T")[0] : "",
 				city: profileData.city || "",
 				state: profileData.state || "",
@@ -438,6 +441,7 @@ export default function ProfileTab() {
 									type="button"
 									onClick={() => setShowPassword(!showPassword)}
 									className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+									aria-label="Toggle password visibility"
 								>
 									<Icon
 										icon={showPassword ? "lucide:eye-off" : "lucide:eye"}

@@ -54,7 +54,7 @@ export default function OrganisationSetup({
 	const [orgName, setOrgName] = useState(initialValues.orgName || "");
 	const [orgDomain, setOrgDomain] = useState(initialValues.orgDomain || "");
 	const [orgCountry, setOrgCountry] = useState(initialValues.orgCountry || "NG");
-	const [orgCurrency, setOrgCurrency] = useState(initialValues.orgCurrency || "NGN");
+	const [orgCurrency] = useState(initialValues.orgCurrency || "NGN");
 	const [orgTimeZone, setOrgTimeZone] = useState(initialValues.orgTimeZone || "WAT");
 	const [orgRegulatoryRegion, setOrgRegulatoryRegion] = useState(
 		initialValues.orgRegulatoryRegion || "Africa",
@@ -235,23 +235,6 @@ export default function OrganisationSetup({
 								<SelectItem value="GH">Ghana</SelectItem>
 								<SelectItem value="KE">Kenya</SelectItem>
 								<SelectItem value="ZA">South Africa</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-					<div className="space-y-2">
-						<Label className="text-sm font-semibold text-gray-700">Currency</Label>
-						<Select
-							value={orgCurrency}
-							onValueChange={setOrgCurrency}
-							disabled={isMutating}
-						>
-							<SelectTrigger className="h-12 border-gray-200 bg-gray-50">
-								<SelectValue placeholder="Default" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="NGN">NGN</SelectItem>
-								<SelectItem value="USD">USD</SelectItem>
-								<SelectItem value="GBP">GBP</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>

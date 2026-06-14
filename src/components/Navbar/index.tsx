@@ -16,6 +16,8 @@ import {
 	useGetNotifications,
 	useMarkAllNotificationsAsRead,
 	useMarkNotificationAsRead,
+	useDeleteNotification,
+	useClearAllNotifications,
 } from "@/hooks/useNotification";
 
 export default function Navbar() {
@@ -35,6 +37,8 @@ export default function Navbar() {
 
 	const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead();
 	const { mutate: markAsRead } = useMarkNotificationAsRead();
+	const { mutate: deleteNotification } = useDeleteNotification();
+	const { mutate: clearAll } = useClearAllNotifications();
 
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
@@ -132,13 +136,23 @@ export default function Navbar() {
 										<h4 className="text-sm font-semibold text-gray-800">
 											Notifications
 										</h4>
-										{unreadCount > 0 && (
-											<button
-												onClick={() => markAllAsRead()}
-												className="text-xs font-medium text-[#1d4ea8] hover:underline"
-											>
-												Mark all as read
-											</button>
+										{notifications.length > 0 && (
+											<div className="flex items-center gap-3">
+												{unreadCount > 0 && (
+													<button
+														onClick={() => markAllAsRead()}
+														className="text-xs font-medium text-[#1d4ea8] hover:underline"
+													>
+														Mark all
+													</button>
+												)}
+												<button
+													onClick={() => clearAll()}
+													className="text-xs font-medium text-red-500 hover:underline"
+												>
+													Clear all
+												</button>
+											</div>
 										)}
 									</div>
 									<div className="max-h-64 divide-y divide-gray-50 overflow-y-auto">
@@ -148,15 +162,9 @@ export default function Navbar() {
 											</div>
 										) : (
 											notifications.map((notif) => (
-												<button
+												<div
 													key={notif._id}
-													type="button"
-													onClick={() => {
-														if (!notif.isRead) {
-															markAsRead(notif._id);
-														}
-													}}
-													className={`block w-full cursor-pointer p-4 text-left transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none ${
+													className={`group relative block w-full p-4 text-left transition-colors hover:bg-gray-50 ${
 														!notif.isRead ? "bg-[#1d4ea8]/5" : ""
 													}`}
 												>
@@ -166,11 +174,41 @@ export default function Navbar() {
 														>
 															{notif.title}
 														</p>
+														<div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+															{!notif.isRead && (
+																<button
+																	type="button"
+																	onClick={() =>
+																		markAsRead(notif._id)
+																	}
+																	className="text-[#1d4ea8] transition-colors hover:text-[#153a82]"
+																	title="Mark as read"
+																>
+																	<Icon
+																		icon="solar:check-circle-bold"
+																		className="size-4"
+																	/>
+																</button>
+															)}
+															<button
+																type="button"
+																onClick={() =>
+																	deleteNotification(notif._id)
+																}
+																className="text-red-400 transition-colors hover:text-red-600"
+																title="Delete"
+															>
+																<Icon
+																	icon="solar:trash-bin-trash-bold"
+																	className="size-4"
+																/>
+															</button>
+														</div>
 														{!notif.isRead && (
-															<span className="mt-1 size-2 shrink-0 rounded-full bg-blue-600" />
+															<span className="mt-1 size-2 shrink-0 rounded-full bg-blue-600 group-hover:hidden" />
 														)}
 													</div>
-													<p className="mt-1 text-[11px] leading-relaxed text-gray-500">
+													<p className="mt-1 pr-8 text-[11px] leading-relaxed text-gray-500">
 														{notif.message}
 													</p>
 													<p className="mt-1 text-[9px] text-gray-400">
@@ -185,7 +223,7 @@ export default function Navbar() {
 															minute: "2-digit",
 														})}
 													</p>
-												</button>
+												</div>
 											))
 										)}
 									</div>

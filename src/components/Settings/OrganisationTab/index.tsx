@@ -19,6 +19,7 @@ import {
 	useUpdateBusinessSettings,
 	useUploadBusinessKyc,
 } from "@/hooks/useBusiness";
+import { useGetMe, useUploadPersonalKyc } from "@/hooks/useProfile";
 import { toast } from "sonner";
 
 type OrganisationFormValues = {
@@ -46,8 +47,36 @@ export default function OrganisationTab() {
 	const { data: settingsRes, isLoading, refetch } = useGetBusinessSettings();
 	const updateSettingsMutation = useUpdateBusinessSettings();
 	const uploadKycMutation = useUploadBusinessKyc();
+	const { data: meRes, refetch: refetchMe } = useGetMe();
+	const uploadPersonalKycMutation = useUploadPersonalKyc();
 
 	const businessSettings = settingsRes?.data;
+	const ownerIdUrl = meRes?.data?.kycDocuments?.idFront;
+
+	const handlePersonalIdUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		const formData = new FormData();
+		formData.append("idDocument", file);
+		formData.append("idType", "Government-issued ID");
+		formData.append("idNumber", "N/A");
+
+		try {
+			const res = await uploadPersonalKycMutation.mutateAsync({
+				formData,
+				isSupervisor: false,
+			});
+			if (res.success) {
+				toast.success("Owner ID document uploaded successfully!");
+				refetchMe().catch(() => undefined);
+			} else {
+				toast.error(res.message || "Failed to upload ID document.");
+			}
+		} catch (err: unknown) {
+			toast.error(err instanceof Error ? err.message : "Failed to upload ID document.");
+		}
+	};
 
 	const cacUrl = businessSettings?.corporateDocuments?.cacCertificate;
 	const taxUrl = businessSettings?.corporateDocuments?.taxIdCertificate;
@@ -253,7 +282,7 @@ export default function OrganisationTab() {
 						</div>
 					</div>
 
-					<div className="space-y-4">
+					<div className="hidden space-y-4">
 						<Label className="text-[14px] font-medium text-gray-600">Theme color</Label>
 						<div className="flex gap-6">
 							<div className="relative">
@@ -597,6 +626,66 @@ export default function OrganisationTab() {
 								</button>
 							</div>
 						</div>
+
+						{/* Government-issued ID (Owner ID) */}
+						<div className="flex items-center justify-between rounded-2xl border border-gray-100 p-4 transition-all hover:bg-gray-50/30">
+							<div className="flex items-center gap-3">
+								<div className="flex size-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500">
+									<Icon icon="solar:user-id-bold" className="size-5" />
+								</div>
+								<div className="flex flex-col">
+									<span className="text-[13px] font-bold text-gray-800">
+										Government-issued ID (Owner ID)
+									</span>
+									<span className="text-[10px] font-medium text-gray-400">
+										{getFileName(ownerIdUrl, "OWNER-ID.pdf")}
+									</span>
+								</div>
+							</div>
+							<div className="flex items-center gap-3">
+								<input
+									type="file"
+									id="owner-id-upload-settings"
+									aria-label="Upload Owner ID"
+									className="sr-only"
+									accept=".png,.jpeg,.jpg,.pdf"
+									disabled={uploadPersonalKycMutation.isPending}
+									onChange={handlePersonalIdUpload}
+								/>
+								<label
+									htmlFor="owner-id-upload-settings"
+									className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
+								>
+									<Icon icon="solar:upload-bold" className="size-5" />
+								</label>
+								<button
+									type="button"
+									onClick={() => handleDownload(ownerIdUrl)}
+									disabled={!ownerIdUrl}
+									className={`transition-colors ${
+										ownerIdUrl
+											? "text-gray-400 hover:text-[#1d4ea8]"
+											: "cursor-not-allowed text-gray-200"
+									}`}
+									aria-label="View Owner ID"
+								>
+									<Icon icon="solar:eye-bold" className="size-5" />
+								</button>
+								<button
+									type="button"
+									onClick={() => handleDownload(ownerIdUrl)}
+									disabled={!ownerIdUrl}
+									className={`transition-colors ${
+										ownerIdUrl
+											? "text-gray-400 hover:text-[#1d4ea8]"
+											: "cursor-not-allowed text-gray-200"
+									}`}
+									aria-label="Download Owner ID"
+								>
+									<Icon icon="solar:download-bold" className="size-5" />
+								</button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -605,26 +694,6 @@ export default function OrganisationTab() {
 			<div className="rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm">
 				<h3 className="mb-8 text-[15px] font-bold text-gray-800">Regional Settings</h3>
 				<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-					<div className="space-y-2">
-						<Label className="text-[14px] font-medium text-gray-600">
-							Default currency
-						</Label>
-						<Controller
-							name="currency"
-							control={control}
-							render={({ field }) => (
-								<Select onValueChange={field.onChange} value={field.value}>
-									<SelectTrigger className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0">
-										<SelectValue placeholder="(₦)" />
-									</SelectTrigger>
-									<SelectContent className="rounded-xl border-gray-100">
-										<SelectItem value="ngn">(₦) Nigerian Naira</SelectItem>
-										<SelectItem value="usd">($) US Dollar</SelectItem>
-									</SelectContent>
-								</Select>
-							)}
-						/>
-					</div>
 					<div className="space-y-2">
 						<Label className="text-[14px] font-medium text-gray-600">Time-zone</Label>
 						<Controller

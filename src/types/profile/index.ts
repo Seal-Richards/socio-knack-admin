@@ -49,6 +49,7 @@ export type UserProfileData = {
 	isOnline?: boolean;
 	lastLogoutTime?: string;
 	lastCheckInTime?: string;
+	lastCheckIn?: string;
 	territoryId?: any;
 	territoryCount?: number;
 	agentCount?: number;
@@ -100,6 +101,12 @@ export type UpdateProfilePayload = {
 	state?: string;
 	country?: string;
 	avatar?: string;
+	compliance?: {
+		termsAccepted?: boolean;
+		dataProcessingConsent?: boolean;
+		locationConsent?: boolean;
+		incentivePolicyAccepted?: boolean;
+	};
 };
 
 export type UpdatePasswordPayload = {

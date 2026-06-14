@@ -70,27 +70,9 @@ export default function Territory() {
 	};
 
 	return (
-		<div className="flex w-full flex-col gap-4 p-4 lg:h-[calc(100vh-140px)] lg:flex-row lg:overflow-hidden">
-			{/* Left Column: Zone Switching */}
-			<div className="flex w-full shrink-0 flex-col gap-4 lg:h-full lg:w-[320px]">
-				<Button
-					onClick={() => setIsCreateTaskModalOpen(true)}
-					className="h-11 w-full gap-2 rounded-xl bg-[#1d4ea8] px-5 text-[14px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95 lg:h-12 lg:px-6 lg:text-[15px]"
-				>
-					<Icon icon="lucide:plus" className="size-4" />
-					Create New Task
-				</Button>
-				<ZoneTab
-					zones={zones}
-					isLoading={isLoading}
-					selectedZoneId={selectedZoneId}
-					setSelectedZoneId={setSelectedZoneId}
-					onAddZoneClick={handleAddZoneClick}
-				/>
-			</div>
-
-			{/* Middle Column: Map View */}
-			<div className="min-h-[400px] w-full flex-1 lg:h-full">
+		<div className="flex w-full flex-col gap-4 p-4 lg:h-[calc(100vh-100px)] lg:overflow-hidden">
+			{/* Top Column: Map View (takes priority horizontal space) */}
+			<div className="min-h-[400px] w-full flex-1 rounded-2xl shadow-sm lg:min-h-0">
 				<TeritoryMap
 					zones={zones}
 					selectedZoneId={selectedZoneId}
@@ -100,20 +82,41 @@ export default function Territory() {
 				/>
 			</div>
 
-			{/* Right Column: Unified Details & Agents Panel */}
-			<div className="custom-scrollbar w-full shrink-0 flex-col rounded-2xl border border-gray-100 bg-white p-4 shadow-sm lg:flex lg:h-full lg:w-[450px] lg:overflow-y-auto lg:p-6">
-				<TeritoryDetails
-					selectedZone={selectedZone}
-					onEditClick={() => {
-						setZoneToEdit(selectedZone);
-						setIsCreateZoneModalOpen(true);
-					}}
-					onDeleteClick={() => {
-						setIsConfirmDeleteOpen(true);
-					}}
-				/>
-				<div className="mt-6 lg:mt-8">
-					<TeritoryAgent selectedZone={selectedZone} />
+			{/* Bottom Panel: Split Zone List and Zone Details */}
+			<div className="flex w-full shrink-0 flex-col gap-4 lg:h-[350px] lg:flex-row">
+				{/* Bottom Left: Zone Switching */}
+				<div className="flex h-[400px] w-full shrink-0 flex-col gap-4 lg:h-full lg:w-[320px]">
+					<Button
+						onClick={() => setIsCreateTaskModalOpen(true)}
+						className="h-11 w-full gap-2 rounded-xl bg-[#1d4ea8] px-5 text-[14px] font-bold text-white shadow-lg transition-all hover:bg-[#153a82] active:scale-95 lg:h-12 lg:px-6 lg:text-[15px]"
+					>
+						<Icon icon="lucide:plus" className="size-4" />
+						Create New Task
+					</Button>
+					<ZoneTab
+						zones={zones}
+						isLoading={isLoading}
+						selectedZoneId={selectedZoneId}
+						setSelectedZoneId={setSelectedZoneId}
+						onAddZoneClick={handleAddZoneClick}
+					/>
+				</div>
+
+				{/* Bottom Right: Unified Details & Agents Panel */}
+				<div className="custom-scrollbar w-full flex-1 flex-col rounded-2xl border border-gray-100 bg-white p-4 shadow-sm lg:flex lg:h-full lg:overflow-y-auto lg:p-6">
+					<TeritoryDetails
+						selectedZone={selectedZone}
+						onEditClick={() => {
+							setZoneToEdit(selectedZone);
+							setIsCreateZoneModalOpen(true);
+						}}
+						onDeleteClick={() => {
+							setIsConfirmDeleteOpen(true);
+						}}
+					/>
+					<div className="mt-6 lg:mt-8">
+						<TeritoryAgent selectedZone={selectedZone} />
+					</div>
 				</div>
 			</div>
 

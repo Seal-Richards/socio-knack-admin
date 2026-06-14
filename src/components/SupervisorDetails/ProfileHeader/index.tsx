@@ -88,10 +88,27 @@ export default function ProfileHeader({ supervisor }: ProfileHeaderProps) {
 				</div>
 
 				{/* Assigned Zones */}
-				<div className="flex flex-col gap-2 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-md lg:p-8">
+				<div className="flex flex-col gap-3 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-md lg:p-8">
 					<span className="text-[14px] font-medium text-gray-600">Assigned Zones</span>
-					<div className="text-[20px] font-bold leading-tight tracking-tight text-gray-900 lg:text-[24px]">
-						{supervisor.assignedZones}
+					<div className="scrollbar-thin scrollbar-thumb-gray-200 flex max-h-[4.5rem] flex-wrap gap-2 overflow-y-auto pr-1">
+						{supervisor.assignedZones && supervisor.assignedZones !== "Unassigned" ? (
+							supervisor.assignedZones.split(",").map((zone) => (
+								<span
+									key={zone.trim()}
+									className="inline-flex items-center gap-1 rounded-full border border-blue-100/50 bg-blue-50/80 px-2.5 py-1 text-[11px] font-bold text-[#1d4ea8] transition-colors hover:bg-blue-100"
+								>
+									<Icon
+										icon="solar:map-point-bold-duotone"
+										className="size-3 text-[#1d4ea8]"
+									/>
+									{zone.trim()}
+								</span>
+							))
+						) : (
+							<span className="text-[14px] font-bold text-gray-400">
+								None Assigned
+							</span>
+						)}
 					</div>
 				</div>
 

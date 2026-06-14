@@ -32,3 +32,27 @@ export function useMarkNotificationAsRead() {
 		},
 	});
 }
+
+export function useDeleteNotification() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (id: string) => notificationRequests.delete(id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["notifications"] }).catch((err) => {
+				console.error("Failed to invalidate notifications query:", err);
+			});
+		},
+	});
+}
+
+export function useClearAllNotifications() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: () => notificationRequests.deleteAll(),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["notifications"] }).catch((err) => {
+				console.error("Failed to invalidate notifications query:", err);
+			});
+		},
+	});
+}

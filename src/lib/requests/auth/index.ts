@@ -18,9 +18,16 @@ import type {
 export const authRequests = {
 	async checkEmail(
 		email: string,
-	): Promise<ApiResponse<{ exists: boolean; isVerified: boolean; role: string | null }>> {
+	): Promise<
+		ApiResponse<{ exists: boolean; isVerified: boolean; role: string | null; message?: string }>
+	> {
 		return apiClient.post<
-			ApiResponse<{ exists: boolean; isVerified: boolean; role: string | null }>,
+			ApiResponse<{
+				exists: boolean;
+				isVerified: boolean;
+				role: string | null;
+				message?: string;
+			}>,
 			{ email: string }
 		>("/auth/check-email", { email }, "Failed to check email status.");
 	},

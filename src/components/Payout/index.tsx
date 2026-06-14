@@ -9,7 +9,6 @@ import AgentRevenueWidget from "@/components/_widgets/AgentRevenue";
 import TotalTaskVisitWidget from "@/components/_widgets/TotalTaskVisit";
 import AgentRoiWidget from "@/components/_widgets/AgentRoi";
 import { useGetReportsPayoutMetrics } from "@/hooks/useReportsPayout";
-import { Icon } from "@iconify/react";
 
 export default function Payout() {
 	const { data: metricsRes, isLoading } = useGetReportsPayoutMetrics();
@@ -27,20 +26,6 @@ export default function Payout() {
 		<div className="flex flex-col gap-10">
 			{/* Top Actions & Metrics Section */}
 			<div className="flex flex-col gap-8">
-				<div className="flex items-center justify-end gap-4">
-					<div className="flex cursor-pointer items-center gap-2 rounded-xl bg-white px-4 py-2 shadow-sm transition-colors hover:bg-gray-50">
-						<Icon icon="lucide:calendar" className="size-4 text-gray-400" />
-						<span className="text-sm font-semibold text-gray-600">
-							January 1st - 15th, 2026
-						</span>
-						<Icon icon="lucide:chevron-down" className="size-4 text-gray-400" />
-					</div>
-					<button className="flex items-center gap-2 rounded-xl bg-[#1e288e] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
-						<Icon icon="lucide:download" className="size-4" />
-						Export CSV/PDF
-					</button>
-				</div>
-
 				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
 					<AgentPayoutWidget
 						label="Total Agent Payout"

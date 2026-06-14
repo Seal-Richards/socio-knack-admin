@@ -2,6 +2,7 @@
 
 import React from "react";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
+import { formatCheckInDate } from "@/utils/dateFormatter";
 import type { UserProfileData } from "@/types/profile";
 import { createColumns } from "./columnFactory";
 import type { TableColumns } from "./definitions";
@@ -52,16 +53,7 @@ export const assignedAgentColumns: TableColumns<UserProfileData> = createColumns
 		accessorKey: "lastCheckInTime",
 		cell: ({ row }) => {
 			const agent = row.original;
-			let checkInText = "No check-in";
-
-			if (agent.lastCheckInTime) {
-				const dt = new Date(agent.lastCheckInTime);
-				checkInText = `${dt.toLocaleDateString()} | ${dt.toLocaleTimeString("en-US", {
-					hour: "numeric",
-					minute: "2-digit",
-					hour12: true,
-				})}`;
-			}
+			const checkInText = formatCheckInDate(agent.lastCheckInTime || agent.lastCheckIn);
 
 			return <span className="text-[13px] font-medium text-gray-500">{checkInText}</span>;
 		},

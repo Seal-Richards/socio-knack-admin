@@ -28,4 +28,12 @@ export const profileRequests = {
 			"Failed to update security password.",
 		);
 	},
+	async uploadPersonalKyc(formData: FormData, isSupervisor = false): Promise<ApiResponse<any>> {
+		const url = isSupervisor ? "/supervisor/kyc/upload" : "/admin/kyc/owner-upload";
+		return apiClient.post<ApiResponse<any>, FormData>(
+			url,
+			formData,
+			"Failed to upload personal KYC document.",
+		);
+	},
 };

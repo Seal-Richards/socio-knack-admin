@@ -29,6 +29,7 @@ export type ReportPayoutItem = {
 	successRate: string;
 	incentiveAmount: string;
 	status: "paid" | "pending" | "failed";
+	date?: string;
 };
 
 export interface ChecklistItem {

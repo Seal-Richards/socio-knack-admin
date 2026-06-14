@@ -8,6 +8,10 @@ import { Icon } from "@iconify/react";
 import { reportPayoutColumns } from "@/components/Tables/columns/reportPayoutColumns";
 import Pagination from "@/components/_atoms/Pagination";
 import { useGetReportsPayoutList } from "@/hooks/useReportsPayout";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { type DateRange } from "react-day-picker";
 
 export default function ReportPayoutList() {
 	const { data: listRes, isLoading } = useGetReportsPayoutList();
@@ -18,15 +22,31 @@ export default function ReportPayoutList() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
 
+	const [date, setDate] = useState<DateRange | undefined>({
+		from: undefined,
+		to: undefined,
+	});
+
 	const selectedCount = Object.keys(rowSelection).filter((key) => rowSelection[key]).length;
 
-	// Filter data
-	const filteredData = payouts.filter(
-		(item) =>
+	// Filter data by search query and date range
+	const filteredData = payouts.filter((item) => {
+		const matchesSearch =
 			item.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			item.territory.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			item.taskTitle.toLowerCase().includes(searchQuery.toLowerCase()),
-	);
+			item.taskTitle.toLowerCase().includes(searchQuery.toLowerCase());
+
+		if (!matchesSearch) return false;
+
+		if (date?.from && item.date) {
+			const itemDate = new Date(item.date);
+			const start = startOfDay(date.from);
+			const end = date.to ? endOfDay(date.to) : endOfDay(date.from);
+			return isWithinInterval(itemDate, { start, end });
+		}
+
+		return true;
+	});
 
 	// Pagination Math
 	const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
@@ -55,6 +75,20 @@ export default function ReportPayoutList() {
 		setRowSelection({}); // reset row selection on search
 	};
 
+	const getDateLabel = () => {
+		if (!date?.from) {
+			return <span className="text-gray-400">Filter by Date</span>;
+		}
+		if (date.to) {
+			return (
+				<span>
+					{format(date.from, "LLL dd, yyyy")} - {format(date.to, "LLL dd, yyyy")}
+				</span>
+			);
+		}
+		return <span>{format(date.from, "LLL dd, yyyy")}</span>;
+	};
+
 	const filterActions = (
 		<div className="flex w-full flex-wrap items-center justify-between gap-4">
 			<div className="flex flex-wrap items-center gap-3">
@@ -65,8 +99,47 @@ export default function ReportPayoutList() {
 					placeholder="Search"
 					value={searchQuery}
 					onChange={handleSearchChange}
-					containerClassName="w-full lg:w-96"
+					containerClassName="w-full lg:w-80"
 				/>
+				<Popover>
+					<PopoverTrigger asChild>
+						<button
+							type="button"
+							className="flex h-11 items-center gap-2 rounded-xl border border-gray-100 bg-white px-4 text-sm font-semibold text-gray-600 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none"
+						>
+							<Icon icon="lucide:calendar" className="size-4 text-gray-400" />
+							{getDateLabel()}
+							{date?.from ? (
+								<button
+									type="button"
+									aria-label="Clear date filter"
+									onClick={(e) => {
+										e.stopPropagation();
+										setDate(undefined);
+									}}
+									className="ml-1 rounded-full p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none"
+								>
+									<Icon icon="lucide:x" className="size-3.5" />
+								</button>
+							) : (
+								<Icon icon="lucide:chevron-down" className="size-4 text-gray-400" />
+							)}
+						</button>
+					</PopoverTrigger>
+					<PopoverContent
+						className="w-auto rounded-2xl border border-gray-100 bg-white p-0 shadow-lg"
+						align="start"
+					>
+						<Calendar
+							initialFocus
+							mode="range"
+							defaultMonth={date?.from}
+							selected={date}
+							onSelect={setDate}
+							numberOfMonths={2}
+						/>
+					</PopoverContent>
+				</Popover>
 			</div>
 		</div>
 	);
