@@ -20,7 +20,7 @@ import {
 	useUploadBusinessKyc,
 } from "@/hooks/useBusiness";
 import { useGetMe, useUploadPersonalKyc } from "@/hooks/useProfile";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 type OrganisationFormValues = {
 	name: string;

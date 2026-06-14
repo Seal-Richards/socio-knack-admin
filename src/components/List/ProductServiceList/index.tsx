@@ -11,7 +11,7 @@ import ConfirmDeleteModal from "@/components/_modals/ConfirmDeleteModal";
 import DynamicFilter from "@/components/_atoms/DynamicFilter";
 import { useGetProducts, useDeleteProduct } from "@/hooks/useProduct";
 import { useGetCategories } from "@/hooks/useCategory";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import type { ProductData } from "@/lib/requests/product";
 import Pagination from "@/components/_atoms/Pagination";
 

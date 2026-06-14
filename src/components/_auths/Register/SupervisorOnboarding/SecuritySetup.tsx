@@ -13,7 +13,7 @@ import {
 	type SupervisorSecuritySetupFormData,
 } from "@/schemas/auth";
 import { useRegisterSupervisorOnboarding } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import type { RegisterSupervisorPayload } from "@/types/auth";
 import StepProgressBar from "../Shared/StepProgressBar";
 

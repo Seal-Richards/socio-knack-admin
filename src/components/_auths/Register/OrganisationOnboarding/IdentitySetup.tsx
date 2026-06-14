@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { adminIdentitySchema, type AdminIdentityFormData } from "@/schemas/auth";
 import { useRegisterAdmin } from "@/hooks/useAuth";
 import { authRequests } from "@/lib/requests/auth";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function IdentitySetup({

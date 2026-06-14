@@ -12,7 +12,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Icon } from "@iconify/react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useGetBankList } from "@/hooks/useWallet";
 import { useLinkBank } from "@/hooks/useBusiness";
 import StepProgressBar from "../Shared/StepProgressBar";

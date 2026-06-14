@@ -7,7 +7,7 @@ import { useGetMe, useUpdateProfile } from "@/hooks/useProfile";
 import Modal from "@/components/_modals";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 interface ComplianceProps {
 	supervisor: {

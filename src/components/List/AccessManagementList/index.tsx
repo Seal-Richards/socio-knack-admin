@@ -22,7 +22,7 @@ import {
 	useDeleteInvitation,
 	useRevokeTeamAccess,
 } from "@/hooks/useTeam";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import Pagination from "@/components/_atoms/Pagination";
 
 type RawTeamUser = {

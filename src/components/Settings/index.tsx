@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import Tabs from "@/components/Tabs";
 import { useGetMe } from "@/hooks/useProfile";
 import { useSearchParams, useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useVerifySubscription } from "@/hooks/useBusiness";
 import OrganisationTab from "./OrganisationTab";
 import ProfileTab from "./ProfileTab";

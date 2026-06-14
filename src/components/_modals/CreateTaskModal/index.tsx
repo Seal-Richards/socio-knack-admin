@@ -5,7 +5,7 @@ import Modal from "@/components/_modals";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Icon } from "@iconify/react";
 import { useCreateVisit } from "@/hooks/useDashboard";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { type TaskFormData } from "@/schemas/task";
 import BasicInfo from "./BasicInfo";
 import Location from "./Location";

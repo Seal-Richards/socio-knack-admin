@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import { useGetTerritories, useDeleteTerritory } from "@/hooks/useTerritory";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import type { TerritoryData } from "@/types/territory";
 import ZoneTab from "./ZoneTab";
 import TeritoryMap from "./TeritoryMap";

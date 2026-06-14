@@ -9,6 +9,7 @@ import {
 	InfoWindowF,
 	DrawingManager,
 	PolygonF,
+	OverlayViewF,
 } from "@react-google-maps/api";
 import type { TerritoryData } from "@/types/territory";
 import type { UserProfileData } from "@/types/profile";
@@ -35,6 +36,12 @@ export interface MapAgent {
 		longitude: number;
 		lastUpdated?: string;
 	};
+	activeVisit?: {
+		_id: string;
+		title: string;
+		status: string;
+		scheduledDate?: string;
+	} | null;
 }
 
 const containerStyle = {
@@ -277,44 +284,98 @@ export default function Map({
 						})}
 
 						{/* Draw Markers for Online/Offline Agents */}
-						{agents.map((agent) => {
-							if (
-								!agent.lastKnownLocation?.latitude ||
-								!agent.lastKnownLocation?.longitude
-							) {
-								return null;
-							}
+						{[...agents]
+							.sort((a, b) => {
+								if (a.isOnline && !b.isOnline) return 1;
+								if (!a.isOnline && b.isOnline) return -1;
+								return 0;
+							})
+							.map((agent) => {
+								if (
+									!agent.lastKnownLocation?.latitude ||
+									!agent.lastKnownLocation?.longitude
+								) {
+									return null;
+								}
 
-							const { latitude, longitude } = agent.lastKnownLocation;
-							const isOnline = agent.isOnline || false;
-							const isInside = isAgentInAssignedZone(agent);
+								const { latitude, longitude } = agent.lastKnownLocation;
+								const isOnline = agent.isOnline || false;
+								const isInside = isAgentInAssignedZone(agent);
+								const agentKey = agent._id || agent.id || "";
 
-							let pinUrl = "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"; // Offline
-							if (isOnline) {
-								pinUrl = isInside
-									? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" // Online & In-Zone
-									: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"; // Online & Out-of-Zone
-							}
+								// Outer status border color
+								let borderColorClass = "border-yellow-500";
+								let pointerBgClass = "bg-yellow-500 border-yellow-500";
+								if (isOnline) {
+									if (isInside) {
+										borderColorClass = "border-green-500";
+										pointerBgClass = "bg-green-500 border-green-500";
+									} else {
+										borderColorClass = "border-red-500";
+										pointerBgClass = "bg-red-500 border-red-500";
+									}
+								}
 
-							const agentKey = agent._id || agent.id || "";
+								const fullName =
+									`${agent.firstName || ""} ${agent.lastName || ""}`.trim() ||
+									agent.name ||
+									agent.email ||
+									"Agent";
 
-							return (
-								<MarkerF
-									key={`agent-pin-${agentKey}`}
-									position={{
-										lat: latitude,
-										lng: longitude,
-									}}
-									onClick={() => {
-										setSelectedAgent(agent);
-										setSelectedMapZone(null);
-									}}
-									icon={{
-										url: pinUrl,
-									}}
-								/>
-							);
-						})}
+								return (
+									<OverlayViewF
+										key={`agent-pin-${agentKey}`}
+										position={{
+											lat: latitude,
+											lng: longitude,
+										}}
+										mapPaneName="overlayMouseTarget"
+									>
+										<button
+											id={`agent-pin-btn-${agentKey}`}
+											type="button"
+											aria-label={`View agent details for ${fullName}`}
+											onClick={() => {
+												setSelectedAgent(agent);
+												setSelectedMapZone(null);
+											}}
+											className={cn(
+												"absolute -translate-x-1/2 -translate-y-full transform cursor-pointer border-none bg-transparent p-0",
+												isOnline ? "z-10" : "z-0",
+											)}
+										>
+											<div className="relative flex flex-col items-center">
+												<div
+													className={cn(
+														"flex size-10 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-md transition-all hover:scale-110",
+														borderColorClass,
+													)}
+												>
+													{agent.avatar ? (
+														// eslint-disable-next-line @next/next/no-img-element
+														<img
+															src={agent.avatar}
+															alt={fullName}
+															className="size-full object-cover"
+														/>
+													) : (
+														<div className="flex size-full items-center justify-center bg-slate-200 text-xs font-bold text-slate-600">
+															{agent.firstName?.charAt(0) || ""}
+															{agent.lastName?.charAt(0) || ""}
+														</div>
+													)}
+												</div>
+												<div
+													className={cn(
+														"size-2 rotate-45 -mt-1 border-r border-b",
+														pointerBgClass,
+													)}
+												/>
+											</div>
+										</button>
+									</OverlayViewF>
+								);
+							})}
 
 						{/* Info Window for Zones */}
 						{selectedMapZone && (
@@ -450,6 +511,14 @@ export default function Map({
 												selectedAgent.lastCheckInTime ||
 													selectedAgent.lastCheckIn,
 											)}
+										</p>
+									)}
+									{selectedAgent.activeVisit && (
+										<p className="mt-1.5 border-t border-gray-100 pt-1.5 text-xs text-gray-600">
+											<strong>Active Task:</strong>{" "}
+											<span className="font-semibold text-[#1d4ea8]">
+												{selectedAgent.activeVisit.title}
+											</span>
 										</p>
 									)}
 								</div>

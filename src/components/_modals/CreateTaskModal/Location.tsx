@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Autocomplete, GoogleMap, MarkerF, PolygonF } from "@react-google-maps/api";
 import { useGetTerritories } from "@/hooks/useTerritory";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import cn from "@/lib/utils";
 import { type TaskFormData } from "@/schemas/task";
 import type { TerritoryData } from "@/types/territory";

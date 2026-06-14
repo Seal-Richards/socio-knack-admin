@@ -15,7 +15,7 @@ import {
 import { useUpdateUserStatus } from "@/hooks/useTeam";
 import { useSendAgentKycComment } from "@/hooks/useAgent";
 import { useUploadPersonalKyc } from "@/hooks/useProfile";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 import { type UserProfileData } from "@/types/profile";
 

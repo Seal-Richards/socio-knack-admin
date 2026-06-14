@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { useUploadOwnerId } from "@/hooks/useBusiness";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function OwnershipVerification({

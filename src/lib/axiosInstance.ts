@@ -4,7 +4,7 @@
 
 import axios, { type AxiosError } from "axios";
 import { getAuthToken, clearAuth } from "@/utils/auth";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import env from "@src/env";
 import { signOut } from "next-auth/react";
 

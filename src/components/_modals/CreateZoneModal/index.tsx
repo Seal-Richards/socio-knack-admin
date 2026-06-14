@@ -17,7 +17,7 @@ import { useGetSupervisors } from "@/hooks/useTeam";
 import { useGetAgents } from "@/hooks/useAgent";
 import { useCreateTerritory, useUpdateTerritory } from "@/hooks/useTerritory";
 import { type CreateTerritoryPayload } from "@/lib/requests/territory";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import cn from "@/lib/utils";
 import { Icon } from "@iconify/react";
 import type { TerritoryData } from "@/types/territory";

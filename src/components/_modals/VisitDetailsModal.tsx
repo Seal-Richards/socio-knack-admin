@@ -9,7 +9,7 @@ import { useGetAgents } from "@/hooks/useAgent";
 import { useGetTerritories } from "@/hooks/useTerritory";
 import { useApproveVisit } from "@/hooks/useReportsPayout";
 import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 type AgentDetails = {
 	_id?: string;
@@ -82,6 +82,11 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 	const currentUser = meRes?.data;
 	const updateVisitMutation = useUpdateVisit();
 	const approveVisitMutation = useApproveVisit();
+
+	const [isSavingEdit, setIsSavingEdit] = React.useState(false);
+	const [isCancelling, setIsCancelling] = React.useState(false);
+	const [isApprovingSchedule, setIsApprovingSchedule] = React.useState(false);
+	const [isApprovingReport, setIsApprovingReport] = React.useState(false);
 
 	const { data: territoriesRes } = useGetTerritories();
 	const territories = territoriesRes?.data || [];
@@ -209,6 +214,7 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 	};
 
 	const handleCancelTask = async () => {
+		setIsCancelling(true);
 		try {
 			const res = await updateVisitMutation.mutateAsync({
 				visitId: visit._id || visit.id || "",
@@ -223,10 +229,13 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 		} catch (err) {
 			const errorMsg = err instanceof Error ? err.message : "Failed to cancel task.";
 			toast.error(errorMsg);
+		} finally {
+			setIsCancelling(false);
 		}
 	};
 
 	const handleApproveSchedule = async () => {
+		setIsApprovingSchedule(true);
 		try {
 			const res = await updateVisitMutation.mutateAsync({
 				visitId: visit._id || visit.id || "",
@@ -241,10 +250,13 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 		} catch (err) {
 			const errorMsg = err instanceof Error ? err.message : "Failed to approve schedule.";
 			toast.error(errorMsg);
+		} finally {
+			setIsApprovingSchedule(false);
 		}
 	};
 
 	const handleApproveReport = async () => {
+		setIsApprovingReport(true);
 		try {
 			const res = await approveVisitMutation.mutateAsync({
 				id: visit._id || visit.id || "",
@@ -259,11 +271,14 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 		} catch (err) {
 			const errorMsg = err instanceof Error ? err.message : "Failed to approve visit report.";
 			toast.error(errorMsg);
+		} finally {
+			setIsApprovingReport(false);
 		}
 	};
 
 	const handleSave = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setIsSavingEdit(true);
 		try {
 			let hr24 = parseInt(timeHour, 10);
 			if (timePeriod === "PM" && hr24 !== 12) {
@@ -301,6 +316,8 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 		} catch (err) {
 			const errorMsg = err instanceof Error ? err.message : "Failed to update task.";
 			toast.error(errorMsg);
+		} finally {
+			setIsSavingEdit(false);
 		}
 	};
 
@@ -553,10 +570,10 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 								</Button>
 								<Button
 									type="submit"
-									disabled={updateVisitMutation.isPending}
+									disabled={isSavingEdit}
 									className="h-11 cursor-pointer rounded-xl bg-[#1d4ea8] px-6 font-bold text-white hover:bg-[#153a82]"
 								>
-									{updateVisitMutation.isPending ? "Saving..." : "Save Changes"}
+									{isSavingEdit ? "Saving..." : "Save Changes"}
 								</Button>
 							</div>
 						</form>
@@ -640,23 +657,29 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 								{canEditOrCancel && !isCancelled && !isCompleted && (
 									<Button
 										onClick={handleCancelTask}
-										disabled={updateVisitMutation.isPending}
+										disabled={
+											isCancelling ||
+											isApprovingSchedule ||
+											isApprovingReport ||
+											isSavingEdit
+										}
 										className="h-11 cursor-pointer rounded-xl bg-red-50 px-6 font-bold text-red-600 transition-colors hover:bg-red-100"
 									>
-										{updateVisitMutation.isPending
-											? "Cancelling..."
-											: "Cancel Task"}
+										{isCancelling ? "Cancelling..." : "Cancel Task"}
 									</Button>
 								)}
 								{canEditOrCancel && visit.isScheduleApproved === false && (
 									<Button
 										onClick={handleApproveSchedule}
-										disabled={updateVisitMutation.isPending}
+										disabled={
+											isCancelling ||
+											isApprovingSchedule ||
+											isApprovingReport ||
+											isSavingEdit
+										}
 										className="h-11 cursor-pointer rounded-xl bg-green-50 px-6 font-bold text-green-600 transition-colors hover:bg-green-100"
 									>
-										{updateVisitMutation.isPending
-											? "Approving..."
-											: "Approve Schedule"}
+										{isApprovingSchedule ? "Approving..." : "Approve Schedule"}
 									</Button>
 								)}
 								{canEditOrCancel &&
@@ -664,12 +687,15 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 									visit.isScheduleApproved === true && (
 										<Button
 											onClick={handleApproveReport}
-											disabled={approveVisitMutation.isPending}
+											disabled={
+												isCancelling ||
+												isApprovingSchedule ||
+												isApprovingReport ||
+												isSavingEdit
+											}
 											className="h-11 cursor-pointer rounded-xl bg-green-50 px-6 font-bold text-green-600 transition-colors hover:bg-green-100"
 										>
-											{approveVisitMutation.isPending
-												? "Approving..."
-												: "Approve Report"}
+											{isApprovingReport ? "Approving..." : "Approve Report"}
 										</Button>
 									)}
 							</div>

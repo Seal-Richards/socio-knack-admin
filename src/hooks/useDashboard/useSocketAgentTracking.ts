@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { io, type Socket } from "socket.io-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetMe } from "@/hooks/useProfile";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 interface SocketAgentData {
 	agentId: string;

@@ -16,7 +16,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { inviteTeamSchema, type InviteTeamFormData } from "@/schemas/invite";
 import { useInviteSupervisor, useInviteStaff } from "@/hooks/useInvite";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 interface InviteTeamModalProps {
 	isOpen: boolean;

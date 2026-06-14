@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Icon } from "@iconify/react";
 import { useSetupBusiness, useUploadBusinessKyc } from "@/hooks/useBusiness";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 type OrganisationSetupProps = {

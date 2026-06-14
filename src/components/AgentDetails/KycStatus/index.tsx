@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import type { AgentData } from "@/types/agent";
 import { useUpdateAgentStatus, useSendAgentKycComment } from "@/hooks/useAgent";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 export default function KycStatus({ agent }: { agent: AgentData }) {
 	const hasId = !!agent.kycDocuments?.idFront;
