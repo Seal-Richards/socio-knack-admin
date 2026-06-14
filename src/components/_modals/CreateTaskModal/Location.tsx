@@ -115,12 +115,8 @@ export default function Location({ onNext, formData, updateFormData }: LocationP
 
 					if (!isInside) {
 						setIsValidLocation(false);
-						toast.warning(
-							"The selected address is outside of the boundary of your chosen zone. Please select a valid address inside the zone.",
-						);
 					} else {
 						setIsValidLocation(true);
-						toast.success("Location verified inside the zone!");
 					}
 				}
 
@@ -213,6 +209,11 @@ export default function Location({ onNext, formData, updateFormData }: LocationP
 				{!isValidLocation && (
 					<p className="mt-0.5 pl-1 text-xs font-semibold text-red-500">
 						Warning: Address is outside the selected zone boundary.
+					</p>
+				)}
+				{isValidLocation && formData.address && (
+					<p className="mt-0.5 pl-1 text-xs font-semibold text-green-600">
+						Location verified inside the zone.
 					</p>
 				)}
 			</div>
