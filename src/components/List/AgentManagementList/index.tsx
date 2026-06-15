@@ -7,13 +7,15 @@ import DynamicFilter from "@/components/_atoms/DynamicFilter";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import {
-	agentManagementColumns,
+	getAgentManagementColumns,
 	type Agent,
 } from "@/components/Tables/columns/agentManagementColumns";
 import { STATUS_OPTIONS } from "@/constants/agentManagement";
-import { useGetAgents } from "@/hooks/useAgent";
+import { useGetAgents, useDeleteAgent } from "@/hooks/useAgent";
 import { useGetTerritories } from "@/hooks/useTerritory";
 import Pagination from "@/components/_atoms/Pagination";
+import ConfirmDeleteModal from "@/components/_modals/ConfirmDeleteModal";
+import { toast } from "@/lib/toast";
 import TableLayoutWrapper from "../TableLayoutWrapper";
 
 export default function AgentManagementList() {
@@ -24,8 +26,46 @@ export default function AgentManagementList() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
 
+	// State for ConfirmDeleteModal
+	const [deleteModal, setDeleteModal] = useState<{
+		isOpen: boolean;
+		agentId: string | number | null;
+	}>({
+		isOpen: false,
+		agentId: null,
+	});
+
 	const { data: agentsRes, isLoading: loadingAgents } = useGetAgents();
 	const { data: territoriesRes, isLoading: loadingTerritories } = useGetTerritories();
+
+	const deleteMutation = useDeleteAgent();
+
+	const handleDeleteClick = (id: string | number) => {
+		setDeleteModal({
+			isOpen: true,
+			agentId: id,
+		});
+	};
+
+	const handleConfirmDelete = () => {
+		if (!deleteModal.agentId) return;
+
+		deleteMutation
+			.mutateAsync(String(deleteModal.agentId))
+			.then((res) => {
+				if (res.success) {
+					toast.success(res.message || "Agent deleted successfully.");
+				} else {
+					toast.error(res.message || "Failed to delete agent.");
+				}
+				setDeleteModal({ isOpen: false, agentId: null });
+			})
+			.catch((err: unknown) => {
+				toast.error(err instanceof Error ? err.message : "Failed to delete agent.");
+			});
+	};
+
+	const columns = getAgentManagementColumns(handleDeleteClick);
 
 	const isLoading = loadingAgents || loadingTerritories;
 	const territories = territoriesRes?.data || [];
@@ -189,34 +229,46 @@ export default function AgentManagementList() {
 	);
 
 	return (
-		<TableLayoutWrapper
-			title=""
-			filters={filterActions}
-			className="gap-0" // Remove standard gap since slots handle header
-		>
-			{isLoading ? (
-				<div className="flex h-40 items-center justify-center">
-					<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
-				</div>
-			) : (
-				<>
-					<Table
-						columns={agentManagementColumns as any[]}
-						data={paginatedTeam}
-						emptyState={{
-							title: "No Agents Found",
-							description: "There are currently no agents matching your filters.",
-							icon: "solar:user-speak-bold-duotone",
-						}}
-					/>
-					<Pagination
-						currentPage={currentPage}
-						totalPages={totalPages}
-						onPageChange={setCurrentPage}
-						className="mt-4"
-					/>
-				</>
-			)}
-		</TableLayoutWrapper>
+		<>
+			<TableLayoutWrapper
+				title=""
+				filters={filterActions}
+				className="gap-0" // Remove standard gap since slots handle header
+			>
+				{isLoading ? (
+					<div className="flex h-40 items-center justify-center">
+						<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
+					</div>
+				) : (
+					<>
+						<Table
+							columns={columns as any[]}
+							data={paginatedTeam}
+							emptyState={{
+								title: "No Agents Found",
+								description: "There are currently no agents matching your filters.",
+								icon: "solar:user-speak-bold-duotone",
+							}}
+						/>
+						<Pagination
+							currentPage={currentPage}
+							totalPages={totalPages}
+							onPageChange={setCurrentPage}
+							className="mt-4"
+						/>
+					</>
+				)}
+			</TableLayoutWrapper>
+			<ConfirmDeleteModal
+				isOpen={deleteModal.isOpen}
+				onClose={() => setDeleteModal({ isOpen: false, agentId: null })}
+				onConfirm={handleConfirmDelete}
+				isLoading={deleteMutation.isPending}
+				title="Delete Agent"
+				description="Are you sure you want to delete this agent? This will permanently delete the agent's user account, personal wallet, and bank configurations. To preserve historical reports and payout logs, their visit tasks and transaction history will be reassigned to the business administrator. This action cannot be undone."
+				confirmText="Yes, Delete"
+				loadingText="Deleting..."
+			/>
+		</>
 	);
 }

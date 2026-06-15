@@ -69,3 +69,15 @@ export function useSendAgentKycComment() {
 		},
 	});
 }
+
+export function useDeleteAgent() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (id: string) => agentRequests.deleteAgent(id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["agents"] }).catch((err) => {
+				console.error("Failed to invalidate agents list query:", err);
+			});
+		},
+	});
+}

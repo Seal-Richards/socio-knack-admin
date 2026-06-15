@@ -51,4 +51,8 @@ export const agentRequests = {
 			"Failed to send KYC comment.",
 		);
 	},
+
+	async deleteAgent(id: string): Promise<ApiResponse<any>> {
+		return apiClient.delete<ApiResponse<any>>(`/admin/agents/${id}`, "Failed to delete agent.");
+	},
 };
