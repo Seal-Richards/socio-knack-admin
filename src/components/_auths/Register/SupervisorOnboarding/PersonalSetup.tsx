@@ -18,7 +18,7 @@ import {
 	supervisorPersonalSetupSchema,
 	type SupervisorPersonalSetupFormData,
 } from "@/schemas/auth";
-import { NIGERIA_STATES_AND_CITIES } from "@/constants/nigeriaData";
+import { useNigeriaData } from "@/hooks/useProfile";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function PersonalSetup({
@@ -36,6 +36,9 @@ export default function PersonalSetup({
 	prefilledEmail?: string;
 	initialValues?: Partial<SupervisorPersonalSetupFormData>;
 }) {
+	const { data: nigeriaDataRes } = useNigeriaData();
+	const NIGERIA_STATES_AND_CITIES = nigeriaDataRes?.data || {};
+
 	const getGenderValue = (val?: string) => {
 		if (!val) return "";
 		const lower = val.toLowerCase();

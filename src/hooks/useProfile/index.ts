@@ -50,3 +50,11 @@ export function useUploadPersonalKyc() {
 		},
 	});
 }
+
+export function useNigeriaData() {
+	return useQuery({
+		queryKey: ["nigeria-data"],
+		queryFn: () => profileRequests.getNigeriaData(),
+		staleTime: Infinity, // The data doesn't change often, keep it cached indefinitely
+	});
+}

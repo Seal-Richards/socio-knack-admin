@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/select";
 import { Icon } from "@iconify/react";
 import { useSetupBusiness, useUploadBusinessKyc } from "@/hooks/useBusiness";
+import { useNigeriaData } from "@/hooks/useProfile";
 import { toast } from "@/lib/toast";
-import { NIGERIA_STATES_AND_CITIES } from "@/constants/nigeriaData";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 type OrganisationSetupProps = {
@@ -56,6 +56,9 @@ export default function OrganisationSetup({
 	step = 4,
 	totalSteps = 6,
 }: OrganisationSetupProps) {
+	const { data: nigeriaDataRes } = useNigeriaData();
+	const NIGERIA_STATES_AND_CITIES = nigeriaDataRes?.data || {};
+
 	const [orgName, setOrgName] = useState(initialValues.orgName || "");
 	const [orgDomain, setOrgDomain] = useState(initialValues.orgDomain || "");
 	const [orgCountry, setOrgCountry] = useState("NG");

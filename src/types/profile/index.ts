@@ -141,3 +141,5 @@ export type InvitationData = {
 	status: string;
 	expiresAt: string;
 };
+
+export type NigeriaStatesAndCities = Record<string, string[]>;

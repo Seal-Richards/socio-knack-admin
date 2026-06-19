@@ -2,7 +2,12 @@
 
 import { apiClient } from "@/lib/apiClient";
 import type { ApiResponse } from "@/types/generic";
-import type { UserProfileData, UpdateProfilePayload, UpdatePasswordPayload } from "@/types/profile";
+import type {
+	UserProfileData,
+	UpdateProfilePayload,
+	UpdatePasswordPayload,
+	NigeriaStatesAndCities,
+} from "@/types/profile";
 
 export const profileRequests = {
 	/** GET /auth/me — returns the logged-in user's full profile for any role */
@@ -34,6 +39,12 @@ export const profileRequests = {
 			url,
 			formData,
 			"Failed to upload personal KYC document.",
+		);
+	},
+	async getNigeriaData(): Promise<ApiResponse<NigeriaStatesAndCities>> {
+		return apiClient.get<ApiResponse<NigeriaStatesAndCities>>(
+			"/auth/nigeria-data",
+			"Failed to load Nigeria states and cities.",
 		);
 	},
 };

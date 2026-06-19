@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Icon } from "@iconify/react";
 import { toast } from "@/lib/toast";
-import { useGetMe, useUpdateProfile, useChangePassword } from "@/hooks/useProfile";
+import { useGetMe, useUpdateProfile, useChangePassword, useNigeriaData } from "@/hooks/useProfile";
 import {
 	profileUpdateSchema,
 	type ProfileUpdateFormData,
@@ -26,7 +26,6 @@ import {
 	type ChangePasswordFormData,
 } from "@/schemas/profile";
 import Modal from "@/components/_modals";
-import { NIGERIA_STATES_AND_CITIES } from "@/constants/nigeriaData";
 
 export default function ProfileTab() {
 	const { data: session, update: updateSession } = useSession();
@@ -40,7 +39,12 @@ export default function ProfileTab() {
 	// Query own profile data via GET /auth/me — works for all roles
 	const { data: ownProfileRes, isLoading: isLoadingProfile, refetch } = useGetMe();
 	const profileData = ownProfileRes?.data;
-	const [hasInitialSynced, setHasInitialSynced] = useState(false);
+
+	// Fetch Nigeria states and cities from the backend endpoint
+	const { data: nigeriaDataRes } = useNigeriaData();
+	const NIGERIA_STATES_AND_CITIES = React.useMemo(() => {
+		return nigeriaDataRes?.data || {};
+	}, [nigeriaDataRes]);
 
 	const {
 		register,
@@ -84,38 +88,32 @@ export default function ProfileTab() {
 		if (!gender) return "";
 
 		const lower = gender.toLowerCase();
-		if (!["male", "female", "other"].includes(lower)) {
-			return "Other";
-		}
-
-		return lower.charAt(0).toUpperCase() + lower.slice(1);
+		if (lower === "male") return "Male";
+		if (lower === "female") return "Female";
+		return "Other";
 	}
 
 	// Sync loaded profile data into form fields
 	useEffect(() => {
-		if (profileData) {
+		if (profileData && Object.keys(NIGERIA_STATES_AND_CITIES).length > 0) {
 			reset({
 				fullName: `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim(),
 				email: profileData.email || "",
 				phone: profileData.phone || "",
 				gender: formatGender(profileData.gender),
 				dob: profileData.dob ? new Date(profileData.dob).toISOString().split("T")[0] : "",
-				city: profileData.city || "",
 				state: profileData.state || "",
+				city: profileData.city || "",
 				country: profileData.country || "Nigeria",
 				avatar: profileData.avatar || "",
 			});
-			setHasInitialSynced(true);
 		}
-	}, [profileData, reset]);
+	}, [profileData, reset, nigeriaDataRes, NIGERIA_STATES_AND_CITIES]);
 	// Reset city when state changes after initial load (only if it has changed from the initial loaded state)
-	useEffect(() => {
-		if (hasInitialSynced && selectedState) {
-			if (selectedState !== profileData?.state) {
-				setValue("city", "");
-			}
-		}
-	}, [selectedState, hasInitialSynced, setValue, profileData?.state]);
+	const handleStateChange = (val: string) => {
+		setValue("state", val, { shouldValidate: true, shouldDirty: true });
+		setValue("city", "", { shouldValidate: true, shouldDirty: true });
+	};
 
 	const onProfileSubmit = async (data: ProfileUpdateFormData) => {
 		try {
@@ -331,7 +329,10 @@ export default function ProfileTab() {
 									name="gender"
 									control={control}
 									render={({ field }) => (
-										<Select onValueChange={field.onChange} value={field.value}>
+										<Select
+											onValueChange={field.onChange}
+											value={field.value || undefined}
+										>
 											<SelectTrigger
 												id="gender"
 												className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
@@ -349,6 +350,43 @@ export default function ProfileTab() {
 							</div>
 							<div className="space-y-2">
 								<Label
+									htmlFor="state"
+									className="text-[14px] font-medium text-gray-600"
+								>
+									State
+								</Label>
+								<Controller
+									name="state"
+									control={control}
+									render={({ field }) => (
+										<Select
+											onValueChange={handleStateChange}
+											value={field.value || undefined}
+										>
+											<SelectTrigger
+												id="state"
+												className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
+											>
+												<SelectValue placeholder="Select" />
+											</SelectTrigger>
+											<SelectContent className="rounded-xl border-gray-100">
+												{Object.keys(NIGERIA_STATES_AND_CITIES).map(
+													(st) => (
+														<SelectItem key={st} value={st}>
+															{st}
+														</SelectItem>
+													),
+												)}
+											</SelectContent>
+										</Select>
+									)}
+								/>
+							</div>
+						</div>
+
+						<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+							<div className="space-y-2">
+								<Label
 									htmlFor="city"
 									className="text-[14px] font-medium text-gray-600"
 								>
@@ -360,7 +398,7 @@ export default function ProfileTab() {
 									render={({ field }) => (
 										<Select
 											onValueChange={field.onChange}
-											value={field.value || ""}
+											value={field.value || undefined}
 											disabled={!selectedState}
 										>
 											<SelectTrigger
@@ -379,43 +417,6 @@ export default function ProfileTab() {
 														{ct}
 													</SelectItem>
 												))}
-											</SelectContent>
-										</Select>
-									)}
-								/>
-							</div>
-						</div>
-
-						<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-							<div className="space-y-2">
-								<Label
-									htmlFor="state"
-									className="text-[14px] font-medium text-gray-600"
-								>
-									State
-								</Label>
-								<Controller
-									name="state"
-									control={control}
-									render={({ field }) => (
-										<Select
-											onValueChange={field.onChange}
-											value={field.value || ""}
-										>
-											<SelectTrigger
-												id="state"
-												className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
-											>
-												<SelectValue placeholder="Select" />
-											</SelectTrigger>
-											<SelectContent className="rounded-xl border-gray-100">
-												{Object.keys(NIGERIA_STATES_AND_CITIES).map(
-													(st) => (
-														<SelectItem key={st} value={st}>
-															{st}
-														</SelectItem>
-													),
-												)}
 											</SelectContent>
 										</Select>
 									)}
