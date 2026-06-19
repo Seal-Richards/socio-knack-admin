@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useForm, Controller } from "react-hook-form";
@@ -27,45 +27,56 @@ import {
 } from "@/schemas/profile";
 import Modal from "@/components/_modals";
 
-export default function ProfileTab() {
-	const { data: session, update: updateSession } = useSession();
-	const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-	const [showPassword, setShowPassword] = useState(false);
+import type { Session } from "next-auth";
+import type { UserProfileData, NigeriaStatesAndCities } from "@/types/profile";
+
+function formatGender(gender?: string | null): string {
+	if (!gender) return "";
+
+	const lower = gender.toLowerCase();
+	if (lower === "male") return "Male";
+	if (lower === "female") return "Female";
+	return "Other";
+}
+
+interface ProfileSettingsFormProps {
+	profileData?: UserProfileData;
+	NIGERIA_STATES_AND_CITIES: NigeriaStatesAndCities;
+	updateProfileMutation: ReturnType<typeof useUpdateProfile>;
+	session: Session | null;
+	updateSession: (data: any) => Promise<Session | null>;
+	refetch: () => Promise<any>;
+}
+
+function ProfileSettingsForm({
+	profileData,
+	NIGERIA_STATES_AND_CITIES,
+	updateProfileMutation,
+	session,
+	updateSession,
+	refetch,
+}: ProfileSettingsFormProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null);
-
-	const updateProfileMutation = useUpdateProfile();
-	const changePasswordMutation = useChangePassword();
-
-	// Query own profile data via GET /auth/me — works for all roles
-	const { data: ownProfileRes, isLoading: isLoadingProfile, refetch } = useGetMe();
-	const profileData = ownProfileRes?.data;
-
-	// Fetch Nigeria states and cities from the backend endpoint
-	const { data: nigeriaDataRes } = useNigeriaData();
-	const NIGERIA_STATES_AND_CITIES = React.useMemo(() => {
-		return nigeriaDataRes?.data || {};
-	}, [nigeriaDataRes]);
 
 	const {
 		register,
 		handleSubmit,
 		control,
-		reset,
 		setValue,
 		watch,
 		formState: { errors },
 	} = useForm<ProfileUpdateFormData>({
 		resolver: zodResolver(profileUpdateSchema),
 		defaultValues: {
-			fullName: "",
-			email: "",
-			phone: "",
-			gender: "",
-			dob: "",
-			city: "",
-			state: "",
-			country: "Nigeria",
-			avatar: "",
+			fullName: `${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim(),
+			email: profileData?.email || "",
+			phone: profileData?.phone || "",
+			gender: formatGender(profileData?.gender),
+			dob: profileData?.dob ? new Date(profileData.dob).toISOString().split("T")[0] : "",
+			state: profileData?.state || "",
+			city: profileData?.city || "",
+			country: profileData?.country || "Nigeria",
+			avatar: profileData?.avatar || "",
 		},
 	});
 
@@ -84,32 +95,6 @@ export default function ProfileTab() {
 		reader.readAsDataURL(file);
 	};
 
-	function formatGender(gender?: string | null): string {
-		if (!gender) return "";
-
-		const lower = gender.toLowerCase();
-		if (lower === "male") return "Male";
-		if (lower === "female") return "Female";
-		return "Other";
-	}
-
-	// Sync loaded profile data into form fields
-	useEffect(() => {
-		if (profileData && Object.keys(NIGERIA_STATES_AND_CITIES).length > 0) {
-			reset({
-				fullName: `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim(),
-				email: profileData.email || "",
-				phone: profileData.phone || "",
-				gender: formatGender(profileData.gender),
-				dob: profileData.dob ? new Date(profileData.dob).toISOString().split("T")[0] : "",
-				state: profileData.state || "",
-				city: profileData.city || "",
-				country: profileData.country || "Nigeria",
-				avatar: profileData.avatar || "",
-			});
-		}
-	}, [profileData, reset, nigeriaDataRes, NIGERIA_STATES_AND_CITIES]);
-	// Reset city when state changes after initial load (only if it has changed from the initial loaded state)
 	const handleStateChange = (val: string) => {
 		setValue("state", val, { shouldValidate: true, shouldDirty: true });
 		setValue("city", "", { shouldValidate: true, shouldDirty: true });
@@ -130,7 +115,6 @@ export default function ProfileTab() {
 
 			if (res.success) {
 				toast.success(res.message);
-				// Update session name if present
 				await updateSession({
 					...session,
 					user: {
@@ -149,6 +133,283 @@ export default function ProfileTab() {
 		}
 	};
 
+	return (
+		<form
+			onSubmit={handleSubmit(onProfileSubmit)}
+			className="rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm"
+		>
+			<div className="mb-8 flex items-center justify-between">
+				<div className="flex items-center gap-3">
+					<h3 className="text-[15px] font-bold text-gray-800">Profile Settings</h3>
+					{profileData?.role && (
+						<span className="inline-flex items-center rounded-full bg-[#1d4ea8]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#1d4ea8]">
+							{profileData.role}
+						</span>
+					)}
+				</div>
+				<Button
+					type="submit"
+					disabled={updateProfileMutation.isPending}
+					className="h-11 rounded-xl bg-[#4CAF50] px-8 font-bold text-white transition-all hover:bg-[#43A047] active:scale-95 disabled:opacity-50"
+				>
+					{updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+				</Button>
+			</div>
+
+			<div className="space-y-8">
+				<div className="space-y-4">
+					<Label className="text-[14px] font-medium text-gray-600">Profile Photo</Label>
+					<div className="relative inline-block">
+						<div className="flex size-24 items-center justify-center overflow-hidden rounded-full border border-gray-100 bg-gray-50/30">
+							{watch("avatar") ? (
+								<Image
+									src={watch("avatar") || ""}
+									alt="Avatar"
+									width={96}
+									height={96}
+									className="size-full object-cover"
+								/>
+							) : (
+								<Icon
+									icon="solar:gallery-bold-duotone"
+									className="size-10 text-gray-200"
+								/>
+							)}
+						</div>
+						<input
+							ref={fileInputRef}
+							type="file"
+							accept="image/*"
+							onChange={handlePhotoUpload}
+							className="sr-only"
+							aria-label="Upload Profile Photo"
+						/>
+						<button
+							type="button"
+							onClick={() => fileInputRef.current?.click()}
+							className="absolute -bottom-1 -right-1 flex size-8 cursor-pointer items-center justify-center rounded-full border border-white bg-[#1d4ea8] text-white shadow-sm transition-all hover:bg-[#153a82] active:scale-95"
+							aria-label="Edit profile photo"
+						>
+							<Icon icon="lucide:edit-3" className="size-4" />
+						</button>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+					<div className="space-y-2">
+						<Label htmlFor="fullName" className="text-[14px] font-medium text-gray-600">
+							Full Name
+						</Label>
+						<Input
+							id="fullName"
+							{...register("fullName")}
+							className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
+						/>
+						{errors.fullName && (
+							<p className="text-xs font-medium text-red-500">
+								{errors.fullName.message}
+							</p>
+						)}
+					</div>
+					<div className="space-y-2">
+						<Label htmlFor="email" className="text-[14px] font-medium text-gray-600">
+							Email Address
+						</Label>
+						<Input
+							id="email"
+							{...register("email")}
+							disabled
+							className="h-12 cursor-not-allowed rounded-xl border-gray-100 bg-gray-100 px-4 text-gray-500 focus-visible:ring-0"
+						/>
+					</div>
+					<div className="space-y-2">
+						<Label htmlFor="phone" className="text-[14px] font-medium text-gray-600">
+							Phone Number
+						</Label>
+						<Input
+							id="phone"
+							{...register("phone")}
+							className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
+						/>
+						{errors.phone && (
+							<p className="text-xs font-medium text-red-500">
+								{errors.phone.message}
+							</p>
+						)}
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+					<div className="space-y-2">
+						<Label htmlFor="dob" className="text-[14px] font-medium text-gray-600">
+							Date of Birth
+						</Label>
+						<Input
+							id="dob"
+							type="date"
+							{...register("dob")}
+							className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
+						/>
+					</div>
+					<div className="space-y-2">
+						<Label
+							htmlFor="gender"
+							className="flex items-center justify-between text-[14px] font-medium text-gray-600"
+						>
+							<span>Gender</span>
+							{profileData?.gender && (
+								<span className="text-xs text-[#1d4ea8]">
+									{formatGender(profileData.gender)}
+								</span>
+							)}
+						</Label>
+						<Controller
+							name="gender"
+							control={control}
+							render={({ field }) => (
+								<Select onValueChange={field.onChange} value={field.value}>
+									<SelectTrigger
+										id="gender"
+										className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
+									>
+										<SelectValue placeholder="Select" />
+									</SelectTrigger>
+									<SelectContent className="rounded-xl border-gray-100">
+										<SelectItem value="Male">Male</SelectItem>
+										<SelectItem value="Female">Female</SelectItem>
+										<SelectItem value="Other">Other</SelectItem>
+									</SelectContent>
+								</Select>
+							)}
+						/>
+					</div>
+					<div className="space-y-2">
+						<Label
+							htmlFor="state"
+							className="flex items-center justify-between text-[14px] font-medium text-gray-600"
+						>
+							<span>State</span>
+							{profileData?.state && (
+								<span className="text-xs text-[#1d4ea8]">{profileData.state}</span>
+							)}
+						</Label>
+						<Controller
+							name="state"
+							control={control}
+							render={({ field }) => (
+								<Select onValueChange={handleStateChange} value={field.value}>
+									<SelectTrigger
+										id="state"
+										className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
+									>
+										<SelectValue placeholder="Select" />
+									</SelectTrigger>
+									<SelectContent className="rounded-xl border-gray-100">
+										{Object.keys(NIGERIA_STATES_AND_CITIES).map((st) => (
+											<SelectItem key={st} value={st}>
+												{st}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							)}
+						/>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+					<div className="space-y-2">
+						<Label
+							htmlFor="city"
+							className="flex items-center justify-between text-[14px] font-medium text-gray-600"
+						>
+							<span>City</span>
+							{profileData?.city && (
+								<span className="text-xs text-[#1d4ea8]">{profileData.city}</span>
+							)}
+						</Label>
+						<Controller
+							name="city"
+							control={control}
+							render={({ field }) => (
+								<Select
+									onValueChange={field.onChange}
+									value={field.value}
+									disabled={!selectedState}
+								>
+									<SelectTrigger
+										id="city"
+										className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
+									>
+										<SelectValue placeholder="Select" />
+									</SelectTrigger>
+									<SelectContent className="rounded-xl border-gray-100">
+										{(NIGERIA_STATES_AND_CITIES[selectedState || ""] || []).map(
+											(ct) => (
+												<SelectItem key={ct} value={ct}>
+													{ct}
+												</SelectItem>
+											),
+										)}
+									</SelectContent>
+								</Select>
+							)}
+						/>
+					</div>
+					<div className="space-y-2">
+						<Label htmlFor="country" className="text-[14px] font-medium text-gray-600">
+							Country
+						</Label>
+						<Controller
+							name="country"
+							control={control}
+							render={({ field }) => (
+								<Select
+									onValueChange={field.onChange}
+									value={field.value || ""}
+									disabled
+								>
+									<SelectTrigger
+										id="country"
+										className="h-12 cursor-not-allowed rounded-xl border-gray-100 bg-gray-100 px-4 text-[14px] font-bold text-gray-500 focus:ring-0"
+									>
+										<SelectValue placeholder="Select" />
+									</SelectTrigger>
+									<SelectContent className="rounded-xl border-gray-100">
+										<SelectItem value="Nigeria">Nigeria</SelectItem>
+									</SelectContent>
+								</Select>
+							)}
+						/>
+					</div>
+				</div>
+			</div>
+		</form>
+	);
+}
+
+export default function ProfileTab() {
+	const { data: session, update: updateSession } = useSession();
+	const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [showOldPassword, setShowOldPassword] = useState(false);
+
+	const updateProfileMutation = useUpdateProfile();
+	const changePasswordMutation = useChangePassword();
+
+	// Query own profile data via GET /auth/me — works for all roles
+	const { data: ownProfileRes, isLoading: isLoadingProfile, refetch } = useGetMe();
+	const profileData = ownProfileRes?.data;
+
+	// Fetch Nigeria states and cities from the backend endpoint
+	const { data: nigeriaDataRes, isLoading: isLoadingNigeriaData } = useNigeriaData();
+	const NIGERIA_STATES_AND_CITIES = React.useMemo(() => {
+		return nigeriaDataRes?.data || {};
+	}, [nigeriaDataRes]);
+
+	const isLoadingData = isLoadingProfile || isLoadingNigeriaData;
+
 	// Change Password Form
 	const {
 		register: regPassword,
@@ -157,6 +418,7 @@ export default function ProfileTab() {
 		formState: { errors: passErrors },
 	} = useForm<ChangePasswordFormData>({
 		resolver: zodResolver(changePasswordSchema),
+		mode: "onChange",
 	});
 
 	const onPasswordSubmit = async (data: ChangePasswordFormData) => {
@@ -181,280 +443,20 @@ export default function ProfileTab() {
 	return (
 		<div className="flex flex-col gap-8 text-gray-800">
 			{/* Section: Profile Settings */}
-			<form
-				onSubmit={handleSubmit(onProfileSubmit)}
-				className="rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm"
-			>
-				<div className="mb-8 flex items-center justify-between">
-					<div className="flex items-center gap-3">
-						<h3 className="text-[15px] font-bold text-gray-800">Profile Settings</h3>
-						{profileData?.role && (
-							<span className="inline-flex items-center rounded-full bg-[#1d4ea8]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#1d4ea8]">
-								{profileData.role}
-							</span>
-						)}
-					</div>
-					<Button
-						type="submit"
-						disabled={updateProfileMutation.isPending || isLoadingProfile}
-						className="h-11 rounded-xl bg-[#4CAF50] px-8 font-bold text-white transition-all hover:bg-[#43A047] active:scale-95 disabled:opacity-50"
-					>
-						{updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
-					</Button>
+			{isLoadingData ? (
+				<div className="flex h-40 items-center justify-center rounded-[2.5rem] border border-gray-100 bg-white shadow-sm">
+					<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
 				</div>
-
-				{isLoadingProfile ? (
-					<div className="flex h-40 items-center justify-center">
-						<div className="size-8 animate-spin rounded-full border-4 border-[#1d4ea8] border-t-transparent" />
-					</div>
-				) : (
-					<div className="space-y-8">
-						<div className="space-y-4">
-							<Label className="text-[14px] font-medium text-gray-600">
-								Profile Photo
-							</Label>
-							<div className="relative inline-block">
-								<div className="flex size-24 items-center justify-center overflow-hidden rounded-full border border-gray-100 bg-gray-50/30">
-									{watch("avatar") ? (
-										<Image
-											src={watch("avatar") || ""}
-											alt="Avatar"
-											width={96}
-											height={96}
-											className="size-full object-cover"
-										/>
-									) : (
-										<Icon
-											icon="solar:gallery-bold-duotone"
-											className="size-10 text-gray-200"
-										/>
-									)}
-								</div>
-								{/* Hidden file input — triggered imperatively via ref */}
-								<input
-									ref={fileInputRef}
-									type="file"
-									accept="image/*"
-									onChange={handlePhotoUpload}
-									className="sr-only"
-									aria-label="Upload Profile Photo"
-								/>
-								<button
-									type="button"
-									onClick={() => fileInputRef.current?.click()}
-									className="absolute -bottom-1 -right-1 flex size-8 cursor-pointer items-center justify-center rounded-full border border-white bg-[#1d4ea8] text-white shadow-sm transition-all hover:bg-[#153a82] active:scale-95"
-									aria-label="Edit profile photo"
-								>
-									<Icon icon="lucide:edit-3" className="size-4" />
-								</button>
-							</div>
-						</div>
-
-						<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-							<div className="space-y-2">
-								<Label
-									htmlFor="fullName"
-									className="text-[14px] font-medium text-gray-600"
-								>
-									Full Name
-								</Label>
-								<Input
-									id="fullName"
-									{...register("fullName")}
-									className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
-								/>
-								{errors.fullName && (
-									<p className="text-xs font-medium text-red-500">
-										{errors.fullName.message}
-									</p>
-								)}
-							</div>
-							<div className="space-y-2">
-								<Label
-									htmlFor="email"
-									className="text-[14px] font-medium text-gray-600"
-								>
-									Email Address
-								</Label>
-								<Input
-									id="email"
-									{...register("email")}
-									disabled
-									className="h-12 cursor-not-allowed rounded-xl border-gray-100 bg-gray-100 px-4 text-gray-500 focus-visible:ring-0"
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label
-									htmlFor="phone"
-									className="text-[14px] font-medium text-gray-600"
-								>
-									Phone Number
-								</Label>
-								<Input
-									id="phone"
-									{...register("phone")}
-									className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
-								/>
-								{errors.phone && (
-									<p className="text-xs font-medium text-red-500">
-										{errors.phone.message}
-									</p>
-								)}
-							</div>
-						</div>
-
-						<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-							<div className="space-y-2">
-								<Label
-									htmlFor="dob"
-									className="text-[14px] font-medium text-gray-600"
-								>
-									Date of Birth
-								</Label>
-								<Input
-									id="dob"
-									type="date"
-									{...register("dob")}
-									className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label
-									htmlFor="gender"
-									className="text-[14px] font-medium text-gray-600"
-								>
-									Gender
-								</Label>
-								<Controller
-									name="gender"
-									control={control}
-									render={({ field }) => (
-										<Select
-											onValueChange={field.onChange}
-											value={field.value || undefined}
-										>
-											<SelectTrigger
-												id="gender"
-												className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
-											>
-												<SelectValue placeholder="Select" />
-											</SelectTrigger>
-											<SelectContent className="rounded-xl border-gray-100">
-												<SelectItem value="Male">Male</SelectItem>
-												<SelectItem value="Female">Female</SelectItem>
-												<SelectItem value="Other">Other</SelectItem>
-											</SelectContent>
-										</Select>
-									)}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label
-									htmlFor="state"
-									className="text-[14px] font-medium text-gray-600"
-								>
-									State
-								</Label>
-								<Controller
-									name="state"
-									control={control}
-									render={({ field }) => (
-										<Select
-											onValueChange={handleStateChange}
-											value={field.value || undefined}
-										>
-											<SelectTrigger
-												id="state"
-												className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
-											>
-												<SelectValue placeholder="Select" />
-											</SelectTrigger>
-											<SelectContent className="rounded-xl border-gray-100">
-												{Object.keys(NIGERIA_STATES_AND_CITIES).map(
-													(st) => (
-														<SelectItem key={st} value={st}>
-															{st}
-														</SelectItem>
-													),
-												)}
-											</SelectContent>
-										</Select>
-									)}
-								/>
-							</div>
-						</div>
-
-						<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-							<div className="space-y-2">
-								<Label
-									htmlFor="city"
-									className="text-[14px] font-medium text-gray-600"
-								>
-									City
-								</Label>
-								<Controller
-									name="city"
-									control={control}
-									render={({ field }) => (
-										<Select
-											onValueChange={field.onChange}
-											value={field.value || undefined}
-											disabled={!selectedState}
-										>
-											<SelectTrigger
-												id="city"
-												className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
-											>
-												<SelectValue placeholder="Select" />
-											</SelectTrigger>
-											<SelectContent className="rounded-xl border-gray-100">
-												{(
-													NIGERIA_STATES_AND_CITIES[
-														selectedState || ""
-													] || []
-												).map((ct) => (
-													<SelectItem key={ct} value={ct}>
-														{ct}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									)}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label
-									htmlFor="country"
-									className="text-[14px] font-medium text-gray-600"
-								>
-									Country
-								</Label>
-								<Controller
-									name="country"
-									control={control}
-									render={({ field }) => (
-										<Select
-											onValueChange={field.onChange}
-											value={field.value || ""}
-											disabled
-										>
-											<SelectTrigger
-												id="country"
-												className="h-12 cursor-not-allowed rounded-xl border-gray-100 bg-gray-100 px-4 text-[14px] font-bold text-gray-500 focus:ring-0"
-											>
-												<SelectValue placeholder="Select" />
-											</SelectTrigger>
-											<SelectContent className="rounded-xl border-gray-100">
-												<SelectItem value="Nigeria">Nigeria</SelectItem>
-											</SelectContent>
-										</Select>
-									)}
-								/>
-							</div>
-						</div>
-					</div>
-				)}
-			</form>
+			) : (
+				<ProfileSettingsForm
+					profileData={profileData}
+					NIGERIA_STATES_AND_CITIES={NIGERIA_STATES_AND_CITIES}
+					updateProfileMutation={updateProfileMutation}
+					session={session}
+					updateSession={updateSession}
+					refetch={refetch}
+				/>
+			)}
 
 			{/* Section: Security & Authentication */}
 			<div className="rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm">
@@ -496,13 +498,26 @@ export default function ProfileTab() {
 					<div className="space-y-4">
 						<div className="space-y-2">
 							<Label htmlFor="oldPassword font-bold">Old Password</Label>
-							<Input
-								id="oldPassword"
-								type="password"
-								placeholder="Enter old password"
-								{...regPassword("oldPassword")}
-								className="h-12 rounded-xl border-gray-100 bg-gray-50/50 px-4 focus:border-[#1d4ea8] focus:ring-0"
-							/>
+							<div className="relative">
+								<Input
+									id="oldPassword"
+									type={showOldPassword ? "text" : "password"}
+									placeholder="Enter old password"
+									{...regPassword("oldPassword")}
+									className="h-12 rounded-xl border-gray-100 bg-gray-50/50 px-4 pr-12 focus:border-[#1d4ea8] focus:ring-0"
+								/>
+								<button
+									type="button"
+									onClick={() => setShowOldPassword(!showOldPassword)}
+									className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+									aria-label="Toggle old password visibility"
+								>
+									<Icon
+										icon={showOldPassword ? "lucide:eye-off" : "lucide:eye"}
+										className="size-5"
+									/>
+								</button>
+							</div>
 							{passErrors.oldPassword && (
 								<p className="text-xs font-medium text-red-500">
 									{passErrors.oldPassword.message}
@@ -543,13 +558,26 @@ export default function ProfileTab() {
 							<Label htmlFor="confirmNewPassword font-bold">
 								Confirm New Password
 							</Label>
-							<Input
-								id="confirmNewPassword"
-								type="password"
-								placeholder="Confirm new password"
-								{...regPassword("confirmNewPassword")}
-								className="h-12 rounded-xl border-gray-100 bg-gray-50/50 px-4 focus:border-[#1d4ea8] focus:ring-0"
-							/>
+							<div className="relative">
+								<Input
+									id="confirmNewPassword"
+									type={showConfirmPassword ? "text" : "password"}
+									placeholder="Confirm new password"
+									{...regPassword("confirmNewPassword")}
+									className="h-12 rounded-xl border-gray-100 bg-gray-50/50 px-4 pr-12 focus:border-[#1d4ea8] focus:ring-0"
+								/>
+								<button
+									type="button"
+									onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+									className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+									aria-label="Toggle confirm password visibility"
+								>
+									<Icon
+										icon={showConfirmPassword ? "lucide:eye-off" : "lucide:eye"}
+										className="size-5"
+									/>
+								</button>
+							</div>
 							{passErrors.confirmNewPassword && (
 								<p className="text-xs font-medium text-red-500">
 									{passErrors.confirmNewPassword.message}
