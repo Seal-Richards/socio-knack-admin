@@ -108,12 +108,14 @@ export default function ProfileTab() {
 			setHasInitialSynced(true);
 		}
 	}, [profileData, reset]);
-	// Reset city when state changes after initial load
+	// Reset city when state changes after initial load (only if it has changed from the initial loaded state)
 	useEffect(() => {
 		if (hasInitialSynced && selectedState) {
-			setValue("city", "");
+			if (selectedState !== profileData?.state) {
+				setValue("city", "");
+			}
 		}
-	}, [selectedState, hasInitialSynced, setValue]);
+	}, [selectedState, hasInitialSynced, setValue, profileData?.state]);
 
 	const onProfileSubmit = async (data: ProfileUpdateFormData) => {
 		try {
