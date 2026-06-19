@@ -14,6 +14,7 @@ import {
 import { Icon } from "@iconify/react";
 import { useSetupBusiness, useUploadBusinessKyc } from "@/hooks/useBusiness";
 import { toast } from "@/lib/toast";
+import { NIGERIA_STATES_AND_CITIES } from "@/constants/nigeriaData";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 type OrganisationSetupProps = {
@@ -21,6 +22,8 @@ type OrganisationSetupProps = {
 		orgName: string;
 		orgDomain: string;
 		orgCountry: string;
+		orgState: string;
+		orgCity: string;
 		orgCurrency: string;
 		orgTimeZone: string;
 		orgRegulatoryRegion: string;
@@ -33,6 +36,8 @@ type OrganisationSetupProps = {
 		orgName?: string;
 		orgDomain?: string;
 		orgCountry?: string;
+		orgState?: string;
+		orgCity?: string;
 		orgCurrency?: string;
 		orgTimeZone?: string;
 		orgRegulatoryRegion?: string;
@@ -53,12 +58,12 @@ export default function OrganisationSetup({
 }: OrganisationSetupProps) {
 	const [orgName, setOrgName] = useState(initialValues.orgName || "");
 	const [orgDomain, setOrgDomain] = useState(initialValues.orgDomain || "");
-	const [orgCountry, setOrgCountry] = useState(initialValues.orgCountry || "NG");
-	const [orgCurrency] = useState(initialValues.orgCurrency || "NGN");
-	const [orgTimeZone, setOrgTimeZone] = useState(initialValues.orgTimeZone || "WAT");
-	const [orgRegulatoryRegion, setOrgRegulatoryRegion] = useState(
-		initialValues.orgRegulatoryRegion || "Africa",
-	);
+	const [orgCountry, setOrgCountry] = useState("NG");
+	const [orgState, setOrgState] = useState(initialValues.orgState || "");
+	const [orgCity, setOrgCity] = useState(initialValues.orgCity || "");
+	const [orgCurrency] = useState("NGN");
+	const [orgTimeZone, setOrgTimeZone] = useState("WAT");
+	const [orgRegulatoryRegion, setOrgRegulatoryRegion] = useState("Africa");
 
 	// Document uploads
 	const [cacName, setCacName] = useState(initialValues.cacCertificateName || "");
@@ -97,9 +102,24 @@ export default function OrganisationSetup({
 		}
 	};
 
+	const handleStateChange = (val: string) => {
+		setOrgState(val);
+		setOrgCity(""); // Reset city when state changes
+	};
+
 	const handleNext = async () => {
 		if (!orgName.trim()) {
 			toast.error("Please enter platform organization name.");
+			return;
+		}
+
+		if (!orgState) {
+			toast.error("Please select state of operation.");
+			return;
+		}
+
+		if (!orgCity) {
+			toast.error("Please select city of operation.");
 			return;
 		}
 
@@ -127,6 +147,8 @@ export default function OrganisationSetup({
 				name: orgName,
 				domain: orgDomain,
 				country: orgCountry,
+				state: orgState,
+				city: orgCity,
 				currency: orgCurrency,
 				timeZone: orgTimeZone,
 				regulatoryRegion: orgRegulatoryRegion,
@@ -157,6 +179,8 @@ export default function OrganisationSetup({
 				orgName,
 				orgDomain,
 				orgCountry,
+				orgState,
+				orgCity,
 				orgCurrency,
 				orgTimeZone,
 				orgRegulatoryRegion,
@@ -217,24 +241,61 @@ export default function OrganisationSetup({
 					/>
 				</div>
 
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 					<div className="space-y-2">
 						<Label className="text-sm font-semibold text-gray-700">
 							Country of Operation
 						</Label>
-						<Select
-							value={orgCountry}
-							onValueChange={setOrgCountry}
-							disabled={isMutating}
-						>
-							<SelectTrigger className="h-12 border-gray-200 bg-gray-50">
+						<Select value={orgCountry} onValueChange={setOrgCountry} disabled>
+							<SelectTrigger className="h-12 cursor-not-allowed border-gray-200 bg-gray-100 text-gray-500">
 								<SelectValue placeholder="Default" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="NG">Nigeria</SelectItem>
-								<SelectItem value="GH">Ghana</SelectItem>
-								<SelectItem value="KE">Kenya</SelectItem>
-								<SelectItem value="ZA">South Africa</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="space-y-2">
+						<Label className="text-sm font-semibold text-gray-700">
+							State of Operation
+						</Label>
+						<Select
+							value={orgState}
+							onValueChange={handleStateChange}
+							disabled={isMutating}
+						>
+							<SelectTrigger className="h-12 border-gray-200 bg-gray-50">
+								<SelectValue placeholder="Select state" />
+							</SelectTrigger>
+							<SelectContent>
+								{Object.keys(NIGERIA_STATES_AND_CITIES).map((st) => (
+									<SelectItem key={st} value={st}>
+										{st}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="space-y-2">
+						<Label className="text-sm font-semibold text-gray-700">
+							City of Operation
+						</Label>
+						<Select
+							value={orgCity}
+							onValueChange={setOrgCity}
+							disabled={isMutating || !orgState}
+						>
+							<SelectTrigger className="h-12 border-gray-200 bg-gray-50">
+								<SelectValue placeholder="Select city" />
+							</SelectTrigger>
+							<SelectContent>
+								{(NIGERIA_STATES_AND_CITIES[orgState] || []).map((ct) => (
+									<SelectItem key={ct} value={ct}>
+										{ct}
+									</SelectItem>
+								))}
 							</SelectContent>
 						</Select>
 					</div>
@@ -243,17 +304,11 @@ export default function OrganisationSetup({
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 					<div className="space-y-2">
 						<Label className="text-sm font-semibold text-gray-700">Time Zone</Label>
-						<Select
-							value={orgTimeZone}
-							onValueChange={setOrgTimeZone}
-							disabled={isMutating}
-						>
-							<SelectTrigger className="h-12 border-gray-200 bg-gray-50">
+						<Select value={orgTimeZone} onValueChange={setOrgTimeZone} disabled>
+							<SelectTrigger className="h-12 cursor-not-allowed border-gray-200 bg-gray-100 text-gray-500">
 								<SelectValue placeholder="WAT" />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="GMT">GMT</SelectItem>
-								<SelectItem value="EST">EST</SelectItem>
 								<SelectItem value="WAT">WAT</SelectItem>
 							</SelectContent>
 						</Select>
@@ -265,15 +320,13 @@ export default function OrganisationSetup({
 						<Select
 							value={orgRegulatoryRegion}
 							onValueChange={setOrgRegulatoryRegion}
-							disabled={isMutating}
+							disabled
 						>
-							<SelectTrigger className="h-12 border-gray-200 bg-gray-50">
+							<SelectTrigger className="h-12 cursor-not-allowed border-gray-200 bg-gray-100 text-gray-500">
 								<SelectValue placeholder="Select" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="Africa">Africa</SelectItem>
-								<SelectItem value="Europe">Europe</SelectItem>
-								<SelectItem value="North America">North America</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>

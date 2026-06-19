@@ -144,6 +144,13 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 		setupFeeText = "100,000";
 	}
 
+	let submitButtonText = "Upgrade & Pay Now";
+	if (isPending) {
+		submitButtonText = "Initializing payment...";
+	} else if (selectedPlan === currentPlan) {
+		submitButtonText = "Current Plan Active";
+	}
+
 	return (
 		<Modal
 			isOpen={isOpen}
@@ -164,6 +171,7 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 						features={planFeatures.starter}
 						buttonText="Select Starter"
 						isSelected={selectedPlan === "starter"}
+						isCurrentPlan={currentPlan === "starter"}
 						onSelect={() => handleSelect("starter")}
 						onAction={() => handleSelect("starter")}
 					/>
@@ -176,6 +184,7 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 						features={planFeatures.growth}
 						buttonText="Select Growth"
 						isSelected={selectedPlan === "growth"}
+						isCurrentPlan={currentPlan === "growth"}
 						onSelect={() => handleSelect("growth")}
 						onAction={() => handleSelect("growth")}
 					/>
@@ -188,6 +197,7 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 						features={planFeatures.business}
 						buttonText="Select Business"
 						isSelected={selectedPlan === "business"}
+						isCurrentPlan={currentPlan === "business"}
 						onSelect={() => handleSelect("business")}
 						onAction={() => handleSelect("business")}
 					/>
@@ -199,6 +209,7 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 						features={planFeatures.enterprise}
 						buttonText="Contact Sales"
 						isSelected={selectedPlan === "enterprise"}
+						isCurrentPlan={currentPlan === "enterprise"}
 						onSelect={() => handleSelect("enterprise")}
 						onAction={() => handleSelect("enterprise")}
 					/>
@@ -267,15 +278,17 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 				{/* Activation Actions */}
 				<div className="mt-8 flex flex-col items-center">
 					<Button
-						disabled={!selectedPlan || isPending}
+						disabled={!selectedPlan || selectedPlan === currentPlan || isPending}
 						onClick={handleCheckout}
 						className={`text-md flex h-14 w-full max-w-md items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-300 ${
-							selectedPlan && selectedPlan !== "enterprise"
+							selectedPlan &&
+							selectedPlan !== "enterprise" &&
+							selectedPlan !== currentPlan
 								? "bg-[#1d4ea8] text-white hover:scale-[1.01] hover:bg-[#153a82] active:scale-95 disabled:opacity-50"
 								: "cursor-not-allowed bg-gray-300 text-gray-500 shadow-none hover:bg-gray-300"
 						}`}
 					>
-						{isPending ? "Initializing payment..." : "Upgrade & Pay Now"}
+						{submitButtonText}
 						<Icon icon="lucide:credit-card" className="ml-1 size-5" />
 					</Button>
 				</div>

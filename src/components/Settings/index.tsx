@@ -31,6 +31,8 @@ export default function Settings() {
 	const { data: meRes } = useGetMe();
 	const business = meRes?.data?.business;
 
+	const userKycStatus = meRes?.data?.kycStatus;
+
 	const shouldLockSettings = useMemo(() => {
 		if (role !== "admin" || !business) return false;
 
@@ -41,10 +43,10 @@ export default function Settings() {
 
 		const isSubscriptionActive = business.subscriptionStatus === "active";
 		const isSubscribedOrTrial = isSubscriptionActive || isTrialActive;
-		const isKycVerified = business.isVerified === true;
+		const isKycVerified = business.isVerified === true || userKycStatus === "approved";
 
 		return !isSubscribedOrTrial || !isKycVerified;
-	}, [role, business]);
+	}, [role, business, userKycStatus]);
 
 	const filteredTabs = useMemo(() => {
 		if (role === "supervisor" || role === "staffs") {

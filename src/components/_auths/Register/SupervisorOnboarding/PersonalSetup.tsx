@@ -18,6 +18,7 @@ import {
 	supervisorPersonalSetupSchema,
 	type SupervisorPersonalSetupFormData,
 } from "@/schemas/auth";
+import { NIGERIA_STATES_AND_CITIES } from "@/constants/nigeriaData";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function PersonalSetup({
@@ -26,33 +27,47 @@ export default function PersonalSetup({
 	step = 1,
 	totalSteps = 3,
 	prefilledEmail = "",
+	initialValues,
 }: {
 	onNext: (data: SupervisorPersonalSetupFormData) => void;
 	onPrev?: () => void;
 	step?: number;
 	totalSteps?: number;
 	prefilledEmail?: string;
+	initialValues?: Partial<SupervisorPersonalSetupFormData>;
 }) {
+	const getGenderValue = (val?: string) => {
+		if (!val) return "";
+		const lower = val.toLowerCase();
+		if (lower === "male") return "Male";
+		if (lower === "female") return "Female";
+		if (lower === "other") return "Other";
+		return val;
+	};
+
 	const {
 		register,
 		handleSubmit,
 		control,
 		setValue,
+		watch,
 		formState: { errors },
 	} = useForm<SupervisorPersonalSetupFormData>({
 		resolver: zodResolver(supervisorPersonalSetupSchema),
 		defaultValues: {
-			firstName: "",
-			lastName: "",
-			email: prefilledEmail,
-			phone: "",
-			dob: "",
-			gender: "",
-			city: "",
-			state: "",
-			country: "",
+			firstName: initialValues?.firstName || "",
+			lastName: initialValues?.lastName || "",
+			email: initialValues?.email || prefilledEmail || "",
+			phone: initialValues?.phone || "",
+			dob: initialValues?.dob || "",
+			gender: getGenderValue(initialValues?.gender),
+			city: initialValues?.city || "",
+			state: initialValues?.state || "",
+			country: initialValues?.country || "Nigeria",
 		},
 	});
+
+	const selectedState = watch("state");
 
 	// Sync prefilled email when it loads
 	useEffect(() => {
@@ -61,6 +76,13 @@ export default function PersonalSetup({
 		}
 	}, [prefilledEmail, setValue]);
 
+	// Reset city when state changes
+	useEffect(() => {
+		if (selectedState) {
+			setValue("city", "");
+		}
+	}, [selectedState, setValue]);
+
 	const onSubmit = (data: SupervisorPersonalSetupFormData) => {
 		onNext(data);
 	};
@@ -68,6 +90,7 @@ export default function PersonalSetup({
 	return (
 		<div className="relative w-full text-gray-800">
 			<button
+				aria-label="Back to previous step"
 				onClick={onPrev}
 				type="button"
 				className="absolute right-0 top-0 flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-500 transition-colors hover:bg-blue-100"
@@ -169,7 +192,7 @@ export default function PersonalSetup({
 							name="gender"
 							control={control}
 							render={({ field }) => (
-								<Select onValueChange={field.onChange} value={field.value}>
+								<Select onValueChange={field.onChange} value={field.value || ""}>
 									<SelectTrigger
 										id="gender"
 										className="h-12 border-gray-200 bg-gray-50 text-gray-900 focus:ring-yellow-500"
@@ -194,37 +217,6 @@ export default function PersonalSetup({
 
 				<div className="grid grid-cols-1 gap-4 pb-2 md:grid-cols-2">
 					<div className="space-y-2">
-						<Label htmlFor="city" className="text-sm font-semibold text-gray-700">
-							City
-						</Label>
-						<Controller
-							name="city"
-							control={control}
-							render={({ field }) => (
-								<Select onValueChange={field.onChange} value={field.value}>
-									<SelectTrigger
-										id="city"
-										className="h-12 border-gray-200 bg-gray-50 text-gray-900 focus:ring-yellow-500"
-									>
-										<SelectValue placeholder="Select city" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="Lagos">Lagos</SelectItem>
-										<SelectItem value="Abuja">Abuja</SelectItem>
-										<SelectItem value="Port Harcourt">Port Harcourt</SelectItem>
-										<SelectItem value="Accra">Accra</SelectItem>
-										<SelectItem value="Nairobi">Nairobi</SelectItem>
-									</SelectContent>
-								</Select>
-							)}
-						/>
-						{errors.city && (
-							<p className="text-xs font-medium text-red-500">
-								{errors.city.message}
-							</p>
-						)}
-					</div>
-					<div className="space-y-2">
 						<Label htmlFor="state" className="text-sm font-semibold text-gray-700">
 							State
 						</Label>
@@ -232,7 +224,7 @@ export default function PersonalSetup({
 							name="state"
 							control={control}
 							render={({ field }) => (
-								<Select onValueChange={field.onChange} value={field.value}>
+								<Select onValueChange={field.onChange} value={field.value || ""}>
 									<SelectTrigger
 										id="state"
 										className="h-12 border-gray-200 bg-gray-50 text-gray-900 focus:ring-yellow-500"
@@ -240,13 +232,11 @@ export default function PersonalSetup({
 										<SelectValue placeholder="Select state" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="Lagos State">Lagos State</SelectItem>
-										<SelectItem value="FCT">FCT</SelectItem>
-										<SelectItem value="Rivers State">Rivers State</SelectItem>
-										<SelectItem value="Greater Accra">Greater Accra</SelectItem>
-										<SelectItem value="Nairobi County">
-											Nairobi County
-										</SelectItem>
+										{Object.keys(NIGERIA_STATES_AND_CITIES).map((st) => (
+											<SelectItem key={st} value={st}>
+												{st}
+											</SelectItem>
+										))}
 									</SelectContent>
 								</Select>
 							)}
@@ -254,6 +244,44 @@ export default function PersonalSetup({
 						{errors.state && (
 							<p className="text-xs font-medium text-red-500">
 								{errors.state.message}
+							</p>
+						)}
+					</div>
+
+					<div className="space-y-2">
+						<Label htmlFor="city" className="text-sm font-semibold text-gray-700">
+							City
+						</Label>
+						<Controller
+							name="city"
+							control={control}
+							render={({ field }) => (
+								<Select
+									onValueChange={field.onChange}
+									value={field.value || ""}
+									disabled={!selectedState}
+								>
+									<SelectTrigger
+										id="city"
+										className="h-12 border-gray-200 bg-gray-50 text-gray-900 focus:ring-yellow-500"
+									>
+										<SelectValue placeholder="Select city" />
+									</SelectTrigger>
+									<SelectContent>
+										{(NIGERIA_STATES_AND_CITIES[selectedState || ""] || []).map(
+											(ct) => (
+												<SelectItem key={ct} value={ct}>
+													{ct}
+												</SelectItem>
+											),
+										)}
+									</SelectContent>
+								</Select>
+							)}
+						/>
+						{errors.city && (
+							<p className="text-xs font-medium text-red-500">
+								{errors.city.message}
 							</p>
 						)}
 					</div>
@@ -267,17 +295,19 @@ export default function PersonalSetup({
 						name="country"
 						control={control}
 						render={({ field }) => (
-							<Select onValueChange={field.onChange} value={field.value}>
+							<Select
+								onValueChange={field.onChange}
+								value={field.value || ""}
+								disabled
+							>
 								<SelectTrigger
 									id="country"
-									className="h-12 border-gray-200 bg-gray-50 text-gray-900 focus:ring-yellow-500"
+									className="h-12 cursor-not-allowed border-gray-200 bg-gray-100 text-gray-500"
 								>
 									<SelectValue placeholder="Select country" />
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value="Nigeria">Nigeria</SelectItem>
-									<SelectItem value="Ghana">Ghana</SelectItem>
-									<SelectItem value="Kenya">Kenya</SelectItem>
 								</SelectContent>
 							</Select>
 						)}

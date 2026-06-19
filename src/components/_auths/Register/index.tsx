@@ -9,6 +9,7 @@ import { useVerifyInvite } from "@/hooks/useAuth";
 import { businessRequests } from "@/lib/requests/business";
 import { profileRequests } from "@/lib/requests/profile";
 import type { RegisterSupervisorPayload } from "@/types/auth";
+import { getAuthToken } from "@/utils/auth";
 
 // Phase 1: Admin & Organization Setup (Steps 1-6)
 import AdminIdentitySetup from "./OrganisationOnboarding/IdentitySetup";
@@ -57,6 +58,8 @@ export default function Register() {
 		orgName: "",
 		orgDomain: "",
 		orgCountry: "NG",
+		orgState: "",
+		orgCity: "",
 		orgCurrency: "NGN",
 		orgTimeZone: "WAT",
 		orgRegulatoryRegion: "Africa",
@@ -70,6 +73,9 @@ export default function Register() {
 		bvn: "",
 		selectedPlan: "",
 	});
+
+	const [isResolvingStep, setIsResolvingStep] = useState(!isInvitedFlow);
+	const [isLoggedInUser, setIsLoggedInUser] = useState(false);
 
 	// Invited User Onboarding Flow Step Tracker
 	const [onboardStep, setOnboardStep] = useState(1);
@@ -100,29 +106,46 @@ export default function Register() {
 		if (isInvitedFlow) {
 			const savedInvitedStep = sessionStorage.getItem("onboarding_invited_step");
 			const savedInvitedData = sessionStorage.getItem("onboarding_invited_data");
-			if (urlStep) {
-				setOnboardStep(parseInt(urlStep, 10));
-			} else if (savedInvitedStep) {
-				setOnboardStep(parseInt(savedInvitedStep, 10));
-			}
+
+			let parsedData: RegisterSupervisorPayload | null = null;
 			if (savedInvitedData) {
 				try {
-					setOnboardData(JSON.parse(savedInvitedData) as RegisterSupervisorPayload);
+					parsedData = JSON.parse(savedInvitedData) as RegisterSupervisorPayload;
+					setOnboardData(parsedData);
 				} catch (e) {
 					console.error("Failed to parse onboarding_invited_data", e);
 				}
 			}
+
+			if (urlStep) {
+				setOnboardStep(parseInt(urlStep, 10));
+			} else if (parsedData) {
+				let resolvedStep = 1;
+				const isStep1Done =
+					!!parsedData.firstName && !!parsedData.lastName && !!parsedData.phone;
+				if (isStep1Done) {
+					resolvedStep = 2;
+					if (savedInvitedStep && parseInt(savedInvitedStep, 10) >= 3) {
+						resolvedStep = 3;
+					}
+				}
+				setOnboardStep(resolvedStep);
+			} else if (savedInvitedStep) {
+				setOnboardStep(parseInt(savedInvitedStep, 10));
+			}
 		} else {
 			const savedAdminStep = sessionStorage.getItem("onboarding_admin_step");
 			const savedAdminData = sessionStorage.getItem("onboarding_admin_data");
-			const storedToken =
-				typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-			if (urlStep) {
-				setCurrentStep(parseInt(urlStep, 10));
-			} else if (storedToken) {
-				// We have a token. Let's auto-resolve step resumption from DB to avoid session storage stale step
-				(async () => {
+			(async () => {
+				const activeToken = await getAuthToken();
+				if (urlStep) {
+					setCurrentStep(parseInt(urlStep, 10));
+					setIsResolvingStep(false);
+				} else if (activeToken) {
+					setIsLoggedInUser(true);
+					setIsResolvingStep(true);
+					// We have a token. Let's auto-resolve step resumption from DB to avoid session storage stale step
 					try {
 						// Temporarily set a step from sessionStorage while we fetch DB (so we don't flash step 1 if we were on a saved step)
 						if (savedAdminStep) {
@@ -146,13 +169,68 @@ export default function Register() {
 									fincraAccountNumber?: string | null;
 									subscriptionStatus?: string | null;
 									hasBankDetails?: boolean;
+									bankDetails?: {
+										bankName?: string;
+										accountNumber?: string;
+										accountName?: string;
+										bankCode?: string;
+										bvn?: string;
+									} | null;
 								};
 								const settingsObj = settings as unknown as OnboardingBusinessData;
 								const docs = settingsObj.corporateDocuments || {};
 								let targetStep = 3;
-								const hasOwnerId = !!profileRes?.data?.kycDocuments?.idFront;
+								const hasOwnerId =
+									!!profileRes?.data?.kycDocuments?.idFront ||
+									profileRes?.data?.kycStatus === "approved";
 
-								if (!hasOwnerId) {
+								setAdminData({
+									firstName: profileRes?.data?.firstName || "",
+									lastName: profileRes?.data?.lastName || "",
+									email: profileRes?.data?.email || "",
+									phoneNumber: profileRes?.data?.phone || "",
+									password: "",
+									confirmPassword: "",
+									ownerIdDocName: hasOwnerId
+										? "Government-issued ID (Uploaded)"
+										: "",
+									orgName: business.name || "",
+									orgDomain: business.domain || "",
+									orgCountry: business.country || "NG",
+									orgState: business.state || "",
+									orgCity: business.city || "",
+									orgCurrency: business.currency || "NGN",
+									orgTimeZone: business.timeZone || "WAT",
+									orgRegulatoryRegion: business.regulatoryRegion || "Africa",
+									cacCertificateName: docs.cacCertificate
+										? "CAC Certificate (Uploaded)"
+										: "",
+									taxIdCertificateName: docs.taxIdCertificate
+										? "Tax ID Certificate (Uploaded)"
+										: "",
+									utilityBillName: docs.utilityBill
+										? "Utility Bill (Uploaded)"
+										: "",
+									bankName: settingsObj.bankDetails?.bankName || "",
+									bankCode: settingsObj.bankDetails?.bankCode || "",
+									accountNumber:
+										settingsObj.bankDetails?.accountNumber ||
+										settingsObj.fincraAccountNumber ||
+										"",
+									accountName: settingsObj.bankDetails?.accountName || "",
+									bvn: settingsObj.bankDetails?.bvn || "",
+									selectedPlan:
+										settingsObj.subscriptionStatus === "active"
+											? business.subscriptionPlan || "starter"
+											: "",
+								});
+
+								if (
+									business.isVerified === true ||
+									profileRes?.data?.kycStatus === "approved"
+								) {
+									targetStep = 7;
+								} else if (!hasOwnerId) {
 									targetStep = 3;
 								} else if (
 									!docs.cacCertificate ||
@@ -180,11 +258,16 @@ export default function Register() {
 						if (savedAdminStep) {
 							setCurrentStep(parseInt(savedAdminStep, 10));
 						}
+					} finally {
+						setIsResolvingStep(false);
 					}
-				})().catch(() => undefined);
-			} else if (savedAdminStep) {
-				setCurrentStep(parseInt(savedAdminStep, 10));
-			}
+				} else {
+					if (savedAdminStep) {
+						setCurrentStep(parseInt(savedAdminStep, 10));
+					}
+					setIsResolvingStep(false);
+				}
+			})().catch(() => undefined);
 
 			if (savedAdminData) {
 				try {
@@ -283,6 +366,29 @@ export default function Register() {
 		containerMaxWidth = "max-w-6xl";
 	}
 
+	if (isResolvingStep) {
+		return (
+			<div className="bg-darkBlue-900 flex min-h-screen w-full flex-col items-center justify-center p-4">
+				<div className="flex flex-col items-center gap-4 text-center">
+					<div className="relative flex size-20 items-center justify-center">
+						<div className="absolute size-full animate-ping rounded-full bg-blue-500/20" />
+						<div className="absolute size-16 animate-pulse rounded-full bg-[#1d4ea8]/50" />
+						<Icon
+							icon="solar:shield-keyhole-bold-duotone"
+							className="z-10 size-10 animate-bounce text-yellow-500"
+						/>
+					</div>
+					<h3 className="mt-4 text-lg font-bold tracking-wide text-white">
+						Syncing Onboarding Progress...
+					</h3>
+					<p className="max-w-xs text-xs text-gray-400">
+						Please wait while we retrieve your setup state from the secure server.
+					</p>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="bg-darkBlue-900 text-foreground flex min-h-screen w-full flex-col items-center justify-center p-4 md:bg-gray-100">
 			{/* Container Card */}
@@ -313,7 +419,13 @@ export default function Register() {
 							)}
 						</div>
 						<button
-							onClick={() => router.push("/login")}
+							onClick={() => {
+								if (isLoggedInUser) {
+									router.push("/dashboard");
+								} else {
+									router.push("/login");
+								}
+							}}
 							className="flex size-8 items-center justify-center self-end rounded-full bg-blue-50 text-blue-500 transition-colors hover:bg-blue-100 md:self-auto"
 							aria-label="Close"
 						>
@@ -356,6 +468,7 @@ export default function Register() {
 											step={onboardStep}
 											totalSteps={totalOnboardSteps - 1}
 											prefilledEmail={onboardData?.email}
+											initialValues={onboardData}
 										/>
 									)}
 									{onboardStep === 2 && (
@@ -411,7 +524,11 @@ export default function Register() {
 												);
 												nextStep();
 											}}
-											onPrev={prevStep}
+											onPrev={
+												isLoggedInUser
+													? () => router.push("/dashboard")
+													: prevStep
+											}
 											initialValues={adminData}
 										/>
 									)}

@@ -35,6 +35,14 @@ export type TeamMembers = {
 	staffs?: TeamMember[];
 };
 
+export type BankDetails = {
+	bankName: string;
+	accountNumber: string;
+	accountName: string;
+	bankCode: string;
+	bvn?: string;
+};
+
 export type BusinessSettingsData = {
 	id: string;
 	name: string;
@@ -62,6 +70,9 @@ export type BusinessSettingsData = {
 	isVerified?: boolean;
 	corporateDocuments?: CorporateDocuments | null;
 	teamMembers?: TeamMembers | null;
+	fincraAccountNumber?: string | null;
+	hasBankDetails?: boolean;
+	bankDetails?: BankDetails | null;
 };
 
 export type UpdateBusinessSettingsPayload = {
@@ -89,6 +100,8 @@ export type SetupBusinessPayload = {
 	name: string;
 	domain?: string;
 	country?: string;
+	state?: string;
+	city?: string;
 	currency?: string;
 	timeZone?: string;
 	regulatoryRegion?: string;

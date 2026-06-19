@@ -57,6 +57,9 @@ export default function BillingsConfigTab() {
 	}, [business]);
 
 	const subscriptionCost = React.useMemo(() => {
+		if (!business?.lastPaymentDate) {
+			return "₦0.00 (Free Trial)";
+		}
 		const agentCount = business?.agentCount || 10;
 		const price = agentCount * 4000;
 		return `₦${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
@@ -64,9 +67,14 @@ export default function BillingsConfigTab() {
 
 	const isActive = business?.subscriptionStatus === "active";
 
-	const planName = business?.subscriptionPlan
-		? `${business.subscriptionPlan.charAt(0).toUpperCase()}${business.subscriptionPlan.slice(1)} Plan`
-		: "Basic Plan";
+	const planName = React.useMemo(() => {
+		if (!business?.subscriptionPlan) return "Basic Plan";
+		const basePlanName = `${business.subscriptionPlan.charAt(0).toUpperCase()}${business.subscriptionPlan.slice(1)} Plan`;
+		if (!business?.lastPaymentDate) {
+			return `${basePlanName} (14-Day Free Trial)`;
+		}
+		return basePlanName;
+	}, [business]);
 
 	// Wallet activation modal state
 	const [isActivateModalOpen, setIsActivateModalOpen] = useState(false);
@@ -192,7 +200,7 @@ export default function BillingsConfigTab() {
 							</div>
 							<div className="rounded-2xl bg-gray-50/50 p-4">
 								<p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-									Renews On
+									{!business?.lastPaymentDate ? "Trial Ends On" : "Renews On"}
 								</p>
 								<p className="mt-1 text-sm font-black text-gray-800">{renewsOn}</p>
 							</div>

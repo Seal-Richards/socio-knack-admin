@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import PricingCard from "@/components/Cards/PricingCard";
 import { useInitializeSubscription } from "@/hooks/useBusiness";
 import { Label } from "@/components/ui/label";
+import { useGetMe } from "@/hooks/useProfile";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 type PlatformActivationProps = {
@@ -42,6 +43,29 @@ export default function PlatformActivation({
 	const [seatCount, setSeatCount] = useState<number>(10);
 
 	const initializeSubscriptionMutation = useInitializeSubscription();
+	const { data: meRes } = useGetMe();
+	const user = meRes?.data;
+	const business = user?.business;
+	const isTrialActiveByDefault = business?.subscriptionStatus === "active";
+
+	useEffect(() => {
+		if (business?.subscriptionPlan && !selectedPlan) {
+			setSelectedPlan(business.subscriptionPlan as PlanKey);
+		}
+	}, [business, selectedPlan]);
+
+	const getButtonText = (planKey: PlanKey) => {
+		if (business?.subscriptionPlan === planKey && business?.subscriptionStatus === "active") {
+			return "Active";
+		}
+		if (planKey === "enterprise") return "Contact Sales";
+		return `Select ${planKey.charAt(0).toUpperCase() + planKey.slice(1)}`;
+	};
+
+	const isCurrentPlanActive =
+		selectedPlan &&
+		business?.subscriptionPlan === selectedPlan &&
+		business?.subscriptionStatus === "active";
 
 	// Adjust default seat count when changing plans to be within the allowed range
 	useEffect(() => {
@@ -177,8 +201,12 @@ export default function PlatformActivation({
 						price="₦4,000"
 						setupFee="₦50,000"
 						features={planFeatures.starter}
-						buttonText="Select Starter"
+						buttonText={getButtonText("starter")}
 						isSelected={selectedPlan === "starter"}
+						isCurrentPlan={
+							business?.subscriptionPlan === "starter" &&
+							business?.subscriptionStatus === "active"
+						}
 						onSelect={() => handleSelect("starter")}
 						onAction={() => handleSelect("starter")}
 					/>
@@ -189,8 +217,12 @@ export default function PlatformActivation({
 						price="₦4,000"
 						setupFee="₦100,000"
 						features={planFeatures.growth}
-						buttonText="Select Growth"
+						buttonText={getButtonText("growth")}
 						isSelected={selectedPlan === "growth"}
+						isCurrentPlan={
+							business?.subscriptionPlan === "growth" &&
+							business?.subscriptionStatus === "active"
+						}
 						onSelect={() => handleSelect("growth")}
 						onAction={() => handleSelect("growth")}
 					/>
@@ -201,8 +233,12 @@ export default function PlatformActivation({
 						price="₦4,000"
 						setupFee="₦200,000"
 						features={planFeatures.business}
-						buttonText="Select Business"
+						buttonText={getButtonText("business")}
 						isSelected={selectedPlan === "business"}
+						isCurrentPlan={
+							business?.subscriptionPlan === "business" &&
+							business?.subscriptionStatus === "active"
+						}
 						onSelect={() => handleSelect("business")}
 						onAction={() => handleSelect("business")}
 					/>
@@ -212,8 +248,12 @@ export default function PlatformActivation({
 						title="Enterprise Plan"
 						subtitle="200+ employees"
 						features={planFeatures.enterprise}
-						buttonText="Contact Sales"
+						buttonText={getButtonText("enterprise")}
 						isSelected={selectedPlan === "enterprise"}
+						isCurrentPlan={
+							business?.subscriptionPlan === "enterprise" &&
+							business?.subscriptionStatus === "active"
+						}
 						onSelect={() => handleSelect("enterprise")}
 						onAction={() => handleSelect("enterprise")}
 					/>
@@ -283,30 +323,41 @@ export default function PlatformActivation({
 				<div className="mt-10 flex flex-col items-center">
 					<Button
 						disabled={!selectedPlan || isPending}
-						onClick={handleCheckout}
+						onClick={isCurrentPlanActive ? handleTrialStart : handleCheckout}
 						className={`text-md flex h-14 w-full max-w-md items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-300 ${
 							selectedPlan && selectedPlan !== "enterprise"
 								? "bg-[#1d4ea8] text-white hover:scale-[1.01] hover:bg-[#153a82] active:scale-95 disabled:opacity-50"
 								: "cursor-not-allowed bg-gray-300 text-gray-500 shadow-none hover:bg-gray-300"
 						}`}
 					>
-						{isPending ? "Initializing payment..." : "Activate & Pay Now"}
-						<Icon icon="lucide:credit-card" className="ml-1 size-5" />
+						{isCurrentPlanActive ? (
+							<>
+								Complete Onboarding
+								<Icon icon="lucide:arrow-right" className="ml-1 size-5" />
+							</>
+						) : (
+							<>
+								{isPending ? "Initializing payment..." : "Activate & Pay Now"}
+								<Icon icon="lucide:credit-card" className="ml-1 size-5" />
+							</>
+						)}
 					</Button>
 
 					{/* Free Trial Option */}
-					<div className="mt-4 flex flex-col items-center gap-1">
-						<button
-							onClick={handleTrialStart}
-							disabled={isPending}
-							className="text-sm font-bold text-[#1d4ea8] transition-all hover:underline"
-						>
-							Start 14-Day Free Trial (No Card Required)
-						</button>
-						<p className="text-center text-[11px] font-medium text-gray-400">
-							Requires organization identity approval before going live.
-						</p>
-					</div>
+					{!isTrialActiveByDefault && (
+						<div className="mt-4 flex flex-col items-center gap-1">
+							<button
+								onClick={handleTrialStart}
+								disabled={isPending}
+								className="text-sm font-bold text-[#1d4ea8] transition-all hover:underline"
+							>
+								Start 14-Day Free Trial (No Card Required)
+							</button>
+							<p className="text-center text-[11px] font-medium text-gray-400">
+								Requires organization identity approval before going live.
+							</p>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

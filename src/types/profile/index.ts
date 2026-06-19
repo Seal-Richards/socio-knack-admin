@@ -9,6 +9,13 @@ export type UserProfileBusiness = {
 	subscriptionStatus?: string;
 	isVerified?: boolean;
 	createdAt?: string;
+	fincraAccountNumber?: string;
+	country?: string;
+	state?: string;
+	city?: string;
+	currency?: string;
+	timeZone?: string;
+	regulatoryRegion?: string;
 };
 
 export type UserProfileTerritory = {
@@ -46,7 +53,19 @@ export type UserProfileData = {
 	business?: UserProfileBusiness | null;
 	territory?: UserProfileTerritory | null;
 	createdAt?: string;
+	updatedBy?: {
+		id: string;
+		firstName: string;
+		lastName: string;
+	} | null;
+	kycStatusUpdatedBy?: {
+		id: string;
+		firstName: string;
+		lastName: string;
+	} | null;
 	isOnline?: boolean;
+	hasPaymentPin?: boolean;
+	isSecurityPinEnabled?: boolean;
 	lastLogoutTime?: string;
 	lastCheckInTime?: string;
 	lastCheckIn?: string;

@@ -67,7 +67,9 @@ export default function Sidebar({ className }: { className?: string }) {
 	const pathname = usePathname();
 	const queryClient = useQueryClient();
 
-	const [lockType, setLockType] = useState<"none" | "expired" | "kyc">("none");
+	const [lockType, setLockType] = useState<"none" | "expired" | "kyc" | "pending_team_kyc">(
+		"none",
+	);
 
 	const { data: meRes } = useGetMe();
 	const user = meRes?.data;
@@ -89,20 +91,41 @@ export default function Sidebar({ className }: { className?: string }) {
 
 	const isKycVerified = useMemo(() => {
 		if (!role || role === "superadmin") return true;
+		// Supervisors and staff are always considered KYC-verified for sidebar purposes
+		if (role === "supervisor" || role === "staffs") return true;
 		if (!business) return true;
-		return business.isVerified === true;
-	}, [role, business]);
+		// Unlock if the business is verified OR if the user's individual KYC was approved by superadmin
+		return business.isVerified === true || user?.kycStatus === "approved";
+	}, [role, business, user?.kycStatus]);
+
+	// NEW: separate lock specifically for supervisor/staff awaiting team KYC approval from their admin.
+	// Does NOT affect admin KYC / business verification / subscription logic.
+	const isPendingTeamKyc = useMemo(() => {
+		if (role !== "supervisor" && role !== "staffs") return false;
+		return user?.kycStatus !== "approved";
+	}, [role, user?.kycStatus]);
 
 	const isItemLocked = (href: string) => {
-		if (href === "/dashboard" || href === "/settings") return false;
+		if (href === "/dashboard") return false;
+		// Supervisor/staff with pending KYC: only allow dashboard + settings (profile tab only)
+		if (isPendingTeamKyc) return href !== "/settings";
+		if (href === "/settings") return false;
 		if (role === "superadmin") return false;
+		// Existing admin/business/subscription lock — unchanged
 		return !isTrialOrSubscribed || !isKycVerified;
 	};
 
 	const handleItemClick = (e: React.MouseEvent<any>, href: string) => {
-		if (href === "/dashboard" || href === "/settings") return;
+		if (href === "/dashboard") return;
+		// Supervisor/staff with pending KYC: block all pages except settings
+		if (isPendingTeamKyc && href !== "/settings") {
+			e.preventDefault();
+			setLockType("pending_team_kyc");
+			return;
+		}
+		if (href === "/settings") return;
 		if (role === "superadmin") return;
-
+		// Existing admin/business/subscription checks — unchanged
 		if (!isTrialOrSubscribed) {
 			e.preventDefault();
 			setLockType("expired");
@@ -128,6 +151,38 @@ export default function Sidebar({ className }: { className?: string }) {
 	const getIsActive = (href: string) => {
 		return pathname === href || (pathname.startsWith(href) && href !== "/dashboard");
 	};
+
+	// Returns display content for the lockout modal based on the active lock type.
+	// Add a new entry here whenever a new lockType variant is introduced.
+	function getLockContent(type: typeof lockType): {
+		title: string;
+		description: string;
+		ctaLabel?: string;
+		ctaHref?: string;
+	} {
+		if (type === "expired") {
+			return {
+				title: "Subscription Required",
+				description: "Please upgrade to access more features",
+				ctaLabel: "Go to Settings",
+				ctaHref: "/settings",
+			};
+		}
+		if (type === "pending_team_kyc") {
+			return {
+				title: "KYC Approval Required",
+				description:
+					"Your KYC is awaiting approval from your Business Owner. You can update your Profile while you wait.",
+				ctaLabel: "Update Profile Settings",
+				ctaHref: "/settings",
+			};
+		}
+		// default: "kyc"
+		return {
+			title: "Verification Pending",
+			description: "Please wait while your business account is being verified",
+		};
+	}
 
 	const menuItems = MENU_ITEMS as MenuItem[];
 	const bottomMenuItems = BOTTOM_MENU_ITEMS as MenuItem[];
@@ -184,42 +239,45 @@ export default function Sidebar({ className }: { className?: string }) {
 			</aside>
 
 			{/* Lockout Modal Overlay */}
-			{lockType !== "none" && (
-				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-					<div className="animate-in fade-in zoom-in-95 w-full max-w-sm rounded-2xl bg-white p-6 text-center text-gray-800 shadow-2xl duration-200">
-						<div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-amber-50 text-amber-500">
-							<Icon icon="solar:lock-keyhole-bold-duotone" className="size-8" />
+			{lockType !== "none" &&
+				(() => {
+					const lock = getLockContent(lockType);
+					return (
+						<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+							<div className="animate-in fade-in zoom-in-95 w-full max-w-sm rounded-2xl bg-white p-6 text-center text-gray-800 shadow-2xl duration-200">
+								<div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-amber-50 text-amber-500">
+									<Icon
+										icon="solar:lock-keyhole-bold-duotone"
+										className="size-8"
+									/>
+								</div>
+								<h3 className="mb-2 text-lg font-bold text-gray-900">
+									{lock.title}
+								</h3>
+								<p className="mb-6 text-xs font-semibold text-gray-500">
+									{lock.description}
+								</p>
+								<div className="flex flex-col gap-2">
+									{lock.ctaHref && lock.ctaLabel && (
+										<Link
+											href={lock.ctaHref}
+											onClick={() => setLockType("none")}
+											className="flex h-11 items-center justify-center rounded-xl bg-[#1d4ea8] text-xs font-bold text-white transition-all hover:bg-[#153a82]"
+										>
+											{lock.ctaLabel}
+										</Link>
+									)}
+									<button
+										onClick={() => setLockType("none")}
+										className="h-11 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 transition-all hover:bg-gray-50"
+									>
+										Close
+									</button>
+								</div>
+							</div>
 						</div>
-						<h3 className="mb-2 text-lg font-bold text-gray-900">
-							{lockType === "expired"
-								? "Subscription Required"
-								: "Verification Pending"}
-						</h3>
-						<p className="mb-6 text-xs font-semibold text-gray-500">
-							{lockType === "expired"
-								? "Please upgrade to access more feature"
-								: "Please wait while your business account is being verified"}
-						</p>
-						<div className="flex flex-col gap-2">
-							{lockType === "expired" && (
-								<Link
-									href="/settings"
-									onClick={() => setLockType("none")}
-									className="flex h-11 items-center justify-center rounded-xl bg-[#1d4ea8] text-xs font-bold text-white transition-all hover:bg-[#153a82]"
-								>
-									Go to Settings
-								</Link>
-							)}
-							<button
-								onClick={() => setLockType("none")}
-								className="h-11 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 transition-all hover:bg-gray-50"
-							>
-								Close
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
+					);
+				})()}
 		</>
 	);
 }

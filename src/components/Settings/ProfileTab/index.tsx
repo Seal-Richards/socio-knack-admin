@@ -26,6 +26,7 @@ import {
 	type ChangePasswordFormData,
 } from "@/schemas/profile";
 import Modal from "@/components/_modals";
+import { NIGERIA_STATES_AND_CITIES } from "@/constants/nigeriaData";
 
 export default function ProfileTab() {
 	const { data: session, update: updateSession } = useSession();
@@ -39,6 +40,7 @@ export default function ProfileTab() {
 	// Query own profile data via GET /auth/me — works for all roles
 	const { data: ownProfileRes, isLoading: isLoadingProfile, refetch } = useGetMe();
 	const profileData = ownProfileRes?.data;
+	const [hasInitialSynced, setHasInitialSynced] = useState(false);
 
 	const {
 		register,
@@ -58,10 +60,12 @@ export default function ProfileTab() {
 			dob: "",
 			city: "",
 			state: "",
-			country: "",
+			country: "Nigeria",
 			avatar: "",
 		},
 	});
+
+	const selectedState = watch("state");
 
 	const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -76,6 +80,17 @@ export default function ProfileTab() {
 		reader.readAsDataURL(file);
 	};
 
+	function formatGender(gender?: string | null): string {
+		if (!gender) return "";
+
+		const lower = gender.toLowerCase();
+		if (!["male", "female", "other"].includes(lower)) {
+			return "Other";
+		}
+
+		return lower.charAt(0).toUpperCase() + lower.slice(1);
+	}
+
 	// Sync loaded profile data into form fields
 	useEffect(() => {
 		if (profileData) {
@@ -83,18 +98,22 @@ export default function ProfileTab() {
 				fullName: `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim(),
 				email: profileData.email || "",
 				phone: profileData.phone || "",
-				gender: profileData.gender
-					? profileData.gender.charAt(0).toUpperCase() +
-						profileData.gender.slice(1).toLowerCase()
-					: "",
+				gender: formatGender(profileData.gender),
 				dob: profileData.dob ? new Date(profileData.dob).toISOString().split("T")[0] : "",
 				city: profileData.city || "",
 				state: profileData.state || "",
-				country: profileData.country || "",
+				country: profileData.country || "Nigeria",
 				avatar: profileData.avatar || "",
 			});
+			setHasInitialSynced(true);
 		}
 	}, [profileData, reset]);
+	// Reset city when state changes after initial load
+	useEffect(() => {
+		if (hasInitialSynced && selectedState) {
+			setValue("city", "");
+		}
+	}, [selectedState, hasInitialSynced, setValue]);
 
 	const onProfileSubmit = async (data: ProfileUpdateFormData) => {
 		try {
@@ -333,10 +352,34 @@ export default function ProfileTab() {
 								>
 									City
 								</Label>
-								<Input
-									id="city"
-									{...register("city")}
-									className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
+								<Controller
+									name="city"
+									control={control}
+									render={({ field }) => (
+										<Select
+											onValueChange={field.onChange}
+											value={field.value || ""}
+											disabled={!selectedState}
+										>
+											<SelectTrigger
+												id="city"
+												className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
+											>
+												<SelectValue placeholder="Select" />
+											</SelectTrigger>
+											<SelectContent className="rounded-xl border-gray-100">
+												{(
+													NIGERIA_STATES_AND_CITIES[
+														selectedState || ""
+													] || []
+												).map((ct) => (
+													<SelectItem key={ct} value={ct}>
+														{ct}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
 								/>
 							</div>
 						</div>
@@ -349,10 +392,31 @@ export default function ProfileTab() {
 								>
 									State
 								</Label>
-								<Input
-									id="state"
-									{...register("state")}
-									className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
+								<Controller
+									name="state"
+									control={control}
+									render={({ field }) => (
+										<Select
+											onValueChange={field.onChange}
+											value={field.value || ""}
+										>
+											<SelectTrigger
+												id="state"
+												className="h-12 rounded-xl border-gray-100 bg-white px-4 text-[14px] font-bold text-gray-800 transition-all hover:bg-gray-50 focus:ring-0"
+											>
+												<SelectValue placeholder="Select" />
+											</SelectTrigger>
+											<SelectContent className="rounded-xl border-gray-100">
+												{Object.keys(NIGERIA_STATES_AND_CITIES).map(
+													(st) => (
+														<SelectItem key={st} value={st}>
+															{st}
+														</SelectItem>
+													),
+												)}
+											</SelectContent>
+										</Select>
+									)}
 								/>
 							</div>
 							<div className="space-y-2">
@@ -362,10 +426,26 @@ export default function ProfileTab() {
 								>
 									Country
 								</Label>
-								<Input
-									id="country"
-									{...register("country")}
-									className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
+								<Controller
+									name="country"
+									control={control}
+									render={({ field }) => (
+										<Select
+											onValueChange={field.onChange}
+											value={field.value || ""}
+											disabled
+										>
+											<SelectTrigger
+												id="country"
+												className="h-12 cursor-not-allowed rounded-xl border-gray-100 bg-gray-100 px-4 text-[14px] font-bold text-gray-500 focus:ring-0"
+											>
+												<SelectValue placeholder="Select" />
+											</SelectTrigger>
+											<SelectContent className="rounded-xl border-gray-100">
+												<SelectItem value="Nigeria">Nigeria</SelectItem>
+											</SelectContent>
+										</Select>
+									)}
 								/>
 							</div>
 						</div>

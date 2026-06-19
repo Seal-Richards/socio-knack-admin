@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
 import { motion } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 import { Icon } from "@iconify/react";
 
 type PricingCardProps = {
@@ -14,6 +14,7 @@ type PricingCardProps = {
 	buttonText: string;
 	theme: "green" | "blue" | "purple" | "orange";
 	isSelected: boolean;
+	isCurrentPlan?: boolean;
 	onSelect: () => void;
 	onAction: () => void;
 };
@@ -48,6 +49,37 @@ const colorThemes = {
 		buttonBg: "bg-[#e08925] hover:bg-[#c2751f]",
 	},
 };
+function getCardClassName({
+	isCurrentPlan,
+	isCustom,
+	isSelected,
+	borderColor,
+}: {
+	isCurrentPlan: boolean;
+	isCustom: boolean;
+	isSelected: boolean;
+	borderColor: string;
+}) {
+	const base =
+		"relative flex h-full flex-col rounded-[2rem] bg-white p-2.5 shadow-sm transition-all duration-300";
+
+	let borderStyles: string;
+	if (isCurrentPlan) {
+		borderStyles = "cursor-default border-[1.5px] border-gray-200";
+	} else if (isCustom) {
+		borderStyles =
+			"cursor-pointer border-[1.5px] border-[#e08925] ring-[1.5px] ring-[#e08925] ring-offset-[6px] ring-offset-[#f4f7fc] hover:shadow-xl";
+	} else {
+		borderStyles = `border-[1.5px] ${borderColor} cursor-pointer hover:shadow-xl`;
+	}
+
+	const selectedStyles =
+		isSelected && !isCurrentPlan
+			? "z-10 scale-[1.02] shadow-2xl ring-2 ring-offset-4 ring-offset-[#f4f7fc]"
+			: "";
+
+	return `${base} ${borderStyles} ${selectedStyles}`;
+}
 
 export default function PricingCard({
 	title,
@@ -59,25 +91,33 @@ export default function PricingCard({
 	buttonText,
 	theme,
 	isSelected,
+	isCurrentPlan = false,
 	onSelect,
 	onAction,
-}: PricingCardProps) {
+	...rest
+}: PricingCardProps & HTMLMotionProps<"div">) {
 	const colors = colorThemes[theme];
 
 	return (
 		<motion.div
-			whileHover={{ y: -8 }}
-			onClick={onSelect}
-			className={`relative flex h-full cursor-pointer flex-col rounded-[2rem] bg-white p-2.5 shadow-sm transition-all duration-300 hover:shadow-xl ${
-				isCustom
-					? `border-[1.5px] border-[#e08925] ring-[1.5px] ring-[#e08925] ring-offset-[6px] ring-offset-[#f4f7fc]`
-					: `border-[1.5px] ${colors.border}`
-			} ${isSelected ? "z-10 scale-[1.02] shadow-2xl ring-2 ring-offset-4 ring-offset-[#f4f7fc]" : ""}`}
-			style={isSelected ? { outlineColor: "currentcolor" } : {}}
+			{...rest}
+			whileHover={isCurrentPlan ? {} : { y: -8 }}
+			onClick={isCurrentPlan ? undefined : onSelect}
+			className={getCardClassName({
+				isCurrentPlan,
+				isCustom,
+				isSelected,
+				borderColor: colors.border,
+			})}
+			style={
+				isSelected && !isCurrentPlan
+					? { ...rest.style, outlineColor: "currentcolor" }
+					: rest.style
+			}
 		>
 			{/* Header Block (Inner padded colored block as per design) */}
 			<div
-				className={`flex w-full items-start gap-3 rounded-2xl p-5 text-white ${colors.headerBg}`}
+				className={`flex w-full items-start gap-3 rounded-2xl p-5 text-white ${isCurrentPlan ? "bg-gray-400" : colors.headerBg}`}
 			>
 				<div className="mt-1.5 size-2.5 shrink-0 rounded-full bg-white" />
 				<div className="flex flex-col">
@@ -133,11 +173,11 @@ export default function PricingCard({
 						// eslint-disable-next-line react/no-array-index-key
 						<div key={i} className="flex items-center gap-3.5">
 							<div
-								className={`flex size-[18px] shrink-0 items-center justify-center rounded-full ${colors.iconBg}`}
+								className={`flex size-[18px] shrink-0 items-center justify-center rounded-full ${isCurrentPlan ? "bg-gray-100" : colors.iconBg}`}
 							>
 								<Icon
 									icon="lucide:check"
-									className={`size-3 stroke-[3] ${colors.iconColor}`}
+									className={`size-3 stroke-[3] ${isCurrentPlan ? "text-gray-400" : colors.iconColor}`}
 								/>
 							</div>
 							<span className="text-[13px] font-medium tracking-tight text-gray-500">
@@ -148,16 +188,25 @@ export default function PricingCard({
 				</div>
 
 				{/* Action Button */}
-				<motion.button
-					whileTap={{ scale: 0.96 }}
-					onClick={(e) => {
-						e.stopPropagation();
-						onAction();
-					}}
-					className={`mt-auto w-full rounded-xl py-4 text-[13px] font-bold text-white shadow-md transition-all ${colors.buttonBg}`}
-				>
-					{buttonText}
-				</motion.button>
+				{isCurrentPlan ? (
+					<button
+						disabled
+						className="bg-gray-150 mt-auto w-full cursor-not-allowed rounded-xl border border-gray-200 py-4 text-[13px] font-bold text-gray-400"
+					>
+						Current Plan
+					</button>
+				) : (
+					<motion.button
+						whileTap={{ scale: 0.96 }}
+						onClick={(e) => {
+							e.stopPropagation();
+							onAction();
+						}}
+						className={`mt-auto w-full rounded-xl py-4 text-[13px] font-bold text-white shadow-md transition-all ${colors.buttonBg}`}
+					>
+						{buttonText}
+					</motion.button>
+				)}
 			</div>
 		</motion.div>
 	);
