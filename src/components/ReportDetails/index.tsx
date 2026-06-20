@@ -9,6 +9,7 @@ import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { formatCheckInDate } from "@/utils/dateFormatter";
 import cn from "@/lib/utils";
 import Image from "next/image";
+import type { SaleProductItem } from "@/types/reportsPayout";
 
 interface ReportDetailsProps {
 	id: string;
@@ -361,30 +362,90 @@ export default function ReportDetails({ id }: ReportDetailsProps) {
 							</div>
 
 							<div className="space-y-4 text-sm text-green-900">
-								<div>
-									<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
-										Product / Service Sold
-									</p>
-									<p className="mt-0.5 font-bold text-green-950">
-										{product?.name || "N/A"}
-									</p>
-									<span className="mt-0.5 block text-xs font-medium text-green-700">
-										Category: {product?.category || "General"}
-									</span>
-								</div>
-
-								<div className="grid grid-cols-2 gap-4">
+								{saleDetails?.products && saleDetails.products.length > 0 ? (
+									<div className="space-y-3 border-b border-green-100/50 pb-4">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+											Products / Services Sold
+										</p>
+										{saleDetails.products.map(
+											(item: SaleProductItem, idx: number) => (
+												<div
+													key={item._id || idx}
+													className="flex items-center justify-between rounded-xl border border-green-100/30 bg-green-500/5 p-3"
+												>
+													<div className="flex-1">
+														<p className="text-xs font-bold text-green-950">
+															{item.name ||
+																item.productId?.name ||
+																`Product #${idx + 1}`}
+														</p>
+														<p className="mt-0.5 text-[10px] font-medium text-green-700">
+															Unit Cost: ₦
+															{(
+																item.cost ||
+																item.productId?.cost ||
+																0
+															).toLocaleString()}
+														</p>
+													</div>
+													<div className="text-right">
+														<p className="text-xs font-black text-green-950">
+															x{item.quantity}
+														</p>
+														<p className="mt-0.5 text-[10px] font-bold text-green-700">
+															₦
+															{(
+																(item.cost ||
+																	item.productId?.cost ||
+																	0) * item.quantity
+															).toLocaleString()}
+														</p>
+													</div>
+												</div>
+											),
+										)}
+									</div>
+								) : (
 									<div>
 										<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
-											Quantity
+											Product / Service Sold
 										</p>
 										<p className="mt-0.5 font-bold text-green-950">
-											{saleDetails?.quantity || 1}
+											{product?.name || "N/A"}
 										</p>
+										<span className="mt-0.5 block text-xs font-medium text-green-700">
+											Category: {product?.category || "General"}
+										</span>
 									</div>
+								)}
+
+								<div className="grid grid-cols-2 gap-4">
+									{!saleDetails?.products || saleDetails.products.length === 0 ? (
+										<div>
+											<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+												Quantity
+											</p>
+											<p className="mt-0.5 font-bold text-green-950">
+												{saleDetails?.quantity || 1}
+											</p>
+										</div>
+									) : (
+										<div>
+											<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+												Total Items
+											</p>
+											<p className="mt-0.5 font-bold text-green-950">
+												{saleDetails.products.reduce(
+													(sum: number, p: SaleProductItem) =>
+														sum + (p.quantity || 0),
+													0,
+												)}
+											</p>
+										</div>
+									)}
 									<div>
 										<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
-											Sale Value
+											Total Sale Value
 										</p>
 										<p className="mt-0.5 font-bold text-green-950">
 											₦{(saleDetails?.saleValue || 0).toLocaleString()}

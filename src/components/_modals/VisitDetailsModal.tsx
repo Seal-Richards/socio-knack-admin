@@ -50,6 +50,19 @@ type VisitRecord = {
 			saleValue?: number;
 			amount?: number;
 			paymentMode?: string;
+			products?: Array<{
+				name?: string;
+				productId?:
+					| {
+							_id?: string;
+							id?: string;
+							name?: string;
+					  }
+					| string
+					| null;
+				quantity?: number;
+				cost?: number;
+			}>;
 		};
 	};
 	isScheduleApproved?: boolean;
@@ -643,6 +656,31 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 											0
 										).toLocaleString()}
 									</p>
+									{visit.report.saleDetails.products &&
+										visit.report.saleDetails.products.length > 0 && (
+											<div className="mt-2 space-y-1 text-[11px] font-semibold text-green-700">
+												{visit.report.saleDetails.products.map((p, idx) => {
+													const productIdStr =
+														typeof p.productId === "object"
+															? p.productId?._id || p.productId?.id
+															: p.productId;
+													const key =
+														productIdStr || p.name || `product-${idx}`;
+													const prodName =
+														p.name ||
+														(typeof p.productId === "object"
+															? p.productId?.name
+															: undefined) ||
+														`Product #${idx + 1}`;
+
+													return (
+														<div key={key}>
+															• {prodName} x{p.quantity}
+														</div>
+													);
+												})}
+											</div>
+										)}
 									<p className="mt-1 text-sm font-medium text-green-700">
 										Payment: {visit.report.saleDetails.paymentMode}
 									</p>

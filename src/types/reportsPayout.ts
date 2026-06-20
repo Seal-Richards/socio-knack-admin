@@ -50,12 +50,21 @@ export interface ProductDetails {
 	category: string;
 }
 
+export interface SaleProductItem {
+	_id?: string;
+	productId?: ProductDetails & { _id?: string; cost?: number };
+	quantity: number;
+	cost?: number;
+	name?: string;
+}
+
 export interface SaleDetails {
 	productId?: ProductDetails;
 	quantity?: number;
 	saleValue?: number;
 	paymentMode?: string;
 	amount?: number;
+	products?: SaleProductItem[];
 }
 
 export interface VisitReportDetails {
