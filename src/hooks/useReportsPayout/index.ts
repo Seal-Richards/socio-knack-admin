@@ -2,6 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { reportsPayoutRequests } from "@/lib/requests/reportsPayout";
+import { toast } from "@/lib/toast";
+import type { ApiResponse } from "@/types/generic";
 
 export function useGetReportsPayoutMetrics() {
 	return useQuery({
@@ -30,7 +32,7 @@ export function useGetReportDetails(id: string) {
 
 export function useApproveVisit() {
 	const queryClient = useQueryClient();
-	return useMutation({
+	return useMutation<ApiResponse<any>, Error, { id: string; isSupervisor: boolean }>({
 		mutationFn: ({ id, isSupervisor }: { id: string; isSupervisor: boolean }) =>
 			reportsPayoutRequests.approveVisit(id, isSupervisor),
 		onSuccess: async (res, variables) => {
@@ -39,13 +41,25 @@ export function useApproveVisit() {
 			await queryClient.invalidateQueries({ queryKey: ["reportsPayoutMetrics"] });
 			await queryClient.invalidateQueries({ queryKey: ["dashboard-visits"] });
 			await queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+			toast.success(res?.message || "Visit approved successfully.");
+		},
+		onError: (err) => {
+			toast.error(err.message || "Failed to approve visit.");
 		},
 	});
 }
 
 export function useRejectVisit() {
 	const queryClient = useQueryClient();
-	return useMutation({
+	return useMutation<
+		ApiResponse<any>,
+		Error,
+		{
+			id: string;
+			isSupervisor: boolean;
+			reason: string;
+		}
+	>({
 		mutationFn: ({
 			id,
 			isSupervisor,
@@ -61,6 +75,10 @@ export function useRejectVisit() {
 			await queryClient.invalidateQueries({ queryKey: ["reportsPayoutMetrics"] });
 			await queryClient.invalidateQueries({ queryKey: ["dashboard-visits"] });
 			await queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+			toast.success(res?.message || "Visit rejected successfully.");
+		},
+		onError: (err) => {
+			toast.error(err.message || "Failed to reject visit.");
 		},
 	});
 }
