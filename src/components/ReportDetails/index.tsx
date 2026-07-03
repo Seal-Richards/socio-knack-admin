@@ -564,21 +564,86 @@ export default function ReportDetails({ id }: ReportDetailsProps) {
 																			inst._id ||
 																			`${inst.date || ""}-${inst.amount || ""}`
 																		}
-																		className="flex items-center justify-between rounded-xl border border-green-100/20 bg-white/60 p-2.5 text-xs"
+																		className="flex flex-col gap-2 rounded-xl border border-green-100/20 bg-white/60 p-3 text-xs shadow-sm"
 																	>
-																		<div>
-																			<p className="font-bold text-green-950">
-																				Installment #
-																				{idx + 1}
-																			</p>
-																			<p className="text-[10px] text-gray-500">
-																				{dateStr}
+																		<div className="flex items-center justify-between">
+																			<div>
+																				<p className="font-bold text-green-950">
+																					Installment #
+																					{idx + 1}
+																				</p>
+																				<p className="text-[10px] text-gray-500">
+																					{dateStr}
+																				</p>
+																			</div>
+																			<p className="font-bold text-green-700">
+																				₦
+																				{amountVal.toLocaleString()}
 																			</p>
 																		</div>
-																		<p className="font-bold text-green-700">
-																			₦
-																			{amountVal.toLocaleString()}
-																		</p>
+
+																		{(inst.customerReferenceInfo ||
+																			inst.notes) && (
+																			<div className="mt-1 space-y-1 rounded-lg bg-green-50/50 p-2 text-[10px] sm:text-[11px]">
+																				{inst.customerReferenceInfo && (
+																					<p>
+																						<span className="font-medium text-gray-500">
+																							Ref:
+																						</span>{" "}
+																						<span className="text-gray-800">
+																							{
+																								inst.customerReferenceInfo
+																							}
+																						</span>
+																					</p>
+																				)}
+																				{inst.notes && (
+																					<p>
+																						<span className="font-medium text-gray-500">
+																							Notes:
+																						</span>{" "}
+																						<span className="text-gray-800">
+																							{
+																								inst.notes
+																							}
+																						</span>
+																					</p>
+																				)}
+																			</div>
+																		)}
+
+																		{inst.photos &&
+																			inst.photos.length >
+																				0 && (
+																				<div className="mt-1 flex gap-2 overflow-x-auto pb-1">
+																					{inst.photos.map(
+																						(
+																							photo: string,
+																						) => (
+																							<a
+																								key={
+																									photo
+																								}
+																								href={
+																									photo
+																								}
+																								target="_blank"
+																								rel="noreferrer"
+																								className="shrink-0 transition-transform hover:scale-105"
+																							>
+																								{/* eslint-disable-next-line @next/next/no-img-element */}
+																								<img
+																									src={
+																										photo
+																									}
+																									alt={`Proof ${idx + 1}`}
+																									className="size-10 rounded-md object-cover shadow-sm ring-1 ring-black/5"
+																								/>
+																							</a>
+																						),
+																					)}
+																				</div>
+																			)}
 																	</div>
 																);
 															},

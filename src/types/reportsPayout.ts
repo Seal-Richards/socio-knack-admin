@@ -70,6 +70,8 @@ export interface SaleDetails {
 		amount?: number;
 		date?: string;
 		notes?: string;
+		customerReferenceInfo?: string;
+		photos?: string[];
 		loggedBy?: string;
 	}>;
 }

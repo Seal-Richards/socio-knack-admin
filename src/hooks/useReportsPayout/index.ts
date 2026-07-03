@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { reportsPayoutRequests } from "@/lib/requests/reportsPayout";
+import { toast } from "sonner";
 
 export function useGetReportsPayoutMetrics() {
 	return useQuery({
@@ -39,6 +40,10 @@ export function useApproveVisit() {
 			await queryClient.invalidateQueries({ queryKey: ["reportsPayoutMetrics"] });
 			await queryClient.invalidateQueries({ queryKey: ["dashboard-visits"] });
 			await queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+			toast.success("Visit approved successfully.");
+		},
+		onError: (err) => {
+			toast.error(err.message || "Failed to approve visit.");
 		},
 	});
 }
