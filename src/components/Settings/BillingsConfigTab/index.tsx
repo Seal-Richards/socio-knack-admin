@@ -9,7 +9,11 @@ import { toast } from "@/lib/toast";
 import Modal from "@/components/_modals";
 import PricingModal from "@/components/_modals/PricingModal";
 import { useGetBusinessSettings, useUpdateBusinessIncentive } from "@/hooks/useBusiness";
-import { useGetWalletBalance, useActivateWallet } from "@/hooks/useWallet";
+import {
+	useGetWalletBalance,
+	useActivateWallet,
+	useGetWalletTransactions,
+} from "@/hooks/useWallet";
 import {
 	Select,
 	SelectContent,
@@ -17,6 +21,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import TableLayoutWrapper from "@/components/List/TableLayoutWrapper";
+import Table from "@/components/Tables";
+import SearchBar from "@/components/_atoms/SearchBar";
+import DynamicFilter from "@/components/_atoms/DynamicFilter";
+import Pagination from "@/components/_atoms/Pagination";
+import { walletTransactionColumns } from "@/components/Tables/columns/walletTransactionColumns";
 
 export default function BillingsConfigTab() {
 	const { data: businessRes, isLoading: isLoadingBusiness } = useGetBusinessSettings();
@@ -28,6 +38,49 @@ export default function BillingsConfigTab() {
 
 	const activateWalletMutation = useActivateWallet();
 	const updateIncentiveMutation = useUpdateBusinessIncentive();
+
+	// Fetch transactions list
+	const { data: transactionsRes, isLoading: isLoadingTxs } = useGetWalletTransactions();
+
+	const [txSearch, setTxSearch] = useState("");
+	const [txType, setTxType] = useState<string>("all");
+	const [txCategory, setTxCategory] = useState<string>("all");
+	const [txPage, setTxPage] = useState(1);
+	const txItemsPerPage = 5;
+
+	const filteredTxs = React.useMemo(() => {
+		const transactions = transactionsRes?.data || [];
+		return transactions.filter((tx) => {
+			const matchesSearch =
+				tx.description?.toLowerCase().includes(txSearch.toLowerCase()) ||
+				tx.category?.toLowerCase().includes(txSearch.toLowerCase()) ||
+				tx._id?.toLowerCase().includes(txSearch.toLowerCase());
+
+			const matchesType = txType === "all" || tx.type.toLowerCase() === txType.toLowerCase();
+
+			const matchesCategory =
+				txCategory === "all" || tx.category.toLowerCase() === txCategory.toLowerCase();
+
+			return matchesSearch && matchesType && matchesCategory;
+		});
+	}, [transactionsRes?.data, txSearch, txType, txCategory]);
+
+	const totalTxPages = Math.max(1, Math.ceil(filteredTxs.length / txItemsPerPage));
+	const paginatedTxs = React.useMemo(() => {
+		return filteredTxs.slice((txPage - 1) * txItemsPerPage, txPage * txItemsPerPage);
+	}, [filteredTxs, txPage]);
+
+	const typeOptions = [
+		{ label: "All Types", value: "all" },
+		{ label: "Credit", value: "credit" },
+		{ label: "Debit", value: "debit" },
+	];
+
+	const categoryOptions = [
+		{ label: "All Categories", value: "all" },
+		{ label: "Wallet Topup", value: "walletTopup" },
+		{ label: "Incentive Payout", value: "incentivePayout" },
+	];
 
 	const business = businessRes?.data;
 	const wallet = walletRes?.data;
@@ -414,6 +467,83 @@ export default function BillingsConfigTab() {
 					</div>
 				</form>
 			</Modal>
+
+			{/* Transaction History Table */}
+			<div className="flex flex-col gap-6 rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm">
+				<div>
+					<h3 className="text-[17px] font-bold text-gray-900">
+						Wallet Transaction History
+					</h3>
+					<p className="text-xs text-gray-400">
+						View history of wallet topups and payouts
+					</p>
+				</div>
+
+				<TableLayoutWrapper
+					title=""
+					className="gap-0"
+					filters={
+						<div className="flex w-full flex-wrap items-center justify-between gap-4">
+							<div className="flex flex-wrap items-center gap-3">
+								<SearchBar
+									placeholder="Search by description..."
+									value={txSearch}
+									onChange={(e) => {
+										setTxSearch(e.target.value);
+										setTxPage(1);
+									}}
+									containerClassName="w-full lg:w-64"
+								/>
+								<DynamicFilter
+									label="Type"
+									options={typeOptions}
+									selected={txType}
+									onSelect={(val) => {
+										setTxType(val);
+										setTxPage(1);
+									}}
+									className="shrink-0"
+								/>
+								<DynamicFilter
+									label="Category"
+									options={categoryOptions}
+									selected={txCategory}
+									onSelect={(val) => {
+										setTxCategory(val);
+										setTxPage(1);
+									}}
+									className="shrink-0"
+								/>
+							</div>
+						</div>
+					}
+				>
+					{isLoadingTxs ? (
+						<div className="flex h-32 items-center justify-center">
+							<div className="size-6 animate-spin rounded-full border-2 border-[#1d4ea8] border-t-transparent" />
+						</div>
+					) : (
+						<>
+							<Table
+								columns={walletTransactionColumns as any[]}
+								data={paginatedTxs}
+								emptyState={{
+									title: "No Transactions Found",
+									description:
+										"There are currently no transactions matching your filter criteria.",
+									icon: "solar:history-bold-duotone",
+								}}
+							/>
+							<Pagination
+								currentPage={txPage}
+								totalPages={totalTxPages}
+								onPageChange={setTxPage}
+								className="mt-4"
+							/>
+						</>
+					)}
+				</TableLayoutWrapper>
+			</div>
 
 			<PricingModal
 				isOpen={isPricingModalOpen}

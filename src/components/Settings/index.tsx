@@ -107,9 +107,14 @@ export default function Settings() {
 		if (role === "supervisor" || role === "staffs") {
 			setActiveTab("profile");
 		} else {
-			setActiveTab("organisation");
+			const tab = searchParams?.get("tab");
+			if (tab && SETTINGS_TABS.some((t) => t.id === tab)) {
+				setActiveTab(tab);
+			} else {
+				setActiveTab("organisation");
+			}
 		}
-	}, [role]);
+	}, [role, searchParams]);
 
 	const renderTabContent = () => {
 		switch (activeTab) {

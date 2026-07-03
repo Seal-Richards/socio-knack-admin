@@ -14,6 +14,25 @@ export type WalletData = {
 	needsActivation?: boolean;
 };
 
+export type TransactionData = {
+	_id: string;
+	id?: string;
+	type: "credit" | "debit";
+	amount: number;
+	category:
+		| "orderPayout"
+		| "withdrawal"
+		| "walletTopup"
+		| "referralBonus"
+		| "refund"
+		| "subscription"
+		| "incentive"
+		| "incentivePayout";
+	status: "pending" | "completed" | "failed" | "reversed";
+	description: string;
+	createdAt: string;
+};
+
 export const walletRequests = {
 	async getBalance(): Promise<ApiResponse<WalletData>> {
 		return apiClient.get<ApiResponse<WalletData>>(
@@ -34,6 +53,13 @@ export const walletRequests = {
 			"/wallet/activate",
 			{ bvn },
 			"Failed to activate virtual wallet.",
+		);
+	},
+
+	async getTransactions(): Promise<ApiResponse<TransactionData[]>> {
+		return apiClient.get<ApiResponse<TransactionData[]>>(
+			"/wallet/transactions",
+			"Failed to load transaction history.",
 		);
 	},
 };

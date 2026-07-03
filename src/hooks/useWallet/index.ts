@@ -30,3 +30,11 @@ export function useGetBankList() {
 		staleTime: 24 * 60 * 60 * 1000, // Static data, cache it for 24 hours
 	});
 }
+
+export function useGetWalletTransactions() {
+	return useQuery({
+		queryKey: ["walletTransactions"],
+		queryFn: () => walletRequests.getTransactions(),
+		staleTime: 30 * 1000, // 30 sec cache
+	});
+}
