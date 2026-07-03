@@ -34,4 +34,17 @@ export const reportsPayoutRequests = {
 			"Failed to approve visit.",
 		);
 	},
+
+	async rejectVisit(
+		visitId: string,
+		isSupervisor: boolean,
+		reason: string,
+	): Promise<ApiResponse<any>> {
+		const prefix = isSupervisor ? "/supervisor" : "/admin";
+		return apiClient.patch<ApiResponse<any>>(
+			`${prefix}/visits/${visitId}/reject`,
+			{ reason },
+			"Failed to reject visit.",
+		);
+	},
 };

@@ -16,6 +16,17 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ agent }: ProfileHeaderProps) {
+	const getStatusBadgeStyle = (status?: string) => {
+		const normalized = status?.toLowerCase();
+		if (normalized === "active" || normalized === "approved") {
+			return "bg-green-50 text-green-600";
+		}
+		if (normalized === "pending") {
+			return "bg-orange-50 text-orange-600";
+		}
+		return "bg-red-50 text-red-600";
+	};
+
 	return (
 		<div className="flex flex-col gap-6 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm sm:gap-8 md:p-10">
 			<div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
@@ -40,7 +51,11 @@ export default function ProfileHeader({ agent }: ProfileHeaderProps) {
 								</span>
 							</div>
 							<div className="flex items-center gap-2 border-l border-gray-200 pl-2 sm:pl-4">
-								<span className="rounded-full bg-green-50 px-3 py-1 text-[11px] font-bold text-green-600">
+								<span
+									className={`rounded-full px-3 py-1 text-[11px] font-bold ${getStatusBadgeStyle(
+										agent.status,
+									)}`}
+								>
 									{agent.status}
 								</span>
 							</div>

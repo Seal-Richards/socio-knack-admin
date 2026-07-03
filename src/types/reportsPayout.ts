@@ -65,6 +65,13 @@ export interface SaleDetails {
 	paymentMode?: string;
 	amount?: number;
 	products?: SaleProductItem[];
+	installments?: Array<{
+		_id?: string;
+		amount?: number;
+		date?: string;
+		notes?: string;
+		loggedBy?: string;
+	}>;
 }
 
 export interface VisitReportDetails {
@@ -81,6 +88,8 @@ export interface VisitDetails {
 	_id: string;
 	title: string;
 	priority: string;
+	status?: string;
+	rejectionReason?: string;
 	checkInTime?: string;
 	checkOutTime?: string;
 	isApproved: boolean;

@@ -42,3 +42,25 @@ export function useApproveVisit() {
 		},
 	});
 }
+
+export function useRejectVisit() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			id,
+			isSupervisor,
+			reason,
+		}: {
+			id: string;
+			isSupervisor: boolean;
+			reason: string;
+		}) => reportsPayoutRequests.rejectVisit(id, isSupervisor, reason),
+		onSuccess: async (res, variables) => {
+			await queryClient.invalidateQueries({ queryKey: ["reportDetails", variables.id] });
+			await queryClient.invalidateQueries({ queryKey: ["reportsPayoutList"] });
+			await queryClient.invalidateQueries({ queryKey: ["reportsPayoutMetrics"] });
+			await queryClient.invalidateQueries({ queryKey: ["dashboard-visits"] });
+			await queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+		},
+	});
+}

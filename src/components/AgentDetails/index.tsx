@@ -62,7 +62,10 @@ export default function AgentDetails({ id }: AgentDetailsProps) {
 		status: statusLabel,
 		email: rawAgent.email || "",
 		phone: rawAgent.phone || "No phone listed",
-		address: rawAgent.residentialAddress || "No address listed",
+		address:
+			[rawAgent.residentialAddress, rawAgent.city, rawAgent.state, rawAgent.country]
+				.filter(Boolean)
+				.join(", ") || "No address listed",
 		avatar: rawAgent.avatar || "/assets/images/admin-avatar.png",
 	};
 

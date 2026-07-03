@@ -19,7 +19,7 @@ import { toast } from "@/lib/toast";
 export default function KycStatus({ agent }: { agent: AgentData }) {
 	const hasId = !!agent.kycDocuments?.idFront;
 	const hasSelfie = !!agent.kycDocuments?.selfie;
-	const hasBank = !!agent.wallet?.fincraAccountNumber;
+	const hasBank = !!agent.hasLinkedBank || !!agent.wallet?.fincraAccountNumber;
 
 	let progress = 0;
 	if (hasId) progress += 35;
@@ -78,6 +78,11 @@ export default function KycStatus({ agent }: { agent: AgentData }) {
 
 	return (
 		<div className="flex flex-col gap-6 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm md:gap-8 md:p-10">
+			<style>{`
+				.kyc-progress-bar-fill {
+					width: ${progress}%;
+				}
+			`}</style>
 			<h3 className="text-[14px] font-bold text-gray-500 sm:text-[15px]">KYC Verification</h3>
 			<div className="h-px w-full bg-gray-100" />
 
@@ -87,10 +92,7 @@ export default function KycStatus({ agent }: { agent: AgentData }) {
 					Verification
 				</span>
 				<div className="h-3.5 w-full flex-1 overflow-hidden rounded-full bg-gray-200">
-					<div
-						style={{ width: `${progress}%` }}
-						className="h-full rounded-full bg-[#1d4ea8]"
-					/>
+					<div className="kyc-progress-bar-fill h-full rounded-full bg-[#1d4ea8]" />
 				</div>
 				<span className="text-[14px] font-bold text-gray-800">{progress}%</span>
 			</div>
@@ -102,13 +104,24 @@ export default function KycStatus({ agent }: { agent: AgentData }) {
 						<span className="text-[14px] font-bold text-gray-700 sm:text-[15px]">
 							Identity Verification
 						</span>
-						<button
-							onClick={() => viewDocument(agent.kycDocuments?.idFront)}
-							className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[12px] font-bold text-gray-600 transition-colors hover:bg-gray-50"
-						>
-							<Icon icon="solar:eye-bold" className="size-4" />
-							View ID Card
-						</button>
+						<div className="flex flex-wrap items-center gap-2">
+							<button
+								onClick={() => viewDocument(agent.kycDocuments?.idFront)}
+								className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[12px] font-bold text-gray-600 transition-colors hover:bg-gray-50"
+							>
+								<Icon icon="solar:eye-bold" className="size-4" />
+								View Front
+							</button>
+							{agent.kycDocuments?.idBack && (
+								<button
+									onClick={() => viewDocument(agent.kycDocuments?.idBack)}
+									className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[12px] font-bold text-gray-600 transition-colors hover:bg-gray-50"
+								>
+									<Icon icon="solar:eye-bold" className="size-4" />
+									View Back
+								</button>
+							)}
+						</div>
 					</div>
 
 					<div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 sm:p-5">

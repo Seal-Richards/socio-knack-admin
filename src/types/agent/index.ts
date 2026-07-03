@@ -45,6 +45,7 @@ export type AgentData = {
 	kycDocuments?: AgentKycDocuments;
 	metrics?: AgentMetrics;
 	wallet?: AgentWallet | null;
+	hasLinkedBank?: boolean;
 	territoryId?: {
 		_id: string;
 		name: string;

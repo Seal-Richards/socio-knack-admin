@@ -58,4 +58,12 @@ export const dashboardRequests = {
 			Partial<ScheduleVisitPayload> & { status?: string }
 		>(`/admin/visits/${visitId}`, payload, "Failed to update task/visit.");
 	},
+
+	async cancelVisit(visitId: string, reason: string): Promise<ApiResponse<VisitData>> {
+		return apiClient.delete<ApiResponse<VisitData>>(
+			`/admin/visits/${visitId}`,
+			"Failed to cancel task/visit.",
+			{ data: { reason } },
+		);
+	},
 };

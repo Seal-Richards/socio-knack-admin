@@ -64,3 +64,26 @@ export function useUpdateVisit() {
 		},
 	});
 }
+
+export function useCancelVisit() {
+	const queryClient = useQueryClient();
+	return useMutation<
+		ApiResponse<VisitData>,
+		Error,
+		{
+			visitId: string;
+			reason: string;
+		}
+	>({
+		mutationFn: ({ visitId, reason }: { visitId: string; reason: string }) =>
+			dashboardRequests.cancelVisit(visitId, reason),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["dashboard-visits"] }).catch((err) => {
+				console.error("Failed to invalidate dashboard-visits query:", err);
+			});
+			queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] }).catch((err) => {
+				console.error("Failed to invalidate dashboard-stats query:", err);
+			});
+		},
+	});
+}

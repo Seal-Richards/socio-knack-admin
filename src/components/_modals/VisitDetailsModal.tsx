@@ -4,12 +4,12 @@ import { Icon } from "@iconify/react";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { Button } from "@/components/ui/button";
 import { useGetMe } from "@/hooks/useProfile";
-import { useUpdateVisit } from "@/hooks/useDashboard";
+import { useUpdateVisit, useCancelVisit } from "@/hooks/useDashboard";
 import { useGetAgents } from "@/hooks/useAgent";
 import { useGetTerritories } from "@/hooks/useTerritory";
-import { useApproveVisit } from "@/hooks/useReportsPayout";
 import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
 import { toast } from "@/lib/toast";
+import { useRouter } from "next/navigation";
 
 type AgentDetails = {
 	_id?: string;
@@ -34,6 +34,9 @@ type VisitRecord = {
 	scheduledDate?: string;
 	status?: string;
 	priority?: string;
+	checkInTime?: string;
+	checkOutTime?: string;
+	updatedAt?: string;
 	agentId?: AgentDetails | string;
 	territoryId?:
 		| {
@@ -62,6 +65,13 @@ type VisitRecord = {
 					| null;
 				quantity?: number;
 				cost?: number;
+			}>;
+			installments?: Array<{
+				_id?: string;
+				amount?: number;
+				date?: string;
+				notes?: string;
+				loggedBy?: string;
 			}>;
 		};
 	};
@@ -94,12 +104,14 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 	const { data: meRes } = useGetMe();
 	const currentUser = meRes?.data;
 	const updateVisitMutation = useUpdateVisit();
-	const approveVisitMutation = useApproveVisit();
+	const cancelVisitMutation = useCancelVisit();
+	const router = useRouter();
 
 	const [isSavingEdit, setIsSavingEdit] = React.useState(false);
 	const [isCancelling, setIsCancelling] = React.useState(false);
+	const [isCancelReasonOpen, setIsCancelReasonOpen] = React.useState(false);
+	const [cancelReason, setCancelReason] = React.useState("");
 	const [isApprovingSchedule, setIsApprovingSchedule] = React.useState(false);
-	const [isApprovingReport, setIsApprovingReport] = React.useState(false);
 
 	const { data: territoriesRes } = useGetTerritories();
 	const territories = territoriesRes?.data || [];
@@ -226,15 +238,22 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 		}
 	};
 
-	const handleCancelTask = async () => {
+	const handleCancelTask = async (e?: React.FormEvent) => {
+		if (e) e.preventDefault();
+		if (!cancelReason.trim()) {
+			setIsCancelReasonOpen(true);
+			return;
+		}
 		setIsCancelling(true);
 		try {
-			const res = await updateVisitMutation.mutateAsync({
+			const res = await cancelVisitMutation.mutateAsync({
 				visitId: visit._id || visit.id || "",
-				payload: { status: "cancelled" },
+				reason: cancelReason.trim(),
 			});
 			if (res.success) {
 				toast.success("Task cancelled successfully.");
+				setIsCancelReasonOpen(false);
+				setCancelReason("");
 				onClose();
 			} else {
 				toast.error(res.message || "Failed to cancel task.");
@@ -265,27 +284,6 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 			toast.error(errorMsg);
 		} finally {
 			setIsApprovingSchedule(false);
-		}
-	};
-
-	const handleApproveReport = async () => {
-		setIsApprovingReport(true);
-		try {
-			const res = await approveVisitMutation.mutateAsync({
-				id: visit._id || visit.id || "",
-				isSupervisor: currentUser?.role === "supervisor",
-			});
-			if (res.success) {
-				toast.success("Visit report approved successfully!");
-				onClose();
-			} else {
-				toast.error(res.message || "Failed to approve visit report.");
-			}
-		} catch (err) {
-			const errorMsg = err instanceof Error ? err.message : "Failed to approve visit report.";
-			toast.error(errorMsg);
-		} finally {
-			setIsApprovingReport(false);
 		}
 	};
 
@@ -643,77 +641,187 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 								</p>
 							</div>
 
-							{visit.report?.saleDetails && (
-								<div className="rounded-xl border border-gray-100 bg-green-50 p-4">
-									<p className="text-[11px] font-bold uppercase tracking-wider text-green-600">
-										Sales Report
-									</p>
-									<p className="mt-1 font-black text-green-900">
-										₦
-										{(
-											visit.report.saleDetails.saleValue ||
-											visit.report.saleDetails.amount ||
-											0
-										).toLocaleString()}
-									</p>
-									{visit.report.saleDetails.products &&
-										visit.report.saleDetails.products.length > 0 && (
-											<div className="mt-2 space-y-1 text-[11px] font-semibold text-green-700">
-												{visit.report.saleDetails.products.map((p, idx) => {
-													const productIdStr =
-														typeof p.productId === "object"
-															? p.productId?._id || p.productId?.id
-															: p.productId;
-													const key =
-														productIdStr || p.name || `product-${idx}`;
-													const prodName =
-														p.name ||
-														(typeof p.productId === "object"
-															? p.productId?.name
-															: undefined) ||
-														`Product #${idx + 1}`;
+							{visit.report?.saleDetails &&
+								(() => {
+									const dateVal =
+										visit.checkOutTime || visit.checkInTime || visit.updatedAt;
+									const paymentDateStr = dateVal
+										? new Date(dateVal).toLocaleString("en-US", {
+												day: "2-digit",
+												month: "2-digit",
+												year: "numeric",
+												hour: "2-digit",
+												minute: "2-digit",
+												hour12: true,
+											})
+										: "N/A";
 
-													return (
-														<div key={key}>
-															• {prodName} x{p.quantity}
-														</div>
-													);
-												})}
-											</div>
-										)}
-									<p className="mt-1 text-sm font-medium text-green-700">
-										Payment: {visit.report.saleDetails.paymentMode}
-									</p>
-								</div>
-							)}
+									return (
+										<div className="rounded-xl border border-gray-100 bg-green-50 p-4">
+											<p className="text-[11px] font-bold uppercase tracking-wider text-green-600">
+												Sales Report
+											</p>
+											<p className="mt-1 flex items-baseline gap-2 font-black text-green-900">
+												<span>
+													₦
+													{(visit.report.saleDetails.amount !== undefined
+														? visit.report.saleDetails.amount
+														: visit.report.saleDetails.saleValue || 0
+													).toLocaleString()}
+												</span>
+												{visit.report.saleDetails.paymentMode ===
+													"installment" && (
+													<span className="text-[10px] font-medium text-green-600">
+														(Logged: {paymentDateStr})
+													</span>
+												)}
+											</p>
+											{visit.report.saleDetails.paymentMode ===
+												"installment" && (
+												<p className="mt-1 text-xs font-semibold text-green-800">
+													Product Original Value: ₦
+													{(
+														visit.report.saleDetails.saleValue || 0
+													).toLocaleString()}
+												</p>
+											)}
+											{visit.report.saleDetails.products &&
+												visit.report.saleDetails.products.length > 0 && (
+													<div className="mt-2 space-y-1 text-[11px] font-semibold text-green-700">
+														{visit.report.saleDetails.products.map(
+															(p, idx) => {
+																const productIdStr =
+																	typeof p.productId === "object"
+																		? p.productId?._id ||
+																			p.productId?.id
+																		: p.productId;
+																const key =
+																	productIdStr ||
+																	p.name ||
+																	`product-${idx}`;
+																const prodName =
+																	p.name ||
+																	(typeof p.productId === "object"
+																		? p.productId?.name
+																		: undefined) ||
+																	`Product #${idx + 1}`;
+
+																return (
+																	<div key={key}>
+																		• {prodName} x{p.quantity}
+																	</div>
+																);
+															},
+														)}
+													</div>
+												)}
+											<p className="mt-1 text-sm font-medium text-green-700">
+												Payment: {visit.report.saleDetails.paymentMode}
+											</p>
+											{visit.report.saleDetails.installments &&
+												visit.report.saleDetails.installments.length >
+													0 && (
+													<div className="mt-3 space-y-1 border-t border-green-200/50 pt-2 text-[11px] font-medium text-green-700">
+														<p className="font-bold text-green-800">
+															Installments Logged:
+														</p>
+														{visit.report.saleDetails.installments.map(
+															(inst, idx) => (
+																<div
+																	key={
+																		inst._id ||
+																		`${inst.date || ""}-${inst.amount || ""}`
+																	}
+																	className="flex items-center justify-between"
+																>
+																	<div>
+																		<span>
+																			Installment #{idx + 1}
+																		</span>
+																		{inst.date && (
+																			<span className="ml-1 text-[9px] font-normal text-green-600">
+																				(
+																				{new Date(
+																					inst.date,
+																				).toLocaleString(
+																					"en-US",
+																					{
+																						day: "2-digit",
+																						month: "2-digit",
+																						year: "numeric",
+																						hour: "2-digit",
+																						minute: "2-digit",
+																						hour12: true,
+																					},
+																				)}
+																				)
+																			</span>
+																		)}
+																	</div>
+																	<span className="font-bold">
+																		₦
+																		{(
+																			inst.amount || 0
+																		).toLocaleString()}
+																	</span>
+																</div>
+															),
+														)}
+														{(() => {
+															const totalPaid =
+																visit.report.saleDetails.installments.reduce(
+																	(sum, inst) =>
+																		sum + (inst.amount || 0),
+																	0,
+																);
+															const remaining = Math.max(
+																0,
+																(visit.report.saleDetails
+																	.saleValue || 0) - totalPaid,
+															);
+															return (
+																<div className="mt-1 flex justify-between border-t border-dashed border-green-200 pt-1.5 font-bold text-green-950">
+																	<span>
+																		Outstanding Balance:
+																	</span>
+																	<span className="text-red-600">
+																		₦
+																		{remaining.toLocaleString()}
+																	</span>
+																</div>
+															);
+														})()}
+													</div>
+												)}
+										</div>
+									);
+								})()}
 						</div>
 					)}
 
 					{!isEditing && (
 						<div className="mt-8 flex items-center justify-between">
 							<div className="flex gap-3">
-								{canEditOrCancel && !isCancelled && !isCompleted && (
-									<Button
-										onClick={handleCancelTask}
-										disabled={
-											isCancelling ||
-											isApprovingSchedule ||
-											isApprovingReport ||
-											isSavingEdit
-										}
-										className="h-11 cursor-pointer rounded-xl bg-red-50 px-6 font-bold text-red-600 transition-colors hover:bg-red-100"
-									>
-										{isCancelling ? "Cancelling..." : "Cancel Task"}
-									</Button>
-								)}
+								{canEditOrCancel &&
+									!isCancelled &&
+									!isCompleted &&
+									visit.status !== "pending" &&
+									visit.status !== "open" && (
+										<Button
+											onClick={handleCancelTask}
+											disabled={
+												isCancelling || isApprovingSchedule || isSavingEdit
+											}
+											className="h-11 cursor-pointer rounded-xl bg-red-50 px-6 font-bold text-red-600 transition-colors hover:bg-red-100"
+										>
+											{isCancelling ? "Cancelling..." : "Cancel Task"}
+										</Button>
+									)}
 								{canEditOrCancel && visit.isScheduleApproved === false && (
 									<Button
 										onClick={handleApproveSchedule}
 										disabled={
-											isCancelling ||
-											isApprovingSchedule ||
-											isApprovingReport ||
-											isSavingEdit
+											isCancelling || isApprovingSchedule || isSavingEdit
 										}
 										className="h-11 cursor-pointer rounded-xl bg-green-50 px-6 font-bold text-green-600 transition-colors hover:bg-green-100"
 									>
@@ -721,19 +829,18 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 									</Button>
 								)}
 								{canEditOrCancel &&
-									visit.status === "pending" &&
+									(visit.status === "pending" || visit.status === "open") &&
 									visit.isScheduleApproved === true && (
 										<Button
-											onClick={handleApproveReport}
-											disabled={
-												isCancelling ||
-												isApprovingSchedule ||
-												isApprovingReport ||
-												isSavingEdit
-											}
-											className="h-11 cursor-pointer rounded-xl bg-green-50 px-6 font-bold text-green-600 transition-colors hover:bg-green-100"
+											onClick={() => {
+												onClose();
+												router.push(
+													`/reports-payouts/${visit._id || visit.id}`,
+												);
+											}}
+											className="h-11 cursor-pointer rounded-xl bg-[#1d4ea8] px-6 font-bold text-white transition-colors hover:bg-[#153a82]"
 										>
-											{isApprovingReport ? "Approving..." : "Approve Report"}
+											View Report Details
 										</Button>
 									)}
 							</div>
@@ -747,6 +854,56 @@ export default function VisitDetailsModal({ isOpen, onClose, visit }: VisitDetai
 					)}
 				</Dialog.Content>
 			</Dialog.Portal>
+			<Dialog.Root open={isCancelReasonOpen} onOpenChange={setIsCancelReasonOpen}>
+				<Dialog.Portal>
+					<Dialog.Overlay className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" />
+					<Dialog.Content className="fixed left-1/2 top-1/2 z-[70] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white p-6 font-sans shadow-xl lg:p-8">
+						<Dialog.Title className="mb-4 text-xl font-black text-gray-900">
+							Cancel Task
+						</Dialog.Title>
+						<Dialog.Description className="mb-6 text-sm text-gray-500">
+							Please state the reason for cancelling this task. This reason will be
+							sent to the agent.
+						</Dialog.Description>
+						<form onSubmit={handleCancelTask} className="flex flex-col gap-4">
+							<div className="flex flex-col gap-2">
+								<label
+									htmlFor="cancellation-reason"
+									className="text-xs font-bold uppercase text-gray-400"
+								>
+									Reason for Cancellation
+								</label>
+								<textarea
+									id="cancellation-reason"
+									aria-label="Reason for Cancellation"
+									rows={4}
+									value={cancelReason}
+									onChange={(e) => setCancelReason(e.target.value)}
+									placeholder="e.g. Change in client schedule, territory reallocation..."
+									className="w-full rounded-xl border border-gray-200 p-3.5 text-sm focus:border-red-500 focus:outline-none"
+									required
+								/>
+							</div>
+							<div className="mt-4 flex justify-end gap-3">
+								<button
+									type="button"
+									onClick={() => setIsCancelReasonOpen(false)}
+									className="h-10 rounded-xl bg-gray-100 px-5 text-sm font-bold text-gray-900 hover:bg-gray-200"
+								>
+									Cancel
+								</button>
+								<button
+									type="submit"
+									disabled={isCancelling}
+									className="h-10 rounded-xl bg-red-600 px-5 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
+								>
+									{isCancelling ? "Submitting..." : "Confirm Cancellation"}
+								</button>
+							</div>
+						</form>
+					</Dialog.Content>
+				</Dialog.Portal>
+			</Dialog.Root>
 		</Dialog.Root>
 	);
 }

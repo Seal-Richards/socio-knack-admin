@@ -30,6 +30,7 @@ export const TASK_TABS = [
 	{ id: "Ongoing", label: "Ongoing", activeColor: "text-[#1d4ea8]", activeBg: "bg-[#1d4ea8]" },
 	{ id: "Today", label: "Today", activeColor: "text-[#1d4ea8]", activeBg: "bg-[#1d4ea8]" },
 	{ id: "Upcoming", label: "Upcoming", activeColor: "text-[#facc15]", activeBg: "bg-[#facc15]" },
+	{ id: "Open", label: "Open", activeColor: "text-[#3b82f6]", activeBg: "bg-[#3b82f6]" },
 	{
 		id: "Completed",
 		label: "Completed",

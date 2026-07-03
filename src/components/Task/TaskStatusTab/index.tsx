@@ -9,6 +9,7 @@ import TodayTaskList from "@/components/List/TodayTaskList";
 import UpcomingTaskList from "@/components/List/UpcomingTaskList";
 import CompletedTaskList from "@/components/List/CompletedTaskList";
 import PendingTaskList from "@/components/List/PendingTaskList";
+import OpenTaskList from "@/components/List/OpenTaskList";
 import { useGetDashboardVisits } from "@/hooks/useDashboard";
 import VisitDetailsModal from "@/components/_modals/VisitDetailsModal";
 import type { TaskItemProps } from "@/components/Task/TaskListItem";
@@ -75,7 +76,9 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 		};
 	});
 
-	const ongoingTasks = formattedVisits.filter((v) => v.status === "inProgress");
+	const ongoingTasks = formattedVisits.filter(
+		(v) => v.status === "inProgress" || v.status === "open",
+	);
 	const todayTasks = formattedVisits.filter(
 		(v) =>
 			new Date(v.raw.scheduledDate as string).toDateString() === new Date().toDateString() &&
@@ -84,6 +87,7 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 	const upcomingTasks = formattedVisits.filter(
 		(v) => v.status === "upcoming" || v.status === "scheduled",
 	);
+	const openTasks = formattedVisits.filter((v) => v.status === "open");
 	const completedTasks = formattedVisits.filter((v) => v.status === "completed");
 	const pendingTasks = formattedVisits.filter((v) => v.status === "pending");
 
@@ -101,6 +105,8 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 				return todayTasks;
 			case "Upcoming":
 				return upcomingTasks;
+			case "Open":
+				return openTasks;
 			case "Completed":
 				return completedTasks;
 			case "Pending":
@@ -157,6 +163,9 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 				)}
 				{activeTab === "Upcoming" && (
 					<UpcomingTaskList tasks={paginatedTasks} onView={handleViewVisit} />
+				)}
+				{activeTab === "Open" && (
+					<OpenTaskList tasks={paginatedTasks} onView={handleViewVisit} />
 				)}
 				{activeTab === "Completed" && (
 					<CompletedTaskList tasks={paginatedTasks} onView={handleViewVisit} />

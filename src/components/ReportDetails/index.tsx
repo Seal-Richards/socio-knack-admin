@@ -1,8 +1,6 @@
-"use client";
-
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useGetReportDetails, useApproveVisit } from "@/hooks/useReportsPayout";
+import { useGetReportDetails, useApproveVisit, useRejectVisit } from "@/hooks/useReportsPayout";
 import { useGetMe } from "@/hooks/useProfile";
 import { Icon } from "@iconify/react";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
@@ -10,6 +8,7 @@ import { formatCheckInDate } from "@/utils/dateFormatter";
 import cn from "@/lib/utils";
 import Image from "next/image";
 import type { SaleProductItem } from "@/types/reportsPayout";
+import * as Dialog from "@radix-ui/react-dialog";
 
 interface ReportDetailsProps {
 	id: string;
@@ -35,7 +34,44 @@ export default function ReportDetails({ id }: ReportDetailsProps) {
 
 	const { data: reportRes, isLoading, error } = useGetReportDetails(id);
 	const approveMutation = useApproveVisit();
+	const rejectMutation = useRejectVisit();
+
+	const [isRejectOpen, setIsRejectOpen] = useState(false);
+	const [rejectionReason, setRejectionReason] = useState("");
+
 	const visit = reportRes?.data;
+
+	let statusBadgeClass = "bg-orange-50 text-orange-600 border-orange-100";
+	let statusText = "Pending Approval";
+
+	if (visit) {
+		if (visit.status === "open") {
+			statusBadgeClass = "bg-blue-50 text-blue-600 border-blue-100";
+			statusText = "Open / Installments";
+		} else if (visit.isApproved) {
+			statusBadgeClass = "bg-green-50 text-green-600 border-green-100";
+			statusText = "Paid / Approved";
+		} else if (visit.status === "cancelled") {
+			statusBadgeClass = "bg-red-50 text-red-600 border-red-100";
+			statusText = "Cancelled / Rejected";
+		}
+	}
+
+	const handleRejectSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!rejectionReason.trim()) return;
+		try {
+			await rejectMutation.mutateAsync({
+				id,
+				isSupervisor,
+				reason: rejectionReason.trim(),
+			});
+			setIsRejectOpen(false);
+			setRejectionReason("");
+		} catch (err) {
+			console.error("Rejection error:", err);
+		}
+	};
 
 	if (isLoading) {
 		return (
@@ -96,31 +132,55 @@ export default function ReportDetails({ id }: ReportDetailsProps) {
 				<div className="flex items-center gap-3">
 					<span
 						className={cn(
-							"inline-flex items-center rounded-full px-3.5 py-1 text-xs font-bold capitalize",
-							visit.isApproved
-								? "bg-green-50 text-green-600 border border-green-100"
-								: "bg-orange-50 text-orange-600 border border-orange-100",
+							"inline-flex items-center rounded-full px-3.5 py-1 text-xs font-bold capitalize border",
+							statusBadgeClass,
 						)}
 					>
-						{visit.isApproved ? "Paid / Approved" : "Pending Approval"}
+						{statusText}
 					</span>
 
-					{canApprove && !visit.isApproved && (
-						<button
-							onClick={() => approveMutation.mutate({ id, isSupervisor })}
-							disabled={approveMutation.isPending}
-							className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-green-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-						>
-							{approveMutation.isPending ? (
-								<div className="size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-							) : (
-								<Icon icon="lucide:check-circle" className="size-4" />
-							)}
-							Approve Visit
-						</button>
+					{canApprove && visit.status === "pending" && (
+						<div className="flex gap-2">
+							<button
+								onClick={() => setIsRejectOpen(true)}
+								disabled={rejectMutation.isPending || approveMutation.isPending}
+								className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+							>
+								<Icon icon="lucide:x-circle" className="size-4" />
+								Reject Report
+							</button>
+							<button
+								onClick={() => approveMutation.mutate({ id, isSupervisor })}
+								disabled={approveMutation.isPending || rejectMutation.isPending}
+								className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-green-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+							>
+								{approveMutation.isPending ? (
+									<div className="size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+								) : (
+									<Icon icon="lucide:check-circle" className="size-4" />
+								)}
+								Approve Visit
+							</button>
+						</div>
 					)}
 				</div>
 			</div>
+
+			{/* Rejection reason banner */}
+			{visit.status === "cancelled" && visit.rejectionReason && (
+				<div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/50 p-5">
+					<Icon
+						icon="solar:shield-warning-bold"
+						className="mt-0.5 size-5 shrink-0 text-red-600"
+					/>
+					<div>
+						<h4 className="text-sm font-bold text-red-950">Report Rejection Reason</h4>
+						<p className="mt-1 text-sm leading-relaxed text-red-800">
+							&ldquo;{visit.rejectionReason}&rdquo;
+						</p>
+					</div>
+				</div>
+			)}
 
 			{/* Header Section */}
 			<div className="flex flex-col gap-2">
@@ -466,13 +526,90 @@ export default function ReportDetails({ id }: ReportDetailsProps) {
 									</div>
 									<div>
 										<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
-											Paid Amount
+											Latest Logged Amount
 										</p>
 										<p className="mt-0.5 font-bold text-green-950">
 											₦{(saleDetails?.amount || 0).toLocaleString()}
 										</p>
 									</div>
 								</div>
+
+								{saleDetails?.paymentMode === "installment" && (
+									<div className="space-y-3 border-t border-green-100/50 pt-4">
+										{saleDetails.installments &&
+											saleDetails.installments.length > 0 && (
+												<>
+													<p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+														Installment Payment Logs
+													</p>
+													<div className="space-y-2">
+														{saleDetails.installments.map(
+															(inst, idx) => {
+																const dateStr = inst.date
+																	? new Date(
+																			inst.date,
+																		).toLocaleString("en-US", {
+																			day: "2-digit",
+																			month: "2-digit",
+																			year: "numeric",
+																			hour: "2-digit",
+																			minute: "2-digit",
+																			hour12: true,
+																		})
+																	: "N/A";
+																const amountVal = inst.amount || 0;
+																return (
+																	<div
+																		key={
+																			inst._id ||
+																			`${inst.date || ""}-${inst.amount || ""}`
+																		}
+																		className="flex items-center justify-between rounded-xl border border-green-100/20 bg-white/60 p-2.5 text-xs"
+																	>
+																		<div>
+																			<p className="font-bold text-green-950">
+																				Installment #
+																				{idx + 1}
+																			</p>
+																			<p className="text-[10px] text-gray-500">
+																				{dateStr}
+																			</p>
+																		</div>
+																		<p className="font-bold text-green-700">
+																			₦
+																			{amountVal.toLocaleString()}
+																		</p>
+																	</div>
+																);
+															},
+														)}
+													</div>
+												</>
+											)}
+										{(() => {
+											const totalPaid = (
+												saleDetails.installments || []
+											).reduce(
+												(sum: number, inst) => sum + (inst.amount || 0),
+												0,
+											);
+											const remaining = Math.max(
+												0,
+												(saleDetails.saleValue || 0) - totalPaid,
+											);
+											return (
+												<div className="mt-2 flex items-center justify-between rounded-xl border border-dashed border-green-200 bg-green-50/50 p-2.5 text-xs">
+													<p className="font-bold text-green-900">
+														Outstanding Balance
+													</p>
+													<p className="font-black text-red-600">
+														₦{remaining.toLocaleString()}
+													</p>
+												</div>
+											);
+										})()}
+									</div>
+								)}
 							</div>
 						</div>
 					)}
@@ -559,6 +696,57 @@ export default function ReportDetails({ id }: ReportDetailsProps) {
 					</div>
 				</div>
 			</div>
+
+			<Dialog.Root open={isRejectOpen} onOpenChange={setIsRejectOpen}>
+				<Dialog.Portal>
+					<Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+					<Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white p-6 font-sans shadow-xl lg:p-8">
+						<Dialog.Title className="mb-4 text-xl font-black text-gray-900">
+							Reject Report / Task
+						</Dialog.Title>
+						<Dialog.Description className="mb-6 text-sm text-gray-500">
+							Please state the reason for rejecting this report. This reason will be
+							sent to the agent via email and push notification.
+						</Dialog.Description>
+						<form onSubmit={handleRejectSubmit} className="flex flex-col gap-4">
+							<div className="flex flex-col gap-2">
+								<label
+									htmlFor="rejection-reason"
+									className="text-xs font-bold uppercase text-gray-400"
+								>
+									Reason for Rejection
+								</label>
+								<textarea
+									id="rejection-reason"
+									aria-label="Reason for Rejection"
+									rows={4}
+									value={rejectionReason}
+									onChange={(e) => setRejectionReason(e.target.value)}
+									placeholder="e.g. Incomplete photo verification, incorrect payment details..."
+									className="w-full rounded-xl border border-gray-200 p-3.5 text-sm focus:border-red-500 focus:outline-none"
+									required
+								/>
+							</div>
+							<div className="mt-4 flex justify-end gap-3">
+								<button
+									type="button"
+									onClick={() => setIsRejectOpen(false)}
+									className="h-10 rounded-xl bg-gray-100 px-5 text-sm font-bold text-gray-900 hover:bg-gray-200"
+								>
+									Cancel
+								</button>
+								<button
+									type="submit"
+									disabled={rejectMutation.isPending}
+									className="h-10 rounded-xl bg-red-600 px-5 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
+								>
+									{rejectMutation.isPending ? "Submitting..." : "Reject Report"}
+								</button>
+							</div>
+						</form>
+					</Dialog.Content>
+				</Dialog.Portal>
+			</Dialog.Root>
 		</div>
 	);
 }
