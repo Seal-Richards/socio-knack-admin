@@ -80,6 +80,7 @@ export default function BillingsConfigTab() {
 		{ label: "All Categories", value: "all" },
 		{ label: "Wallet Topup", value: "walletTopup" },
 		{ label: "Incentive Payout", value: "incentivePayout" },
+		{ label: "Subscription", value: "subscription" },
 	];
 
 	const business = businessRes?.data;
@@ -472,10 +473,10 @@ export default function BillingsConfigTab() {
 			<div className="flex flex-col gap-6 rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm">
 				<div>
 					<h3 className="text-[17px] font-bold text-gray-900">
-						Wallet Transaction History
+						Business transactions history
 					</h3>
 					<p className="text-xs text-gray-400">
-						View history of wallet topups and payouts
+						View history of wallet topups, payouts, and subscription renewals
 					</p>
 				</div>
 

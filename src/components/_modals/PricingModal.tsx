@@ -43,16 +43,29 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 		}
 	}, [isOpen, currentPlan]);
 
+	const getPlanLimits = (planKey: PlanKey | null) => {
+		if (planKey === "starter") return { min: 1, max: 50 };
+		if (planKey === "growth") return { min: 51, max: 100 };
+		if (planKey === "business") return { min: 101, max: 200 };
+		if (planKey === "enterprise") return { min: 201, max: Infinity };
+		return { min: 1, max: Infinity };
+	};
+
+	const limits = getPlanLimits(selectedPlan);
+
 	// Adjust default seat count when changing plans to be within the allowed range
 	useEffect(() => {
-		if (selectedPlan === "starter") {
-			setSeatCount((prev) => (prev < 1 || prev > 50 ? 10 : prev));
-		} else if (selectedPlan === "growth") {
-			setSeatCount((prev) => (prev < 51 || prev > 100 ? 55 : prev));
-		} else if (selectedPlan === "business") {
-			setSeatCount((prev) => (prev < 101 || prev > 200 ? 105 : prev));
-		} else if (selectedPlan === "enterprise") {
-			setSeatCount(205);
+		if (selectedPlan) {
+			const { min, max } = getPlanLimits(selectedPlan);
+			setSeatCount((prev) => {
+				if (prev < min || prev > max) {
+					if (selectedPlan === "starter") return 10;
+					if (selectedPlan === "growth") return 55;
+					if (selectedPlan === "business") return 105;
+					return 205;
+				}
+				return prev;
+			});
 		}
 	}, [selectedPlan]);
 
@@ -68,21 +81,13 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 	};
 
 	const validateSeats = (): boolean => {
-		if (selectedPlan === "starter") {
-			if (seatCount < 1 || seatCount > 50) {
-				toast.error("Starter plan requires between 1 and 50 users.");
-				return false;
-			}
-		} else if (selectedPlan === "growth") {
-			if (seatCount < 51 || seatCount > 100) {
-				toast.error("Growth plan requires between 51 and 100 users.");
-				return false;
-			}
-		} else if (selectedPlan === "business") {
-			if (seatCount < 101 || seatCount > 200) {
-				toast.error("Business plan requires between 101 and 200 users.");
-				return false;
-			}
+		if (!selectedPlan) return false;
+		if (seatCount < limits.min || seatCount > limits.max) {
+			const capitalizedPlan = selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1);
+			toast.error(
+				`${capitalizedPlan} plan requires between ${limits.min} and ${limits.max} users.`,
+			);
+			return false;
 		}
 		return true;
 	};
@@ -227,9 +232,11 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 							</p>
 							<div className="flex items-center gap-3">
 								<button
-									onClick={() => setSeatCount((prev) => Math.max(1, prev - 1))}
-									className="flex size-10 items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"
-									disabled={isPending}
+									onClick={() =>
+										setSeatCount((prev) => Math.max(limits.min, prev - 1))
+									}
+									className="flex size-10 items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50"
+									disabled={isPending || seatCount <= limits.min}
 									aria-label="Decrease seat count"
 								>
 									<Icon icon="lucide:minus" className="size-4" />
@@ -237,16 +244,24 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 								<Input
 									type="number"
 									value={seatCount}
-									onChange={(e) =>
-										setSeatCount(Math.max(1, parseInt(e.target.value, 10) || 1))
-									}
+									onChange={(e) => {
+										const val = parseInt(e.target.value, 10);
+										setSeatCount(Number.isNaN(val) ? 0 : val);
+									}}
+									onBlur={() => {
+										setSeatCount((prev) =>
+											Math.max(limits.min, Math.min(limits.max, prev)),
+										);
+									}}
 									className="h-10 w-24 border-gray-300 text-center font-bold text-gray-800"
 									disabled={isPending}
 								/>
 								<button
-									onClick={() => setSeatCount((prev) => prev + 1)}
-									className="flex size-10 items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"
-									disabled={isPending}
+									onClick={() =>
+										setSeatCount((prev) => Math.min(limits.max, prev + 1))
+									}
+									className="flex size-10 items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50"
+									disabled={isPending || seatCount >= limits.max}
 									aria-label="Increase seat count"
 								>
 									<Icon icon="lucide:plus" className="size-4" />

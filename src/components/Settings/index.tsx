@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import Tabs from "@/components/Tabs";
 import { useGetMe } from "@/hooks/useProfile";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { toast } from "@/lib/toast";
 import { useVerifySubscription } from "@/hooks/useBusiness";
 import OrganisationTab from "./OrganisationTab";
@@ -23,7 +23,6 @@ export default function Settings() {
 	const { data: session } = useSession();
 	const role = session?.user?.role;
 	const searchParams = useSearchParams();
-	const router = useRouter();
 	const verifySubscriptionMutation = useVerifySubscription();
 	const [isVerifying, setIsVerifying] = useState(false);
 	const verifiedTxIds = React.useRef<Record<string, boolean>>({});
@@ -78,6 +77,13 @@ export default function Settings() {
 		) {
 			verifiedTxIds.current[transactionId] = true;
 			setIsVerifying(true);
+
+			// Clean the URL synchronously to prevent verification loops on remount/re-render
+			if (typeof window !== "undefined") {
+				const cleanUrl = window.location.pathname;
+				window.history.replaceState({}, "", cleanUrl);
+			}
+
 			const toastId = toast.loading("Verifying your subscription payment, please wait...");
 			verifySubscriptionMutation.mutate(transactionId, {
 				onSuccess: (res) => {
@@ -88,7 +94,6 @@ export default function Settings() {
 					} else {
 						toast.error(res.message || "Failed to verify subscription.");
 					}
-					router.replace("/settings");
 					setIsVerifying(false);
 				},
 				onError: (err: unknown) => {
@@ -96,12 +101,11 @@ export default function Settings() {
 					const errorMsg =
 						err instanceof Error ? err.message : "Error verifying subscription.";
 					toast.error(errorMsg);
-					router.replace("/settings");
 					setIsVerifying(false);
 				},
 			});
 		}
-	}, [searchParams, router, verifySubscriptionMutation, isVerifying]);
+	}, [searchParams, verifySubscriptionMutation, isVerifying]);
 
 	useEffect(() => {
 		if (role === "supervisor" || role === "staffs") {

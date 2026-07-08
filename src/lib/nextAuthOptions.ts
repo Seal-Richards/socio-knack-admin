@@ -31,6 +31,20 @@ declare module "next-auth/jwt" {
 export const nextAuthOptions: NextAuthConfig = {
 	secret: env.NEXTAUTH_SECRET,
 	session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
+	cookies: {
+		sessionToken: {
+			name:
+				process.env.NODE_ENV === "production"
+					? "__Secure-next-auth.admin-session-token"
+					: "next-auth.admin-session-token",
+			options: {
+				httpOnly: true,
+				sameSite: "lax",
+				path: "/",
+				secure: process.env.NODE_ENV === "production",
+			},
+		},
+	},
 	providers: [
 		CredentialsProvider({
 			name: "Credentials",
