@@ -16,6 +16,7 @@ export type UserProfileBusiness = {
 	currency?: string;
 	timeZone?: string;
 	regulatoryRegion?: string;
+	industryType?: string;
 };
 
 export type UserProfileTerritory = {

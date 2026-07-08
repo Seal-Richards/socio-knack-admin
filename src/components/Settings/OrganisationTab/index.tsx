@@ -28,6 +28,7 @@ type OrganisationFormValues = {
 	taxId: string;
 	hqAddress: string;
 	logo: string;
+	industryType: string;
 	color1: string;
 	color2: string;
 	primaryAdminName: string;
@@ -132,6 +133,7 @@ export default function OrganisationTab() {
 				taxId: "",
 				hqAddress: "",
 				logo: "",
+				industryType: "",
 				color1: "1d4ea8",
 				color2: "1d4ea8",
 				primaryAdminName: "",
@@ -159,6 +161,7 @@ export default function OrganisationTab() {
 				taxId: businessSettings.taxId || "",
 				hqAddress: businessSettings.hqAddress || "",
 				logo: businessSettings.logo || "",
+				industryType: businessSettings.industryType || "",
 				color1: businessSettings.themeColors?.color1?.replace("#", "") || "1d4ea8",
 				color2: businessSettings.themeColors?.color2?.replace("#", "") || "1d4ea8",
 				primaryAdminName: businessSettings.primaryAdmin?.name || "",
@@ -197,6 +200,7 @@ export default function OrganisationTab() {
 				taxId: data.taxId,
 				hqAddress: data.hqAddress,
 				logo: data.logo,
+				industryType: data.industryType,
 				themeColors: {
 					color1: `#${data.color1}`,
 					color2: `#${data.color2}`,
@@ -334,6 +338,16 @@ export default function OrganisationTab() {
 						<Label className="text-[14px] font-medium text-gray-600">Tax ID</Label>
 						<Input
 							{...register("taxId")}
+							className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 focus:border-[#1d4ea8] focus:ring-0"
+						/>
+					</div>
+					<div className="space-y-2">
+						<Label className="text-[14px] font-medium text-gray-600">
+							Industry Type
+						</Label>
+						<Input
+							{...register("industryType")}
+							placeholder="Enter industry type"
 							className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 focus:border-[#1d4ea8] focus:ring-0"
 						/>
 					</div>

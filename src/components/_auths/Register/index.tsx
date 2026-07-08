@@ -63,6 +63,7 @@ export default function Register() {
 		orgCurrency: "NGN",
 		orgTimeZone: "WAT",
 		orgRegulatoryRegion: "Africa",
+		orgIndustryType: "",
 		cacCertificateName: "",
 		taxIdCertificateName: "",
 		utilityBillName: "",
@@ -202,6 +203,7 @@ export default function Register() {
 									orgCurrency: business.currency || "NGN",
 									orgTimeZone: business.timeZone || "WAT",
 									orgRegulatoryRegion: business.regulatoryRegion || "Africa",
+									orgIndustryType: business.industryType || "",
 									cacCertificateName: docs.cacCertificate
 										? "CAC Certificate (Uploaded)"
 										: "",

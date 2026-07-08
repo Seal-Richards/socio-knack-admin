@@ -57,6 +57,7 @@ export type BusinessSettingsData = {
 	currency: string;
 	timeZone?: string | null;
 	primaryLanguage: string;
+	industryType?: string | null;
 	defaultIncentiveType: "flat" | "percentage";
 	defaultIncentiveValue: number;
 	primaryAdmin?: ContactPerson;
@@ -89,6 +90,7 @@ export type UpdateBusinessSettingsPayload = {
 	currency?: string;
 	timeZone?: string;
 	primaryLanguage?: string;
+	industryType?: string;
 };
 
 export type UpdateBusinessIncentivePayload = {
@@ -105,6 +107,7 @@ export type SetupBusinessPayload = {
 	currency?: string;
 	timeZone?: string;
 	regulatoryRegion?: string;
+	industryType?: string;
 };
 
 export type LinkBankPayload = {

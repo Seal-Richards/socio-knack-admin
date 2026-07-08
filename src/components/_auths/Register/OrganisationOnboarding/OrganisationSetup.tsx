@@ -30,6 +30,7 @@ type OrganisationSetupProps = {
 		cacCertificateName: string;
 		taxIdCertificateName: string;
 		utilityBillName: string;
+		orgIndustryType: string;
 	}) => void;
 	onPrev?: () => void;
 	initialValues: {
@@ -44,6 +45,7 @@ type OrganisationSetupProps = {
 		cacCertificateName?: string;
 		taxIdCertificateName?: string;
 		utilityBillName?: string;
+		orgIndustryType?: string;
 	};
 	step?: number;
 	totalSteps?: number;
@@ -65,8 +67,11 @@ export default function OrganisationSetup({
 	const [orgState, setOrgState] = useState(initialValues.orgState || "");
 	const [orgCity, setOrgCity] = useState(initialValues.orgCity || "");
 	const [orgCurrency] = useState("NGN");
-	const [orgTimeZone, setOrgTimeZone] = useState("WAT");
-	const [orgRegulatoryRegion, setOrgRegulatoryRegion] = useState("Africa");
+	const [orgTimeZone, setOrgTimeZone] = useState(initialValues.orgTimeZone || "WAT");
+	const [orgRegulatoryRegion, setOrgRegulatoryRegion] = useState(
+		initialValues.orgRegulatoryRegion || "Africa",
+	);
+	const [orgIndustryType, setOrgIndustryType] = useState(initialValues.orgIndustryType || "");
 
 	// Document uploads
 	const [cacName, setCacName] = useState(initialValues.cacCertificateName || "");
@@ -116,6 +121,11 @@ export default function OrganisationSetup({
 			return;
 		}
 
+		if (!orgIndustryType.trim()) {
+			toast.error("Please enter platform industry type.");
+			return;
+		}
+
 		if (!orgState) {
 			toast.error("Please select state of operation.");
 			return;
@@ -155,6 +165,7 @@ export default function OrganisationSetup({
 				currency: orgCurrency,
 				timeZone: orgTimeZone,
 				regulatoryRegion: orgRegulatoryRegion,
+				industryType: orgIndustryType,
 			});
 
 			if (!setupRes.success) {
@@ -190,6 +201,7 @@ export default function OrganisationSetup({
 				cacCertificateName: cacName,
 				taxIdCertificateName: taxIdName,
 				utilityBillName: utilityName,
+				orgIndustryType,
 			});
 		} catch (error: unknown) {
 			toast.error(
@@ -239,6 +251,17 @@ export default function OrganisationSetup({
 						placeholder="Enter here"
 						value={orgDomain}
 						onChange={(e) => setOrgDomain(e.target.value)}
+						disabled={isMutating}
+						className="h-12 border-gray-200 bg-gray-50"
+					/>
+				</div>
+
+				<div className="space-y-2">
+					<Label className="text-sm font-semibold text-gray-700">Industry Type</Label>
+					<Input
+						placeholder="Enter industry type (e.g., Logistics, Retail)"
+						value={orgIndustryType}
+						onChange={(e) => setOrgIndustryType(e.target.value)}
 						disabled={isMutating}
 						className="h-12 border-gray-200 bg-gray-50"
 					/>
