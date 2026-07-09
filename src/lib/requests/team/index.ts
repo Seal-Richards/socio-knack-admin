@@ -54,11 +54,11 @@ export const teamRequests = {
 
 	async updateUserStatus(
 		userId: string,
-		payload: { status?: string; kycStatus?: string },
+		payload: { status?: string; kycStatus?: string; reason?: string },
 	): Promise<ApiResponse<{ id: string; status: string }>> {
 		return apiClient.patch<
 			ApiResponse<{ id: string; status: string }>,
-			{ status?: string; kycStatus?: string }
+			{ status?: string; kycStatus?: string; reason?: string }
 		>(`/admin/users/${userId}/status`, payload, "Failed to update user status.");
 	},
 
@@ -84,10 +84,11 @@ export const teamRequests = {
 		);
 	},
 
-	async revokeTeamAccess(userId: string): Promise<ApiResponse<unknown>> {
+	async revokeTeamAccess(userId: string, reason?: string): Promise<ApiResponse<unknown>> {
 		return apiClient.delete<ApiResponse<unknown>>(
 			`/admin/users/${userId}`,
 			"Failed to revoke team access.",
+			reason ? { data: { reason } } : undefined,
 		);
 	},
 };

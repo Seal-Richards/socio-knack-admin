@@ -70,10 +70,33 @@ export function useSendAgentKycComment() {
 	});
 }
 
+export function useSendAgentComplianceComment() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			userId,
+			comment,
+			status,
+		}: {
+			userId: string;
+			comment: string;
+			status: string;
+		}) => agentRequests.sendAgentComplianceComment(userId, comment, status),
+		onSuccess: (_, variables) => {
+			queryClient
+				.invalidateQueries({ queryKey: ["agent", variables.userId] })
+				.catch((err) => {
+					console.error("Failed to invalidate agent query:", err);
+				});
+		},
+	});
+}
+
 export function useDeleteAgent() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (id: string) => agentRequests.deleteAgent(id),
+		mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+			agentRequests.deleteAgent(id, reason),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["agents"] }).catch((err) => {
 				console.error("Failed to invalidate agents list query:", err);

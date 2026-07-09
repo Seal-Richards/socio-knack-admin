@@ -7,6 +7,9 @@ import { useGetMe, useUpdateProfile } from "@/hooks/useProfile";
 import Modal from "@/components/_modals";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useSendAgentComplianceComment } from "@/hooks/useAgent";
 import { toast } from "@/lib/toast";
 
 interface ComplianceProps {
@@ -22,6 +25,29 @@ export default function Compliance({ supervisor }: ComplianceProps) {
 	// Query logged-in user profile
 	const { data: meRes } = useGetMe();
 	const currentUser = meRes?.data;
+
+	const [status, setStatus] = useState<"warning" | "critical" | "good">("warning");
+	const [comment, setComment] = useState("");
+	const sendComplianceMutation = useSendAgentComplianceComment();
+
+	const handleSendComment = async () => {
+		if (!comment.trim()) return;
+		try {
+			const res = await sendComplianceMutation.mutateAsync({
+				userId: rawSupervisor?._id || rawSupervisor?.id || supervisor.id,
+				comment: comment.trim(),
+				status,
+			});
+			if (res.success) {
+				toast.success("Compliance comment sent successfully.");
+				setComment("");
+			} else {
+				toast.error(res.message || "Failed to send compliance comment.");
+			}
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "An error occurred.");
+		}
+	};
 
 	// Check if this supervisor details page belongs to the logged-in supervisor/staffs
 	const isOwnProfile =
@@ -343,6 +369,85 @@ export default function Compliance({ supervisor }: ComplianceProps) {
 					</div>
 				)}
 			</div>
+
+			{!isOwnProfile && (
+				<div className="mt-8 border-t border-gray-100 pt-8">
+					<h4 className="mb-4 text-[14px] font-bold text-gray-800">
+						Send Compliance Comment
+					</h4>
+					<div className="max-w-xl space-y-4">
+						<div>
+							<Label className="text-[13px] font-bold text-gray-800">
+								Select Status Level
+							</Label>
+							<div className="mt-2 flex gap-4">
+								<button
+									type="button"
+									onClick={() => setStatus("good")}
+									className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all ${
+										status === "good"
+											? "border-green-600 bg-green-50 text-green-600 shadow-sm"
+											: "border-gray-100 bg-white text-gray-500 hover:bg-gray-50/50"
+									}`}
+								>
+									<span className="size-2 rounded-full bg-green-500" />
+									Good / Compliant
+								</button>
+								<button
+									type="button"
+									onClick={() => setStatus("warning")}
+									className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all ${
+										status === "warning"
+											? "border-yellow-500 bg-yellow-50 text-yellow-600 shadow-sm"
+											: "border-gray-100 bg-white text-gray-500 hover:bg-gray-50/50"
+									}`}
+								>
+									<span className="size-2 rounded-full bg-yellow-500" />
+									Warning
+								</button>
+								<button
+									type="button"
+									onClick={() => setStatus("critical")}
+									className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all ${
+										status === "critical"
+											? "border-red-600 bg-red-50 text-red-600 shadow-sm"
+											: "border-gray-100 bg-white text-gray-500 hover:bg-gray-50/50"
+									}`}
+								>
+									<span className="size-2 rounded-full bg-red-500" />
+									Critical
+								</button>
+							</div>
+						</div>
+
+						<div className="space-y-2">
+							<Label
+								htmlFor="compliance-comment"
+								className="text-[13px] font-bold text-gray-800"
+							>
+								Comment
+							</Label>
+							<Textarea
+								id="compliance-comment"
+								value={comment}
+								onChange={(e) => setComment(e.target.value)}
+								placeholder="Describe the compliance issue or observation..."
+								className="min-h-[100px] resize-none rounded-xl border-gray-200 px-4 py-3 text-[13px] focus-visible:ring-0"
+							/>
+						</div>
+
+						<div className="flex justify-end">
+							<Button
+								disabled={sendComplianceMutation.isPending || !comment.trim()}
+								onClick={handleSendComment}
+								className="h-11 w-full rounded-full bg-[#1d4ea8] text-[13px] font-bold text-white hover:bg-[#153a82] sm:w-32"
+							>
+								{sendComplianceMutation.isPending ? "Sending..." : "Send Alert"}
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
 
 			<Modal
 				isOpen={isModalOpen}

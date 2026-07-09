@@ -47,11 +47,11 @@ export default function AgentManagementList() {
 		});
 	};
 
-	const handleConfirmDelete = () => {
+	const handleConfirmDelete = (reason?: string) => {
 		if (!deleteModal.agentId) return;
 
 		deleteMutation
-			.mutateAsync(String(deleteModal.agentId))
+			.mutateAsync({ id: String(deleteModal.agentId), reason })
 			.then((res) => {
 				if (res.success) {
 					toast.success(res.message || "Agent deleted successfully.");
@@ -268,6 +268,7 @@ export default function AgentManagementList() {
 				description="Are you sure you want to delete this agent? This will permanently delete the agent's user account, personal wallet, and bank configurations. To preserve historical reports and payout logs, their visit tasks and transaction history will be reassigned to the business administrator. This action cannot be undone."
 				confirmText="Yes, Delete"
 				loadingText="Deleting..."
+				withReason
 			/>
 		</>
 	);

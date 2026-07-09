@@ -78,4 +78,5 @@ export type UpdateAgentStatusPayload = {
 	kycStatus?: string;
 	comment?: string;
 	kycComment?: string;
+	reason?: string;
 };

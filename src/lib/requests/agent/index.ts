@@ -52,7 +52,23 @@ export const agentRequests = {
 		);
 	},
 
-	async deleteAgent(id: string): Promise<ApiResponse<any>> {
-		return apiClient.delete<ApiResponse<any>>(`/admin/agents/${id}`, "Failed to delete agent.");
+	async sendAgentComplianceComment(
+		userId: string,
+		comment: string,
+		status: string,
+	): Promise<ApiResponse<any>> {
+		return apiClient.post<ApiResponse<any>, { comment: string; status: string }>(
+			`/admin/users/${userId}/compliance-comment`,
+			{ comment, status },
+			"Failed to send compliance comment.",
+		);
+	},
+
+	async deleteAgent(id: string, reason?: string): Promise<ApiResponse<any>> {
+		return apiClient.delete<ApiResponse<any>>(
+			`/admin/agents/${id}`,
+			"Failed to delete agent.",
+			reason ? { data: { reason } } : undefined,
+		);
 	},
 };

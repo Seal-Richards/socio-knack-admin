@@ -101,7 +101,7 @@ export default function AccessManagementList() {
 		});
 	};
 
-	const handleConfirmAction = () => {
+	const handleConfirmAction = (reason?: string) => {
 		const { type, id } = confirmModal;
 		if (!id || !type) return;
 
@@ -129,7 +129,7 @@ export default function AccessManagementList() {
 				});
 		} else if (type === "revoke") {
 			revokeMutation
-				.mutateAsync(String(id))
+				.mutateAsync({ userId: String(id), reason })
 				.then((res) => {
 					if (res.success) toast.success(res.message);
 					else toast.error(res.message);
@@ -328,7 +328,11 @@ export default function AccessManagementList() {
 							containerClassName="w-64 h-12"
 						/>
 						<div className="flex items-center gap-2 rounded-xl border border-gray-100 p-1">
-							<button className="flex size-10 items-center justify-center rounded-lg text-gray-400 transition-all hover:bg-gray-50">
+							<button
+								title="Filter"
+								aria-label="Filter"
+								className="flex size-10 items-center justify-center rounded-lg text-gray-400 transition-all hover:bg-gray-50"
+							>
 								<Icon icon="solar:filter-bold" className="size-5" />
 							</button>
 						</div>
@@ -428,6 +432,7 @@ export default function AccessManagementList() {
 				isLoading={
 					cancelMutation.isPending || deleteMutation.isPending || revokeMutation.isPending
 				}
+				withReason={confirmModal.type === "revoke"}
 				title={(() => {
 					if (confirmModal.type === "cancel") return "Cancel Invitation";
 					if (confirmModal.type === "delete") return "Delete Invitation";

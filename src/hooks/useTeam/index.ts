@@ -54,7 +54,7 @@ export function useUpdateUserStatus() {
 			payload,
 		}: {
 			userId: string;
-			payload: { status?: string; kycStatus?: string };
+			payload: { status?: string; kycStatus?: string; reason?: string };
 		}) => teamRequests.updateUserStatus(userId, payload),
 		onSuccess: () => {
 			queryClient
@@ -123,7 +123,8 @@ export function useDeleteInvitation() {
 export function useRevokeTeamAccess() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (userId: string) => teamRequests.revokeTeamAccess(userId),
+		mutationFn: ({ userId, reason }: { userId: string; reason?: string }) =>
+			teamRequests.revokeTeamAccess(userId, reason),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["admins"] }).catch((err) => {
 				console.error("Failed to invalidate admins query:", err);
