@@ -176,7 +176,7 @@ export default function InviteTeamModal({ isOpen, onClose }: InviteTeamModalProp
 							reset();
 							onClose();
 						}}
-						className="h-12 w-full rounded-xl text-[15px] font-bold text-gray-500 hover:bg-gray-50"
+						className="h-12 w-full rounded-xl text-[15px] font-bold text-gray-500 hover:bg-red-500"
 					>
 						Cancel
 					</Button>

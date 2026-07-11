@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+// import { Switch } from "@/components/ui/switch";
 import {
 	Select,
 	SelectContent,
@@ -612,7 +612,7 @@ export default function ProfileTab() {
 			</Modal>
 
 			{/* Section: Notification Control */}
-			<div className="rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm">
+			{/* <div className="rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm">
 				<h3 className="mb-8 text-[15px] font-bold text-gray-800">Notification Control</h3>
 				<div className="flex flex-col gap-6">
 					<div className="flex max-w-sm items-center justify-between">
@@ -634,7 +634,7 @@ export default function ProfileTab() {
 						<Switch disabled className="data-[state=checked]:bg-[#1d4ea8]" />
 					</div>
 				</div>
-			</div>
+			</div> */}
 
 			{/* Section: System Preferences */}
 			<div className="rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm">
@@ -666,12 +666,12 @@ export default function ProfileTab() {
 			</div>
 
 			{/* Section: Audit Log */}
-			<div className="rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-sm">
+			{/* <div className="rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-sm">
 				<button className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-gray-100/60 font-bold text-gray-800 transition-all hover:bg-gray-100 active:scale-[0.99]">
 					<Icon icon="solar:history-bold-duotone" className="size-6" />
 					View Audit & Activity Log
 				</button>
-			</div>
+			</div> */}
 		</div>
 	);
 }
