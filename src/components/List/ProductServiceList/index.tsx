@@ -9,11 +9,12 @@ import { getProductServiceColumns } from "@/components/Tables/columns/productSer
 import ProductFormModal from "@/components/_modals/ProductFormModal";
 import ConfirmDeleteModal from "@/components/_modals/ConfirmDeleteModal";
 import DynamicFilter from "@/components/_atoms/DynamicFilter";
-import { useGetProducts, useDeleteProduct } from "@/hooks/useProduct";
+import { useGetProducts, useDeleteProduct, useGetProductStats } from "@/hooks/useProduct";
 import { useGetCategories } from "@/hooks/useCategory";
 import { toast } from "@/lib/toast";
 import type { ProductData } from "@/lib/requests/product";
 import Pagination from "@/components/_atoms/Pagination";
+import ProductStatsWidgets from "@/components/_widgets/Products";
 
 export default function ProductServiceList() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,6 +35,7 @@ export default function ProductServiceList() {
 		isLoading: isLoadingProducts,
 		refetch: refetchProducts,
 	} = useGetProducts();
+	const { data: statsRes, isLoading: isLoadingStats } = useGetProductStats();
 	const { data: categoriesRes } = useGetCategories();
 	const deleteProductMutation = useDeleteProduct();
 
@@ -125,6 +127,8 @@ export default function ProductServiceList() {
 
 	return (
 		<div className="flex flex-col gap-6 text-gray-800">
+			<ProductStatsWidgets stats={statsRes?.data} isLoading={isLoadingStats} />
+
 			<div className="rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-sm">
 				<div className="mb-10 flex flex-wrap items-center justify-between gap-6">
 					<h3 className="text-[17px] font-bold text-gray-800">

@@ -58,6 +58,7 @@ export default function ProductFormModal({
 	const [description, setDescription] = useState("");
 	const [selectedCategoryId, setSelectedCategoryId] = useState("");
 	const [cost, setCost] = useState("");
+	const [quantity, setQuantity] = useState("");
 	const [incentiveEligible, setIncentiveEligible] = useState<"Yes" | "No">("No");
 	const [incentiveValueType, setIncentiveValueType] = useState<"default" | "custom">("default");
 	const [customIncentiveType, setCustomIncentiveType] = useState<"flat" | "percentage">("flat");
@@ -87,6 +88,9 @@ export default function ProductFormModal({
 				}
 				setSelectedCategoryId(catId);
 				setCost(String(productToEdit.cost || ""));
+				setQuantity(
+					String(productToEdit.quantity !== undefined ? productToEdit.quantity : ""),
+				);
 				setIncentiveEligible(productToEdit.incentiveEligible ? "Yes" : "No");
 				setAvatar(productToEdit.avatar || "");
 				setStatus(productToEdit.status || "active");
@@ -107,6 +111,7 @@ export default function ProductFormModal({
 				setDescription("");
 				setSelectedCategoryId("");
 				setCost("");
+				setQuantity("");
 				setIncentiveEligible("No");
 				setIncentiveValueType("default");
 				setCustomIncentiveType("flat");
@@ -205,6 +210,17 @@ export default function ProductFormModal({
 			return;
 		}
 
+		const numQuantity = Number(quantity);
+		if (
+			quantity === "" ||
+			Number.isNaN(numQuantity) ||
+			numQuantity < 0 ||
+			!Number.isInteger(numQuantity)
+		) {
+			toast.error("Please enter a valid non-negative integer product quantity.");
+			return;
+		}
+
 		// Prepare payload
 		const isEligible = incentiveEligible === "Yes";
 		const payload = {
@@ -216,6 +232,7 @@ export default function ProductFormModal({
 			incentiveEligible: isEligible,
 			avatar,
 			status,
+			quantity: numQuantity,
 			...(isEligible && incentiveValueType === "custom"
 				? {
 						incentiveType: customIncentiveType,
@@ -546,6 +563,24 @@ export default function ProductFormModal({
 									className="h-12 rounded-xl border-gray-100 bg-gray-50/20 pl-8 pr-4 font-bold text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
 								/>
 							</div>
+						</div>
+
+						{/* Product Quantity */}
+						<div className="space-y-2">
+							<label
+								htmlFor="prod-quantity"
+								className="text-[13px] font-bold text-gray-600"
+							>
+								Product Quantity
+							</label>
+							<Input
+								id="prod-quantity"
+								type="number"
+								placeholder="0"
+								value={quantity}
+								onChange={(e) => setQuantity(e.target.value)}
+								className="h-12 rounded-xl border-gray-100 bg-gray-50/20 px-4 font-bold text-gray-900 focus:border-[#1d4ea8] focus-visible:ring-0 focus-visible:ring-offset-0"
+							/>
 						</div>
 
 						{/* Product Status */}

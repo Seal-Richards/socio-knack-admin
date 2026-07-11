@@ -56,7 +56,7 @@ export const getProductServiceColumns = (
 								{product.name}
 							</span>
 							<span className="text-[11px] font-medium text-gray-400">
-								{catName} • ID: {product._id}
+								{catName} • ID: {product._id} • Qty: {product.quantity ?? 0}
 							</span>
 						</div>
 					</div>
@@ -110,6 +110,14 @@ export const getProductServiceColumns = (
 			header: "Status",
 			cell: ({ row }) => {
 				const product = row.original;
+				if (product.quantity === 0) {
+					return (
+						<div className="inline-flex items-center gap-1.5 rounded-full bg-red-50/80 px-2.5 py-1.5 text-[11px] font-bold text-red-600">
+							<span className="size-1.5 rounded-full bg-red-500" />
+							Out of stock
+						</div>
+					);
+				}
 				const active = product.status === "active";
 				return (
 					<div

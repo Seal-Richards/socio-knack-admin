@@ -19,6 +19,7 @@ export type ProductData = {
 	businessId: string;
 	createdBy: string;
 	createdAt?: string;
+	quantity: number;
 };
 
 export type CreateProductPayload = {
@@ -32,6 +33,7 @@ export type CreateProductPayload = {
 	incentiveValue?: number;
 	status?: "active" | "inactive";
 	avatar?: string;
+	quantity: number;
 };
 
 export const productRequests = {
@@ -40,6 +42,26 @@ export const productRequests = {
 			"/admin/products",
 			"Failed to load products list.",
 		);
+	},
+
+	async getProductStats(): Promise<
+		ApiResponse<{
+			totalProducts: number;
+			totalSold: number;
+			outOfStockProducts: number;
+			inactiveProducts: number;
+			activeProducts: number;
+		}>
+	> {
+		return apiClient.get<
+			ApiResponse<{
+				totalProducts: number;
+				totalSold: number;
+				outOfStockProducts: number;
+				inactiveProducts: number;
+				activeProducts: number;
+			}>
+		>("/admin/products/stats", "Failed to load products stats.");
 	},
 
 	async createProduct(body: CreateProductPayload): Promise<ApiResponse<ProductData>> {

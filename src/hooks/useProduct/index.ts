@@ -12,6 +12,14 @@ export function useGetProducts() {
 	});
 }
 
+export function useGetProductStats() {
+	return useQuery({
+		queryKey: ["product-stats"],
+		queryFn: () => productRequests.getProductStats(),
+		staleTime: 5 * 60 * 1000, // 5 min
+	});
+}
+
 export function useCreateProduct() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -19,6 +27,9 @@ export function useCreateProduct() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["products"] }).catch((err) => {
 				console.error("Failed to invalidate products query:", err);
+			});
+			queryClient.invalidateQueries({ queryKey: ["product-stats"] }).catch((err) => {
+				console.error("Failed to invalidate product stats query:", err);
 			});
 		},
 	});
@@ -33,6 +44,9 @@ export function useUpdateProduct() {
 			queryClient.invalidateQueries({ queryKey: ["products"] }).catch((err) => {
 				console.error("Failed to invalidate products query:", err);
 			});
+			queryClient.invalidateQueries({ queryKey: ["product-stats"] }).catch((err) => {
+				console.error("Failed to invalidate product stats query:", err);
+			});
 		},
 	});
 }
@@ -44,6 +58,9 @@ export function useDeleteProduct() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["products"] }).catch((err) => {
 				console.error("Failed to invalidate products query:", err);
+			});
+			queryClient.invalidateQueries({ queryKey: ["product-stats"] }).catch((err) => {
+				console.error("Failed to invalidate product stats query:", err);
 			});
 		},
 	});

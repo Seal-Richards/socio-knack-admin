@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import Tabs from "@/components/Tabs";
+import { Button } from "@/components/ui/button";
 import { TASK_TABS } from "@/constants/dashboard";
 import OngoingTaskList from "@/components/List/OngoingTaskList";
 import TodayTaskList from "@/components/List/TodayTaskList";
@@ -35,6 +37,7 @@ interface TaskStatusTabProps {
 }
 
 export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabProps = {}) {
+	const router = useRouter();
 	const [activeTab, setActiveTab] = useState("Ongoing");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedVisit, setSelectedVisit] = useState<Record<string, unknown> | null>(null);
@@ -143,7 +146,7 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 						className="w-full overflow-x-auto border-none sm:w-auto"
 					/>
 				</div>
-				{onSeeMore && (
+				{onSeeMore ? (
 					<button
 						onClick={onSeeMore}
 						className="flex shrink-0 items-center gap-2 text-[13px] font-bold text-[#1d4ea8] hover:underline"
@@ -151,6 +154,16 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 						<Icon icon="solar:eye-bold" className="size-4" />
 						See More
 					</button>
+				) : (
+					!isModalView && (
+						<Button
+							onClick={() => router.push("/territory-control")}
+							className="h-11 gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-6 text-[13px] font-bold text-[#1d4ea8] shadow-none transition-all hover:bg-blue-50 active:scale-95"
+						>
+							<Icon icon="lucide:plus-circle" className="size-4" />
+							Create Task
+						</Button>
+					)
 				)}
 			</div>
 
