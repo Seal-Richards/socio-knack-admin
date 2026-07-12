@@ -51,6 +51,8 @@ export const productRequests = {
 			outOfStockProducts: number;
 			inactiveProducts: number;
 			activeProducts: number;
+			totalInStockValue: number;
+			totalInStockQty: number;
 		}>
 	> {
 		return apiClient.get<
@@ -60,6 +62,8 @@ export const productRequests = {
 				outOfStockProducts: number;
 				inactiveProducts: number;
 				activeProducts: number;
+				totalInStockValue: number;
+				totalInStockQty: number;
 			}>
 		>("/admin/products/stats", "Failed to load products stats.");
 	},

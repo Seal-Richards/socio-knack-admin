@@ -10,9 +10,18 @@ interface WidgetProps {
 	icon: string;
 	iconBg: string;
 	iconColor: string;
+	subValue?: string;
 }
 
-export function ProductStatCard({ label, value, className, icon, iconBg, iconColor }: WidgetProps) {
+export function ProductStatCard({
+	label,
+	value,
+	className,
+	icon,
+	iconBg,
+	iconColor,
+	subValue,
+}: WidgetProps) {
 	return (
 		<div
 			className={cn(
@@ -33,10 +42,15 @@ export function ProductStatCard({ label, value, className, icon, iconBg, iconCol
 				</div>
 			</div>
 
-			<div className="flex items-end justify-between">
+			<div className="flex flex-col gap-2">
 				<h4 className="text-[2.25rem] font-black leading-none tracking-tighter text-gray-900">
 					{value}
 				</h4>
+				{subValue && (
+					<span className="w-max rounded-lg bg-[#1d4ea8]/5 px-2.5 py-1 text-[11px] font-black text-[#1d4ea8]">
+						{subValue}
+					</span>
+				)}
 			</div>
 		</div>
 	);
@@ -49,6 +63,8 @@ interface ProductStatsWidgetsProps {
 		outOfStockProducts: number;
 		inactiveProducts: number;
 		activeProducts: number;
+		totalInStockValue: number;
+		totalInStockQty: number;
 	};
 	isLoading?: boolean;
 }
@@ -61,6 +77,10 @@ export default function ProductStatsWidgets({ stats, isLoading }: ProductStatsWi
 			icon: "solar:box-bold-duotone",
 			iconBg: "bg-blue-50/50",
 			iconColor: "text-[#1d4ea8]",
+			subValue:
+				stats?.totalInStockValue !== undefined && stats?.totalInStockQty !== undefined
+					? `₦${stats.totalInStockValue.toLocaleString()} In-Stock (${stats.totalInStockQty})`
+					: undefined,
 		},
 		{
 			label: "Sold",
@@ -116,6 +136,7 @@ export default function ProductStatsWidgets({ stats, isLoading }: ProductStatsWi
 					icon={item.icon}
 					iconBg={item.iconBg}
 					iconColor={item.iconColor}
+					subValue={item.subValue}
 				/>
 			))}
 		</div>
