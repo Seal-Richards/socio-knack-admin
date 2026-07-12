@@ -94,6 +94,25 @@ export default function Location({ onNext, formData, updateFormData }: LocationP
 		}
 	}, [formData.territoryId, zones]);
 
+	// Validate location against zone boundary
+	useEffect(() => {
+		if (formData.coordinates && formData.coordinates.length === 2 && selectedZone) {
+			const coords = selectedZone.boundary?.coordinates?.[0];
+			if (coords) {
+				const checkPoint = {
+					lat: formData.coordinates[1]!,
+					lng: formData.coordinates[0]!,
+				};
+				const isInside = isPointInPolygon(checkPoint, coords);
+				setIsValidLocation(isInside);
+			} else {
+				setIsValidLocation(true);
+			}
+		} else {
+			setIsValidLocation(true);
+		}
+	}, [selectedZone, formData.coordinates]);
+
 	const onAutocompleteLoad = (autocompleteInstance: google.maps.places.Autocomplete) => {
 		setAutocomplete(autocompleteInstance);
 	};
@@ -107,18 +126,6 @@ export default function Location({ onNext, formData, updateFormData }: LocationP
 
 			if (lat !== undefined && lng !== undefined) {
 				const checkPoint = { lat, lng };
-
-				// If zone is selected, check boundary geofencing
-				if (selectedZone?.boundary?.coordinates?.[0]) {
-					const vertices = selectedZone.boundary.coordinates[0];
-					const isInside = isPointInPolygon(checkPoint, vertices);
-
-					if (!isInside) {
-						setIsValidLocation(false);
-					} else {
-						setIsValidLocation(true);
-					}
-				}
 
 				updateFormData({
 					address: formattedAddress,
