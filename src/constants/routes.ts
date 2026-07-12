@@ -13,7 +13,7 @@ export const ROUTES = {
 	USERS: "/user-management",
 	SETTINGS: "/settings",
 	ALL_TASKS: "/all-task",
-	HELP: "#",
+	HELP: "/help",
 	LOGOUT: "/logout",
 
 	// Legacy or other routes

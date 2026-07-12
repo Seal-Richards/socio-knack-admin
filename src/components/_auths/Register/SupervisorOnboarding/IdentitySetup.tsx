@@ -4,20 +4,40 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
+import { toast } from "@/lib/toast";
 import StepProgressBar from "../Shared/StepProgressBar";
 
 export default function IdentitySetup({
 	onNext,
 	onPrev,
+	initialFileName = "",
 	step = 2,
 	totalSteps = 3,
 }: {
-	onNext?: () => void;
+	onNext?: (file: File | null) => void;
 	onPrev?: () => void;
+	initialFileName?: string;
 	step?: number;
 	totalSteps?: number;
 }) {
-	const [fileName, setFileName] = useState("");
+	const [fileName, setFileName] = useState(initialFileName);
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			setFileName(file.name);
+			setSelectedFile(file);
+		}
+	};
+
+	const handleNext = () => {
+		if (!fileName) {
+			toast.error("Please upload a government-issued ID to continue.");
+			return;
+		}
+		onNext?.(selectedFile);
+	};
 
 	return (
 		<div className="relative w-full">
@@ -38,7 +58,7 @@ export default function IdentitySetup({
 			<div className="space-y-6">
 				<div className="relative space-y-2">
 					<Label className="text-sm font-semibold text-gray-700">
-						Government-issued ID Upload
+						Government-issued ID Upload <span className="text-red-500">*</span>
 					</Label>
 					<p className="mb-2 text-xs text-gray-500">
 						Upload Document (Passport / National ID / Driver&apos;s License)
@@ -61,7 +81,7 @@ export default function IdentitySetup({
 								type="file"
 								aria-label="Upload Document File"
 								className="hidden"
-								onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
+								onChange={handleFileChange}
 								accept=".png,.jpeg,.jpg,.pdf"
 							/>
 						</label>
@@ -69,7 +89,7 @@ export default function IdentitySetup({
 				</div>
 
 				<Button
-					onClick={onNext}
+					onClick={handleNext}
 					className="text-md mt-8 h-12 w-full bg-yellow-500 font-sans font-semibold text-white hover:bg-yellow-600"
 				>
 					Next

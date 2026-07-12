@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/select";
 import { useUpdateUserStatus } from "@/hooks/useTeam";
 import { useSendAgentKycComment } from "@/hooks/useAgent";
-import { useUploadPersonalKyc } from "@/hooks/useProfile";
+import { useGetMe, useUploadPersonalKyc } from "@/hooks/useProfile";
 import { toast } from "@/lib/toast";
+import cn from "@/lib/utils";
 
 import { type UserProfileData } from "@/types/profile";
 
@@ -27,6 +28,14 @@ interface KycStatusProps {
 }
 
 export default function KycStatus({ supervisor }: KycStatusProps) {
+	const { data: meRes } = useGetMe();
+	const currentUser = meRes?.data;
+	const currentUserRole = currentUser?.role;
+	const currentUserId = currentUser?.id || currentUser?._id;
+
+	const isSupervisorUser = currentUserRole === "supervisor";
+	const isViewingOthers = isSupervisorUser && String(supervisor.id) !== String(currentUserId);
+
 	const rawSupervisor = supervisor.raw;
 	const hasId = !!rawSupervisor?.kycDocuments?.idFront;
 	const hasSelfie = !!rawSupervisor?.kycDocuments?.selfie;
@@ -59,6 +68,21 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 			return defaultName;
 		}
 	};
+
+	// Derived labels — avoids nested ternaries in JSX (no-nested-ternary lint rule)
+	let idFrontLabel: string;
+	if (isViewingOthers) {
+		idFrontLabel = hasId ? "Document Uploaded (Restricted)" : "Not uploaded yet";
+	} else {
+		idFrontLabel = getFileName(rawSupervisor?.kycDocuments?.idFront, "ID-CARD.pdf");
+	}
+
+	let selfieLabel: string;
+	if (isViewingOthers) {
+		selfieLabel = hasSelfie ? "Selfie Uploaded (Restricted)" : "Not uploaded yet";
+	} else {
+		selfieLabel = getFileName(rawSupervisor?.kycDocuments?.selfie, "SELFIE.jpg");
+	}
 
 	const handleUploadDocument = async (
 		field: "idFront" | "selfie",
@@ -116,6 +140,7 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 
 			if (res.success) {
 				toast.success("KYC comment sent to supervisor's email successfully.");
+				setComment("");
 			} else {
 				toast.error(res.message || "Failed to send KYC comment.");
 			}
@@ -148,7 +173,12 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 				<span className="text-[14px] font-bold text-gray-800">{progress}%</span>
 			</div>
 
-			<div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:gap-16">
+			<div
+				className={cn(
+					"grid grid-cols-1 gap-10 lg:gap-16",
+					isSupervisorUser ? "w-full max-w-xl" : "md:grid-cols-2",
+				)}
+			>
 				{/* Left Column: Verification Steps */}
 				<div className="flex flex-col gap-4 sm:gap-6">
 					{/* Identity Verification */}
@@ -158,33 +188,37 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 								Identity Verification
 							</span>
 							<span className="text-[10px] font-medium text-gray-400">
-								{getFileName(rawSupervisor?.kycDocuments?.idFront, "ID-CARD.pdf")}
+								{idFrontLabel}
 							</span>
 						</div>
 						<div className="flex items-center gap-3">
-							<input
-								type="file"
-								id="supervisor-id-upload"
-								aria-label="Upload Supervisor ID"
-								className="sr-only"
-								accept=".png,.jpeg,.jpg,.pdf"
-								disabled={uploadMutation.isPending}
-								onChange={(e) => handleUploadDocument("idFront", e)}
-							/>
-							<label
-								htmlFor="supervisor-id-upload"
-								className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
-							>
-								<Icon icon="solar:upload-bold" className="size-5" />
-							</label>
+							{!isViewingOthers && (
+								<>
+									<input
+										type="file"
+										id="supervisor-id-upload"
+										aria-label="Upload Supervisor ID"
+										className="sr-only"
+										accept=".png,.jpeg,.jpg,.pdf"
+										disabled={uploadMutation.isPending}
+										onChange={(e) => handleUploadDocument("idFront", e)}
+									/>
+									<label
+										htmlFor="supervisor-id-upload"
+										className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
+									>
+										<Icon icon="solar:upload-bold" className="size-5" />
+									</label>
+								</>
+							)}
 							<button
 								type="button"
 								onClick={() =>
 									viewDocument(rawSupervisor?.kycDocuments?.idFront ?? undefined)
 								}
-								disabled={!rawSupervisor?.kycDocuments?.idFront}
+								disabled={isViewingOthers || !rawSupervisor?.kycDocuments?.idFront}
 								className={`transition-colors ${
-									rawSupervisor?.kycDocuments?.idFront
+									!isViewingOthers && rawSupervisor?.kycDocuments?.idFront
 										? "text-gray-400 hover:text-[#1d4ea8]"
 										: "cursor-not-allowed text-gray-200"
 								}`}
@@ -197,9 +231,9 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 								onClick={() =>
 									viewDocument(rawSupervisor?.kycDocuments?.idFront ?? undefined)
 								}
-								disabled={!rawSupervisor?.kycDocuments?.idFront}
+								disabled={isViewingOthers || !rawSupervisor?.kycDocuments?.idFront}
 								className={`transition-colors ${
-									rawSupervisor?.kycDocuments?.idFront
+									!isViewingOthers && rawSupervisor?.kycDocuments?.idFront
 										? "text-gray-400 hover:text-[#1d4ea8]"
 										: "cursor-not-allowed text-gray-200"
 								}`}
@@ -217,33 +251,37 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 								Proof of address / Selfie
 							</span>
 							<span className="text-[10px] font-medium text-gray-400">
-								{getFileName(rawSupervisor?.kycDocuments?.selfie, "SELFIE.jpg")}
+								{selfieLabel}
 							</span>
 						</div>
 						<div className="flex items-center gap-3">
-							<input
-								type="file"
-								id="supervisor-selfie-upload"
-								aria-label="Upload Supervisor Selfie"
-								className="sr-only"
-								accept=".png,.jpeg,.jpg,.pdf"
-								disabled={uploadMutation.isPending}
-								onChange={(e) => handleUploadDocument("selfie", e)}
-							/>
-							<label
-								htmlFor="supervisor-selfie-upload"
-								className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
-							>
-								<Icon icon="solar:upload-bold" className="size-5" />
-							</label>
+							{!isViewingOthers && (
+								<>
+									<input
+										type="file"
+										id="supervisor-selfie-upload"
+										aria-label="Upload Supervisor Selfie"
+										className="sr-only"
+										accept=".png,.jpeg,.jpg,.pdf"
+										disabled={uploadMutation.isPending}
+										onChange={(e) => handleUploadDocument("selfie", e)}
+									/>
+									<label
+										htmlFor="supervisor-selfie-upload"
+										className="cursor-pointer text-gray-400 transition-colors hover:text-[#1d4ea8]"
+									>
+										<Icon icon="solar:upload-bold" className="size-5" />
+									</label>
+								</>
+							)}
 							<button
 								type="button"
 								onClick={() =>
 									viewDocument(rawSupervisor?.kycDocuments?.selfie ?? undefined)
 								}
-								disabled={!rawSupervisor?.kycDocuments?.selfie}
+								disabled={isViewingOthers || !rawSupervisor?.kycDocuments?.selfie}
 								className={`transition-colors ${
-									rawSupervisor?.kycDocuments?.selfie
+									!isViewingOthers && rawSupervisor?.kycDocuments?.selfie
 										? "text-gray-400 hover:text-[#1d4ea8]"
 										: "cursor-not-allowed text-gray-200"
 								}`}
@@ -256,9 +294,9 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 								onClick={() =>
 									viewDocument(rawSupervisor?.kycDocuments?.selfie ?? undefined)
 								}
-								disabled={!rawSupervisor?.kycDocuments?.selfie}
+								disabled={isViewingOthers || !rawSupervisor?.kycDocuments?.selfie}
 								className={`transition-colors ${
-									rawSupervisor?.kycDocuments?.selfie
+									!isViewingOthers && rawSupervisor?.kycDocuments?.selfie
 										? "text-gray-400 hover:text-[#1d4ea8]"
 										: "cursor-not-allowed text-gray-200"
 								}`}
@@ -271,69 +309,73 @@ export default function KycStatus({ supervisor }: KycStatusProps) {
 				</div>
 
 				{/* Right Column: Access Panel */}
-				<div className="w-full">
-					<div className="flex flex-col gap-6 rounded-3xl border border-gray-200 p-6 shadow-sm sm:p-8">
-						<h3 className="text-[14px] font-bold text-gray-800">Access Panel</h3>
-						<div className="h-px w-full bg-gray-100" />
+				{!isSupervisorUser && (
+					<div className="w-full">
+						<div className="flex flex-col gap-6 rounded-3xl border border-gray-200 p-6 shadow-sm sm:p-8">
+							<h3 className="text-[14px] font-bold text-gray-800">Access Panel</h3>
+							<div className="h-px w-full bg-gray-100" />
 
-						<div className="space-y-2">
-							<Label className="text-[13px] font-bold text-gray-800">
-								Set Status
-							</Label>
-							<Select value={kycStatus} onValueChange={setKycStatus}>
-								<SelectTrigger className="h-12 w-full rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-600 focus:ring-0">
-									<SelectValue placeholder="Select Status" />
-								</SelectTrigger>
-								<SelectContent className="rounded-xl border-gray-100">
-									<SelectItem value="approved">Approved</SelectItem>
-									<SelectItem value="pending">Pending</SelectItem>
-									<SelectItem value="rejected">Rejected</SelectItem>
-								</SelectContent>
-							</Select>
-						</div>
+							<div className="space-y-2">
+								<Label className="text-[13px] font-bold text-gray-800">
+									Set Status
+								</Label>
+								<Select value={kycStatus} onValueChange={setKycStatus}>
+									<SelectTrigger className="h-12 w-full rounded-xl border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-600 focus:ring-0">
+										<SelectValue placeholder="Select Status" />
+									</SelectTrigger>
+									<SelectContent className="rounded-xl border-gray-100">
+										<SelectItem value="approved">Approved</SelectItem>
+										<SelectItem value="pending">Pending</SelectItem>
+										<SelectItem value="rejected">Rejected</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
 
-						<div className="mt-4 flex flex-col gap-4 sm:flex-row">
-							<Button
-								variant="outline"
-								onClick={() => {
-									setKycStatus(rawSupervisor?.kycStatus || "pending");
-								}}
-								className="h-12 flex-1 rounded-full border-gray-100 text-[14px] font-bold text-gray-800 hover:bg-gray-50"
-							>
-								Cancel
-							</Button>
-							<Button
-								disabled={updateStatusMutation.isPending}
-								onClick={handleSaveStatus}
-								className="h-12 flex-1 rounded-full bg-[#4CAF50] text-[14px] font-bold text-white hover:bg-[#43A047]"
-							>
-								{updateStatusMutation.isPending ? "Saving..." : "Save"}
-							</Button>
-						</div>
+							<div className="mt-4 flex flex-col gap-4 sm:flex-row">
+								<Button
+									variant="outline"
+									onClick={() => {
+										setKycStatus(rawSupervisor?.kycStatus || "pending");
+									}}
+									className="h-12 flex-1 rounded-full border-gray-100 text-[14px] font-bold text-gray-800 hover:bg-gray-50"
+								>
+									Cancel
+								</Button>
+								<Button
+									disabled={updateStatusMutation.isPending}
+									onClick={handleSaveStatus}
+									className="h-12 flex-1 rounded-full bg-[#4CAF50] text-[14px] font-bold text-white hover:bg-[#43A047]"
+								>
+									{updateStatusMutation.isPending ? "Saving..." : "Save"}
+								</Button>
+							</div>
 
-						<div className="h-px w-full bg-gray-100" />
+							<div className="h-px w-full bg-gray-100" />
 
-						<div className="space-y-2">
-							<Label className="text-[13px] font-bold text-gray-800">Comment</Label>
-							<Textarea
-								value={comment}
-								onChange={(e) => setComment(e.target.value)}
-								placeholder="Input comment"
-								className="min-h-[120px] resize-none rounded-xl border-gray-200 px-4 py-3 text-[13px] focus-visible:ring-0"
-							/>
-						</div>
+							<div className="space-y-2">
+								<Label className="text-[13px] font-bold text-gray-800">
+									Comment
+								</Label>
+								<Textarea
+									value={comment}
+									onChange={(e) => setComment(e.target.value)}
+									placeholder="Input comment"
+									className="min-h-[120px] resize-none rounded-xl border-gray-200 px-4 py-3 text-[13px] focus-visible:ring-0"
+								/>
+							</div>
 
-						<div className="mt-2 flex justify-end">
-							<Button
-								disabled={sendCommentMutation.isPending || !comment.trim()}
-								onClick={handleSendComment}
-								className="h-12 w-full rounded-full bg-[#1d4ea8] text-[14px] font-bold text-white hover:bg-[#153a82] sm:w-32"
-							>
-								{sendCommentMutation.isPending ? "Sending..." : "Send"}
-							</Button>
+							<div className="mt-2 flex justify-end">
+								<Button
+									disabled={sendCommentMutation.isPending || !comment.trim()}
+									onClick={handleSendComment}
+									className="h-12 w-full rounded-full bg-[#1d4ea8] text-[14px] font-bold text-white hover:bg-[#153a82] sm:w-32"
+								>
+									{sendCommentMutation.isPending ? "Sending..." : "Send"}
+								</Button>
+							</div>
 						</div>
 					</div>
-				</div>
+				)}
 			</div>
 		</div>
 	);

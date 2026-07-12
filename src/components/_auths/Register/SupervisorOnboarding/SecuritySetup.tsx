@@ -23,12 +23,14 @@ export default function SecuritySetup({
 	step = 3,
 	totalSteps = 3,
 	onboardPayload,
+	idFile,
 }: {
 	onNext: (data: SupervisorSecuritySetupFormData) => void;
 	onPrev?: () => void;
 	step?: number;
 	totalSteps?: number;
 	onboardPayload: RegisterSupervisorPayload;
+	idFile: File | null;
 }) {
 	const [showPassword, setShowPassword] = useState(false);
 	const registerOnboardingMutation = useRegisterSupervisorOnboarding();
@@ -60,6 +62,30 @@ export default function SecuritySetup({
 			});
 
 			if (res.success) {
+				const token = res.data?.token;
+				// 1. Save the token to local storage so subsequent authenticated request works
+				if (token) {
+					localStorage.setItem("token", token);
+				}
+
+				// 2. If ID file was selected, upload it
+				if (idFile) {
+					const formData = new FormData();
+					formData.append("idFront", idFile);
+					formData.append("idType", "Government-issued ID");
+					formData.append("idNumber", "N/A");
+
+					try {
+						const { profileRequests } = await import("@/lib/requests/profile");
+						await profileRequests.uploadPersonalKyc(formData, true);
+					} catch (uploadError) {
+						console.error("KYC Auto-upload error:", uploadError);
+						toast.error(
+							"Account created, but identity document upload failed. You can upload it in your profile settings.",
+						);
+					}
+				}
+
 				toast.success(res.message);
 				onNext(data);
 			} else {

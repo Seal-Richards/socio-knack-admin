@@ -97,6 +97,8 @@ export default function Register() {
 		password: "",
 	});
 
+	const [selectedIdFile, setSelectedIdFile] = useState<File | null>(null);
+
 	// Load step & data from sessionStorage and query parameters on mount
 	useEffect(() => {
 		if (typeof window === "undefined") return;
@@ -475,8 +477,12 @@ export default function Register() {
 									)}
 									{onboardStep === 2 && (
 										<SupervisorIdentitySetup
-											onNext={nextOnboardStep}
+											onNext={(file) => {
+												if (file) setSelectedIdFile(file);
+												nextOnboardStep();
+											}}
 											onPrev={prevOnboardStep}
+											initialFileName={selectedIdFile?.name}
 											step={onboardStep}
 											totalSteps={totalOnboardSteps - 1}
 										/>
@@ -492,6 +498,7 @@ export default function Register() {
 											step={onboardStep}
 											totalSteps={totalOnboardSteps - 1}
 											onboardPayload={onboardData}
+											idFile={selectedIdFile}
 										/>
 									)}
 									{onboardStep === 4 && <AuthSuccess isSupervisorFlow />}

@@ -55,7 +55,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 	const blockType = useMemo(() => {
 		if (isLoading || !user) return null;
 		if (role === "superadmin") return null;
-		if (pathname === "/settings") return null;
+		if (pathname === "/settings" || pathname === "/help") return null;
 
 		// 1. Expiration check takes precedence
 		if (!isTrialOrSubscribed) {
@@ -68,7 +68,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 		}
 
 		// 3. Team Member pending review (cannot access anything except settings and dashboard)
-		if (isPendingTeamKyc && pathname !== "/dashboard") {
+		if (isPendingTeamKyc && pathname !== "/dashboard" && pathname !== "/help") {
 			return "pending_team_kyc";
 		}
 
