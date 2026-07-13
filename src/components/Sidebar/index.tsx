@@ -197,7 +197,7 @@ export default function Sidebar({ className }: { className?: string }) {
 				)}
 			>
 				<div className="flex h-20 items-center justify-center px-8 lg:h-24 lg:justify-start">
-					<Link href="/dashboard" className="relative flex items-center justify-center">
+					<Link href="/" className="relative flex items-center justify-center">
 						<div className="relative h-12 w-48">
 							<Image
 								src="/assets/images/logo_sk_white.png"

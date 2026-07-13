@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { businessRequests } from "@/lib/requests/business";
 import type {
 	UpdateBusinessSettingsPayload,
@@ -6,13 +6,21 @@ import type {
 	SetupBusinessPayload,
 	LinkBankPayload,
 	InitializeSubscriptionPayload,
+	BusinessSettingsData,
 } from "@/types/business";
+import type { ApiResponse } from "@/types/generic";
 
-export function useGetBusinessSettings() {
-	return useQuery({
+export function useGetBusinessSettings(
+	options?: Omit<
+		UseQueryOptions<ApiResponse<BusinessSettingsData>, Error>,
+		"queryKey" | "queryFn"
+	>,
+) {
+	return useQuery<ApiResponse<BusinessSettingsData>, Error>({
 		queryKey: ["businessSettings"],
 		queryFn: () => businessRequests.getSettings(),
 		staleTime: 5 * 60 * 1000, // 5 min
+		...options,
 	});
 }
 

@@ -136,3 +136,29 @@
 .agent-offset-17 { transform: translate(calc(-50% + 0px), calc(-100% - 30px)); }
 .agent-offset-18 { transform: translate(calc(-50% + 10px), calc(-100% - 25px)); }
 .agent-offset-19 { transform: translate(calc(-50% + 20px), calc(-100% - 20px)); }
+
+@layer utilities {
+	.hero-bg {
+		background: radial-gradient(100% 100% at 50% 0%, #F6F9FF 0%, #FFFFFF 50%, #204B9B 100%);
+	}
+
+	.vector-line-circle {
+		@apply absolute rounded-full border border-slate-200/40;
+		pointer-events: none;
+	}
+
+	@keyframes scroll-linear {
+		0% {
+			transform: translateX(-50%);
+		}
+		100% {
+			transform: translateX(0);
+		}
+	}
+	.animate-scroll-linear {
+		animation: scroll-linear 30s linear infinite;
+	}
+	.pause {
+		animation-play-state: paused;
+	}
+}
