@@ -54,14 +54,16 @@ function getCardClassName({
 	isCustom,
 	isSelected,
 	borderColor,
+	className,
 }: {
 	isCurrentPlan: boolean;
 	isCustom: boolean;
 	isSelected: boolean;
 	borderColor: string;
+	className?: string;
 }) {
 	const base =
-		"relative flex h-full flex-col rounded-[2rem] bg-white p-2.5 shadow-sm transition-all duration-300";
+		"relative flex h-full flex-col rounded-[2rem] bg-white p-2.5 lg:p-2 xl:p-2.5 shadow-sm transition-all duration-300";
 
 	let borderStyles: string;
 	if (isCurrentPlan) {
@@ -78,7 +80,7 @@ function getCardClassName({
 			? "z-10 scale-[1.02] shadow-2xl ring-2 ring-offset-4 ring-offset-[#f4f7fc]"
 			: "";
 
-	return `${base} ${borderStyles} ${selectedStyles}`;
+	return `${base} ${borderStyles} ${selectedStyles} ${className || ""}`.trim();
 }
 
 export default function PricingCard({
@@ -94,6 +96,7 @@ export default function PricingCard({
 	isCurrentPlan = false,
 	onSelect,
 	onAction,
+	className,
 	...rest
 }: PricingCardProps & HTMLMotionProps<"div">) {
 	const colors = colorThemes[theme];
@@ -108,6 +111,7 @@ export default function PricingCard({
 				isCustom,
 				isSelected,
 				borderColor: colors.border,
+				className,
 			})}
 			style={
 				isSelected && !isCurrentPlan
@@ -117,24 +121,24 @@ export default function PricingCard({
 		>
 			{/* Header Block (Inner padded colored block as per design) */}
 			<div
-				className={`flex w-full items-start gap-3 rounded-2xl p-5 text-white ${isCurrentPlan ? "bg-gray-400" : colors.headerBg}`}
+				className={`flex w-full items-start gap-3 rounded-2xl p-5 text-white lg:p-3.5 xl:p-5 ${isCurrentPlan ? "bg-gray-400" : colors.headerBg}`}
 			>
 				<div className="mt-1.5 size-2.5 shrink-0 rounded-full bg-white" />
 				<div className="flex flex-col">
-					<span className="text-[17px] font-bold leading-tight tracking-wide">
+					<span className="text-[17px] font-bold leading-tight tracking-wide lg:text-[15px] xl:text-[17px]">
 						{title}
 					</span>
 					<span className="mt-0.5 text-[11px] font-medium text-white/90">{subtitle}</span>
 				</div>
 			</div>
 
-			<div className="flex flex-1 flex-col px-5 pb-3 pt-8">
+			<div className="flex flex-1 flex-col px-5 pb-3 pt-8 lg:px-3.5 lg:pt-6 xl:px-5 xl:pt-8">
 				{/* Pricing Area */}
 				<div className="mb-4 flex h-[75px] flex-col justify-center">
 					{!isCustom ? (
 						<>
 							<div className="flex items-center gap-1.5">
-								<span className="text-[2.5rem] font-extrabold leading-none tracking-tighter text-[#2a2a2a]">
+								<span className="text-[2.5rem] font-extrabold leading-none tracking-tighter text-[#2a2a2a] lg:text-[2rem] xl:text-[2.5rem]">
 									{price}
 								</span>
 								<div className="ml-1 flex flex-col text-[9px] font-bold uppercase leading-[1.2] text-gray-400">
@@ -143,7 +147,7 @@ export default function PricingCard({
 								</div>
 							</div>
 							<div className="mt-4 flex items-center gap-1.5">
-								<span className="text-[15px] font-bold leading-none text-[#2a2a2a]">
+								<span className="text-[15px] font-bold leading-none text-[#2a2a2a] lg:text-[13px] xl:text-[15px]">
 									{setupFee}
 								</span>
 								<div className="ml-1 flex flex-col text-[9px] font-bold uppercase leading-[1.2] text-gray-400">
@@ -154,10 +158,10 @@ export default function PricingCard({
 						</>
 					) : (
 						<div className="flex w-full flex-col pt-4 text-center leading-[1.1]">
-							<span className="text-[2.5rem] font-bold tracking-tight text-[#555555]">
+							<span className="text-[2.5rem] font-bold tracking-tight text-[#555555] lg:text-[2rem] xl:text-[2.5rem]">
 								Custom
 							</span>
-							<span className="text-[2.5rem] font-bold tracking-tight text-[#555555]">
+							<span className="text-[2.5rem] font-bold tracking-tight text-[#555555] lg:text-[2rem] xl:text-[2.5rem]">
 								Pricing
 							</span>
 						</div>
@@ -169,18 +173,17 @@ export default function PricingCard({
 
 				{/* Features List */}
 				<div className="mb-10 flex flex-1 flex-col gap-[15px]">
-					{features.map((feature, i) => (
-						// eslint-disable-next-line react/no-array-index-key
-						<div key={i} className="flex items-center gap-3.5">
+					{features.map((feature) => (
+						<div key={feature} className="flex items-center gap-3.5">
 							<div
-								className={`flex size-[18px] shrink-0 items-center justify-center rounded-full ${isCurrentPlan ? "bg-gray-100" : colors.iconBg}`}
+								className={`flex size-[18px] shrink-0 items-center justify-center rounded-full lg:size-[16px] xl:size-[18px] ${isCurrentPlan ? "bg-gray-100" : colors.iconBg}`}
 							>
 								<Icon
 									icon="lucide:check"
-									className={`size-3 stroke-[3] ${isCurrentPlan ? "text-gray-400" : colors.iconColor}`}
+									className={`size-3 stroke-[3] lg:size-2.5 xl:size-3 ${isCurrentPlan ? "text-gray-400" : colors.iconColor}`}
 								/>
 							</div>
-							<span className="text-[13px] font-medium tracking-tight text-gray-500">
+							<span className="text-[13px] font-medium tracking-tight text-gray-500 lg:text-[12px] xl:text-[13px]">
 								{feature}
 							</span>
 						</div>
@@ -191,7 +194,7 @@ export default function PricingCard({
 				{isCurrentPlan ? (
 					<button
 						disabled
-						className="bg-gray-150 mt-auto w-full cursor-not-allowed rounded-xl border border-gray-200 py-4 text-[13px] font-bold text-gray-400"
+						className="bg-gray-150 mt-auto w-full cursor-not-allowed rounded-xl border border-gray-200 py-4 text-[13px] font-bold text-gray-400 lg:py-3 lg:text-[12px] xl:py-4 xl:text-[13px]"
 					>
 						Current Plan
 					</button>
@@ -202,7 +205,7 @@ export default function PricingCard({
 							e.stopPropagation();
 							onAction();
 						}}
-						className={`mt-auto w-full rounded-xl py-4 text-[13px] font-bold text-white shadow-md transition-all ${colors.buttonBg}`}
+						className={`mt-auto w-full rounded-xl py-4 text-[13px] font-bold text-white shadow-md transition-all lg:py-3 lg:text-[12px] xl:py-4 xl:text-[13px] ${colors.buttonBg}`}
 					>
 						{buttonText}
 					</motion.button>

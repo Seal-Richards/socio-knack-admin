@@ -169,20 +169,64 @@ export default function AboutUsPage() {
 						{/* Main Paragraphs */}
 						<div className="space-y-6 text-[15px] font-medium leading-relaxed text-gray-700 md:text-[16px]">
 							{aboutContent.mainParagraphs.map((para) => (
-								<p key={para.slice(0, 50)}>{para}</p>
+								<p key={para}>{para}</p>
 							))}
 						</div>
 
 						{/* Header Sections */}
-						<div className="mt-12 space-y-10">
+						<div className="mt-12 space-y-12">
 							{aboutContent.sections.map((section) => (
-								<div key={section.text.slice(0, 50)} className="space-y-3.5">
+								<div key={section.header} className="space-y-4">
 									<h3 className="text-xl font-black tracking-tight text-[#1d4ea8] md:text-2xl">
 										{section.header}
 									</h3>
-									<p className="text-[15px] font-medium leading-relaxed text-gray-500 md:text-[16px]">
-										{section.text}
-									</p>
+
+									{section.text && (
+										<p className="text-[15px] font-medium leading-relaxed text-gray-500 md:text-[16px]">
+											{section.text}
+										</p>
+									)}
+
+									{section.paragraphs && section.paragraphs.length > 0 && (
+										<div className="space-y-3">
+											{section.paragraphs.map((p) => (
+												<p
+													key={p}
+													className="text-[15px] font-medium leading-relaxed text-gray-500 md:text-[16px]"
+												>
+													{p}
+												</p>
+											))}
+										</div>
+									)}
+
+									{section.bullets && section.bullets.length > 0 && (
+										<ul className="space-y-3">
+											{section.bullets.map((bullet) => (
+												<li
+													key={bullet}
+													className="flex items-start gap-3 text-[15px] font-medium leading-relaxed text-gray-500 md:text-[16px]"
+												>
+													<span className="mt-2 flex size-1.5 shrink-0 rounded-full bg-[#DDA71A]" />
+													<span>{bullet}</span>
+												</li>
+											))}
+										</ul>
+									)}
+
+									{section.footerParagraphs &&
+										section.footerParagraphs.length > 0 && (
+											<div className="mt-4 space-y-3">
+												{section.footerParagraphs.map((p) => (
+													<p
+														key={p}
+														className="text-[15px] font-medium leading-relaxed text-gray-500 md:text-[16px]"
+													>
+														{p}
+													</p>
+												))}
+											</div>
+										)}
 								</div>
 							))}
 						</div>

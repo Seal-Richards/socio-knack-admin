@@ -86,7 +86,7 @@ export default function ContactUsPage() {
 										Email Support
 									</span>
 									<span className="text-base font-bold text-slate-800 md:text-lg">
-										support@socioknack.com
+										info@socioknack.com
 									</span>
 								</div>
 							</div>
@@ -100,7 +100,7 @@ export default function ContactUsPage() {
 										Call Center
 									</span>
 									<span className="text-base font-bold text-slate-800 md:text-lg">
-										+234 (0) 800-SOCIOKNACK
+										(+234) 02012298322
 									</span>
 								</div>
 							</div>
@@ -114,7 +114,7 @@ export default function ContactUsPage() {
 										Headquarters
 									</span>
 									<span className="text-base font-bold leading-snug text-slate-800 md:text-lg">
-										12 Ikeja Way, GRA, Lagos, Nigeria
+										2nd floor, 52-54 Isaac John St, Ikeja, Lagos 101233, Lagos
 									</span>
 								</div>
 							</div>

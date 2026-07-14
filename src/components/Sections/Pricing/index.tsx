@@ -194,10 +194,11 @@ const PricingSection = () => {
 				</motion.h2>
 
 				{/* Pricing Cards Grid */}
-				<div className="grid w-full grid-cols-1 items-stretch gap-8 md:grid-cols-2 xl:grid-cols-4">
+				<div className="grid w-full grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4 xl:gap-8">
 					{pricingPlans.map((plan) => (
 						<PricingCard
 							key={plan.key}
+							className="mx-auto w-full max-w-[360px] sm:max-w-none"
 							theme={plan.theme}
 							isCustom={plan.isCustom}
 							title={plan.title}

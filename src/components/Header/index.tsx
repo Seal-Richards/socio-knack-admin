@@ -23,6 +23,7 @@ const Header = () => {
 	const [isScrolled, setIsScrolled] = useState(false);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const pathname = usePathname();
+	const [activeSection, setActiveSection] = useState("Home");
 
 	const { data: session, status } = useSession();
 	const { data: ownProfileRes } = useGetMe();
@@ -32,18 +33,60 @@ const Header = () => {
 	const displayName = session?.user?.name ?? "User";
 	const isAuthenticated = status === "authenticated";
 
+	const handleMenuClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+		if (href.startsWith("/#")) {
+			const targetId = href.substring(2); // e.g. "features"
+			if (pathname === "/") {
+				e.preventDefault();
+				setIsMobileMenuOpen(false);
+				setTimeout(() => {
+					const element = document.getElementById(targetId);
+					if (element) {
+						element.scrollIntoView({ behavior: "smooth" });
+					}
+				}, 200);
+				return;
+			}
+		}
+		setIsMobileMenuOpen(false);
+	};
+
 	useEffect(() => {
 		const handleScroll = () => {
-			if (window.scrollY > 20) {
+			if (window.scrollY > 20 || pathname !== "/") {
 				setIsScrolled(true);
 			} else {
 				setIsScrolled(false);
 			}
+
+			if (pathname === "/") {
+				const scrollPosition = window.scrollY + 200; // offset for header height and buffer
+
+				const featuresEl = document.getElementById("features");
+				const pricingEl = document.getElementById("pricing");
+				const faqEl = document.getElementById("faq");
+
+				if (faqEl && scrollPosition >= faqEl.offsetTop) {
+					setActiveSection("FAQ");
+				} else if (pricingEl && scrollPosition >= pricingEl.offsetTop) {
+					setActiveSection("Pricing");
+				} else if (featuresEl && scrollPosition >= featuresEl.offsetTop) {
+					setActiveSection("Features");
+				} else {
+					setActiveSection("Home");
+				}
+			} else if (pathname === "/about-us") {
+				setActiveSection("About Us");
+			} else {
+				setActiveSection("");
+			}
 		};
 
 		window.addEventListener("scroll", handleScroll);
+		handleScroll();
+
 		return () => window.removeEventListener("scroll", handleScroll);
-	}, []);
+	}, [pathname]);
 
 	// Prevent scroll when mobile menu is open
 	useEffect(() => {
@@ -87,13 +130,13 @@ const Header = () => {
 						{/* Desktop Menu Links */}
 						<div className="hidden items-center gap-8 md:flex lg:gap-12">
 							{menuItems.map((item) => {
-								const isActive = pathname === item.href;
+								const isActive = activeSection === item.label;
 								return (
 									<Link
 										key={item.href}
 										href={item.href}
 										className={cn(
-											"relative py-1 text-[15px] font-bold text-gray-600 transition-colors hover:text-[#1d4ea8]",
+											"relative py-1 text-[15px] font-bold text-slate-700 transition-colors hover:text-[#1d4ea8]",
 											isActive && "text-[#1d4ea8]",
 										)}
 									>
@@ -101,7 +144,7 @@ const Header = () => {
 										{isActive && (
 											<motion.div
 												layoutId="activeHeaderTab"
-												className="absolute inset-x-0 bottom-0 h-[2.5px] rounded-full bg-[#1d4ea8]"
+												className="absolute inset-x-0 bottom-0 h-[2.5px] rounded-full bg-[#DDA71A]"
 												transition={{
 													type: "spring",
 													stiffness: 380,
@@ -139,7 +182,7 @@ const Header = () => {
 									<Link href="/login">
 										<Button
 											variant="ghost"
-											className="h-[46px] rounded-full px-6 text-[15px] font-bold text-gray-600 hover:bg-blue-50/30 hover:text-[#1d4ea8]"
+											className="h-[46px] rounded-full px-6 text-[15px] font-bold text-slate-700 hover:bg-blue-50/30 hover:text-[#1d4ea8]"
 										>
 											Login
 										</Button>
@@ -176,6 +219,7 @@ const Header = () => {
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 0 }}
+						transition={{ duration: 0.2, ease: "easeInOut" }}
 						className="fixed inset-0 z-40 bg-white md:hidden"
 					>
 						{/* Background decorative blobs */}
@@ -185,7 +229,7 @@ const Header = () => {
 						<div className="flex h-full flex-col justify-between px-6 pb-12 pt-28">
 							<div className="flex flex-col gap-6">
 								{menuItems.map((item, index) => {
-									const isActive = pathname === item.href;
+									const isActive = activeSection === item.label;
 									return (
 										<motion.div
 											key={item.href}
@@ -195,13 +239,16 @@ const Header = () => {
 										>
 											<Link
 												href={item.href}
-												onClick={() => setIsMobileMenuOpen(false)}
+												onClick={(e) => handleMenuClick(e, item.href)}
 												className={cn(
-													"text-[28px] font-black tracking-tight text-gray-500 transition-colors hover:text-[#1d4ea8]",
+													"relative inline-block text-[28px] font-black tracking-tight text-slate-700 transition-colors hover:text-[#1d4ea8]",
 													isActive && "text-[#1d4ea8]",
 												)}
 											>
 												{item.label}
+												{isActive && (
+													<span className="absolute -bottom-1 left-0 h-1 w-8 rounded-full bg-[#DDA71A]" />
+												)}
 											</Link>
 										</motion.div>
 									);
@@ -253,7 +300,7 @@ const Header = () => {
 										>
 											<Button
 												variant="outline"
-												className="h-14 w-full rounded-2xl border-gray-200 text-base font-bold text-gray-600"
+												className="h-14 w-full rounded-2xl border-gray-200 text-base font-bold text-slate-700"
 											>
 												Login
 											</Button>

@@ -32,6 +32,21 @@ export default function Home() {
 		return () => clearTimeout(timer);
 	}, []);
 
+	useEffect(() => {
+		if (!isLoading) {
+			const { hash } = window.location;
+			if (hash) {
+				const targetId = hash.replace("#", "");
+				setTimeout(() => {
+					const element = document.getElementById(targetId);
+					if (element) {
+						element.scrollIntoView({ behavior: "smooth" });
+					}
+				}, 100);
+			}
+		}
+	}, [isLoading]);
+
 	if (isLoading) {
 		return (
 			<main className="relative min-h-screen bg-slate-50/20">
