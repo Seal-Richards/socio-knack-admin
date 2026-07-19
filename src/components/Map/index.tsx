@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useCallback, useState } from "react";
+import React, { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import cn from "@/lib/utils";
 import {
 	GoogleMap,
@@ -10,11 +10,13 @@ import {
 	DrawingManager,
 	PolygonF,
 	OverlayViewF,
+	Autocomplete,
 } from "@react-google-maps/api";
 import type { TerritoryData } from "@/types/territory";
 import type { UserProfileData } from "@/types/profile";
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import { formatCheckInDate } from "@/utils/dateFormatter";
+import { Icon } from "@iconify/react";
 
 export interface MapAgent {
 	id?: string;
@@ -78,6 +80,7 @@ interface MapProps {
 	setIsDrawing?: (drawing: boolean) => void;
 	onSaveTerritory?: (coords: LatLng[]) => void;
 	agents?: MapAgent[];
+	showSearch?: boolean;
 }
 
 const GOOGLE_MAPS_LIBRARIES: ("drawing" | "places")[] = ["drawing", "places"];
@@ -91,6 +94,7 @@ export default function Map({
 	setIsDrawing,
 	onSaveTerritory,
 	agents = [],
+	showSearch = !readOnly,
 }: MapProps) {
 	const { isLoaded, loadError } = useJsApiLoader({
 		id: "google-map-script",
@@ -101,6 +105,58 @@ export default function Map({
 
 	const [selectedMapZone, setSelectedMapZone] = useState<TerritoryData | null>(null);
 	const [selectedAgent, setSelectedAgent] = useState<MapAgent | null>(null);
+
+	const [map, setMap] = useState<google.maps.Map | null>(null);
+	const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+	const [hasText, setHasText] = useState(false);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	const onLoadMap = useCallback((mapInstance: google.maps.Map) => {
+		setMap(mapInstance);
+	}, []);
+
+	const onUnmountMap = useCallback(() => {
+		setMap(null);
+	}, []);
+
+	const onAutocompleteLoad = useCallback(
+		(autocompleteInstance: google.maps.places.Autocomplete) => {
+			setAutocomplete(autocompleteInstance);
+		},
+		[],
+	);
+
+	const onPlaceChanged = useCallback(() => {
+		if (autocomplete && map) {
+			const place = autocomplete.getPlace();
+			const location = place.geometry?.location;
+			const viewport = place.geometry?.viewport;
+
+			if (location) {
+				map.panTo(location);
+				if (viewport) {
+					map.fitBounds(viewport);
+				} else {
+					map.setZoom(14);
+				}
+				setHasText(true);
+				if (inputRef.current) {
+					inputRef.current.value = place.formatted_address || place.name || "";
+				}
+			}
+		}
+	}, [autocomplete, map]);
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setHasText(e.target.value.length > 0);
+	};
+
+	const handleClearSearch = () => {
+		if (inputRef.current) {
+			inputRef.current.value = "";
+		}
+		setHasText(false);
+	};
 
 	// Helper to extract polygon paths from GeoJSON format [longitude, latitude]
 	const getPolygonCoords = useCallback((zone: TerritoryData): LatLng[] => {
@@ -214,6 +270,28 @@ export default function Map({
 		[onSaveTerritory],
 	);
 
+	// Auto-center and fit bounds when a zone is selected
+	useEffect(() => {
+		if (!map || !selectedZoneId || zones.length === 0) return;
+		const zone = zones.find((z) => z._id === selectedZoneId);
+		if (!zone) return;
+
+		const coords = getPolygonCoords(zone);
+		if (coords.length === 0) return;
+
+		const bounds = new google.maps.LatLngBounds();
+		coords.forEach((coord) => bounds.extend(coord));
+		map.fitBounds(bounds);
+
+		// Limit the zoom level so it doesn't zoom in too close
+		const listener = google.maps.event.addListener(map, "bounds_changed", () => {
+			if (map.getZoom()! > 15) {
+				map.setZoom(15);
+			}
+			google.maps.event.removeListener(listener);
+		});
+	}, [map, selectedZoneId, zones, getPolygonCoords]);
+
 	if (loadError) {
 		return (
 			<div className="flex h-full items-center justify-center bg-red-50 p-4 text-red-500">
@@ -230,6 +308,8 @@ export default function Map({
 						mapContainerStyle={containerStyle}
 						center={center}
 						zoom={12}
+						onLoad={onLoadMap}
+						onUnmount={onUnmountMap}
 						options={{
 							styles: [
 								{
@@ -557,6 +637,47 @@ export default function Map({
 							/>
 						)}
 					</GoogleMap>
+
+					{/* Floating Location Search Autocomplete */}
+					{showSearch && (
+						<div className="group absolute inset-x-4 top-4 z-10 rounded-2xl border border-gray-100 bg-white/95 shadow-md backdrop-blur-sm transition-all duration-300 focus-within:border-[#1d4ea8]/50 focus-within:shadow-xl sm:left-4 sm:right-auto sm:w-96">
+							<Autocomplete
+								onLoad={onAutocompleteLoad}
+								onPlaceChanged={onPlaceChanged}
+							>
+								<div className="relative flex items-center">
+									<input
+										ref={inputRef}
+										type="text"
+										onChange={handleInputChange}
+										aria-label="Search location"
+										placeholder="Search region, city, state or county..."
+										className="h-12 w-full rounded-2xl bg-transparent pl-11 pr-10 text-[14px] font-medium text-gray-800 placeholder:text-gray-400 focus:outline-none"
+									/>
+									<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+										<Icon
+											icon="solar:magnifer-linear"
+											className="size-5 text-gray-400 transition-colors group-focus-within:text-[#1d4ea8]"
+										/>
+									</div>
+									{hasText && (
+										<button
+											type="button"
+											onClick={handleClearSearch}
+											className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 transition-colors hover:text-gray-600"
+											aria-label="Clear search"
+										>
+											<span className="sr-only">Clear search</span>
+											<Icon
+												icon="solar:close-circle-bold"
+												className="size-5 text-gray-400 hover:text-gray-600"
+											/>
+										</button>
+									)}
+								</div>
+							</Autocomplete>
+						</div>
+					)}
 
 					{/* Floating control buttons */}
 					{!readOnly && setIsDrawing && (
