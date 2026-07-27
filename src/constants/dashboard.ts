@@ -38,6 +38,7 @@ export const TASK_TABS = [
 		activeBg: "bg-[#22c55e]",
 	},
 	{ id: "Pending", label: "Pending", activeColor: "text-[#ef4444]", activeBg: "bg-[#ef4444]" },
+	{ id: "Cancelled", label: "Cancelled", activeColor: "text-gray-500", activeBg: "bg-gray-500" },
 ];
 
 export const ONGOING_TASKS = [

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createTaskBasicSchema = z.object({
 	title: z.string().min(1, "Visit Name is required."),
+	territoryId: z.string().min(1, "Please select a target zone."),
 	agentId: z.string().min(1, "Please select an agent to assign this task."),
 });
 

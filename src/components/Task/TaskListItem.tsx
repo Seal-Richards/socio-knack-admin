@@ -12,7 +12,7 @@ export interface TaskItemProps {
 	location: string;
 	subLocation: string;
 	distance: string;
-	statusColor: "blue" | "yellow" | "green" | "red";
+	statusColor: "blue" | "yellow" | "green" | "red" | "grey" | "gray";
 	raw?: Record<string, unknown>;
 }
 
@@ -28,6 +28,8 @@ export default function TaskListItem({
 		yellow: "bg-[#facc15] ring-[#facc15]/20",
 		green: "bg-[#22c55e] ring-[#22c55e]/20",
 		red: "bg-[#ef4444] ring-[#ef4444]/20",
+		grey: "bg-gray-400 ring-gray-400/20",
+		gray: "bg-gray-400 ring-gray-400/20",
 	};
 
 	return (

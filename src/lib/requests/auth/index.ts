@@ -37,8 +37,12 @@ export const authRequests = {
 	): Promise<ApiResponse<{ token?: string; user?: any; otpSent?: boolean }>> {
 		return apiClient.post<
 			ApiResponse<{ token?: string; user?: any; otpSent?: boolean }>,
-			LoginPayload
-		>("/auth/login", body, "Failed to log in. Please try again.");
+			LoginPayload & { isAdminDashboard?: boolean }
+		>(
+			"/auth/login",
+			{ ...body, isAdminDashboard: true },
+			"Failed to log in. Please try again.",
+		);
 	},
 
 	async registerAdmin(body: RegisterAdminPayload): Promise<ApiResponse<RegisterAdminResponse>> {
@@ -53,9 +57,12 @@ export const authRequests = {
 		email: string;
 		otp: string;
 	}): Promise<ApiResponse<VerifyOtpResponse>> {
-		return apiClient.post<ApiResponse<VerifyOtpResponse>, { email: string; otp: string }>(
+		return apiClient.post<
+			ApiResponse<VerifyOtpResponse>,
+			{ email: string; otp: string; isAdminDashboard?: boolean }
+		>(
 			"/auth/verify-email",
-			body,
+			{ ...body, isAdminDashboard: true },
 			"Failed to verify OTP. Please try again.",
 		);
 	},

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -11,38 +11,75 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { useGetAgents } from "@/hooks/useAgent";
+import { useGetTerritories } from "@/hooks/useTerritory";
 import cn from "@/lib/utils";
-import { createTaskBasicSchema } from "@/schemas/task";
+import { createTaskBasicSchema, type TaskFormData } from "@/schemas/task";
 
 interface BasicInfoProps {
 	onNext: () => void;
-	formData: {
-		title: string;
-		agentId: string;
-		scheduledDate: string;
-		scheduledTime: string;
-		priority: string;
-	};
-	updateFormData: (fields: Partial<BasicInfoProps["formData"]>) => void;
+	formData: TaskFormData;
+	updateFormData: (fields: Partial<TaskFormData>) => void;
 }
 
 export default function BasicInfo({ onNext, formData, updateFormData }: BasicInfoProps) {
 	const priorities = ["Low", "Medium", "High"];
-	const [errors, setErrors] = useState<{ title?: string; agentId?: string }>({});
+	const [errors, setErrors] = useState<{
+		title?: string;
+		territoryId?: string;
+		agentId?: string;
+	}>({});
 
 	const { data: agentsRes, isLoading: loadingAgents } = useGetAgents();
-	const agents = agentsRes?.data || [];
+	const agents = useMemo(() => agentsRes?.data || [], [agentsRes?.data]);
+
+	const { data: territoriesRes, isLoading: loadingZones } = useGetTerritories();
+	const zones = useMemo(() => territoriesRes?.data || [], [territoriesRes?.data]);
+
+	const selectedZone = useMemo(() => {
+		return zones.find((z) => z._id === formData.territoryId);
+	}, [formData.territoryId, zones]);
+
+	const filteredAgents = useMemo(() => {
+		if (!formData.territoryId || !selectedZone) return [];
+		return agents.filter((agent) => {
+			const assignedAgentIds: string[] =
+				selectedZone.assignedAgents?.map((a: unknown) => {
+					if (a && typeof a === "object" && "_id" in a) {
+						return String((a as { _id: unknown })._id);
+					}
+					return String(a);
+				}) || [];
+			return assignedAgentIds.includes(String(agent.id || agent._id));
+		});
+	}, [formData.territoryId, selectedZone, agents]);
+
+	const isAgentSelectDisabled = !formData.territoryId || loadingAgents;
+
+	const agentPlaceholder = useMemo(() => {
+		if (!formData.territoryId) {
+			return "Please select a zone first";
+		}
+		if (loadingAgents) {
+			return "Loading agents...";
+		}
+		if (filteredAgents.length === 0) {
+			return "No agents assigned to this zone";
+		}
+		return "Select Agent";
+	}, [formData.territoryId, loadingAgents, filteredAgents.length]);
 
 	const handleNext = () => {
 		const result = createTaskBasicSchema.safeParse({
 			title: formData.title,
+			territoryId: formData.territoryId,
 			agentId: formData.agentId,
 		});
 
 		if (!result.success) {
-			const formattedErrors: { title?: string; agentId?: string } = {};
+			const formattedErrors: { title?: string; territoryId?: string; agentId?: string } = {};
 			result.error.issues.forEach((issue) => {
 				if (issue.path[0] === "title") formattedErrors.title = issue.message;
+				if (issue.path[0] === "territoryId") formattedErrors.territoryId = issue.message;
 				if (issue.path[0] === "agentId") formattedErrors.agentId = issue.message;
 			});
 			setErrors(formattedErrors);
@@ -77,6 +114,43 @@ export default function BasicInfo({ onNext, formData, updateFormData }: BasicInf
 				)}
 			</div>
 
+			{/* Target Zone */}
+			<div className="flex flex-col gap-3">
+				<Label className="text-[14px] font-bold text-gray-700">Target Zone</Label>
+				<Select
+					value={formData.territoryId}
+					onValueChange={(val) => {
+						// Reset agentId when territory changes to prevent mismatch
+						updateFormData({ territoryId: val, agentId: "" });
+						if (errors.territoryId)
+							setErrors((prev) => ({ ...prev, territoryId: undefined }));
+					}}
+				>
+					<SelectTrigger
+						className={cn(
+							"h-14 rounded-2xl border px-5 text-[14px] focus:ring-offset-0",
+							errors.territoryId
+								? "border-red-500 focus:ring-red-500/20"
+								: "border-gray-200 focus:ring-[#1d4ea8]/20",
+						)}
+					>
+						<SelectValue
+							placeholder={loadingZones ? "Loading zones..." : "Select Zone"}
+						/>
+					</SelectTrigger>
+					<SelectContent className="rounded-2xl border-gray-100 shadow-xl">
+						{zones.map((zone) => (
+							<SelectItem key={zone._id} value={zone._id}>
+								{zone.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+				{errors.territoryId && (
+					<p className="pl-1 text-xs font-semibold text-red-500">{errors.territoryId}</p>
+				)}
+			</div>
+
 			{/* Assign Agent */}
 			<div className="flex flex-col gap-3">
 				<Label className="text-[14px] font-bold text-gray-700">Assign Field Agent</Label>
@@ -86,6 +160,7 @@ export default function BasicInfo({ onNext, formData, updateFormData }: BasicInf
 						updateFormData({ agentId: val });
 						if (errors.agentId) setErrors((prev) => ({ ...prev, agentId: undefined }));
 					}}
+					disabled={isAgentSelectDisabled}
 				>
 					<SelectTrigger
 						className={cn(
@@ -95,12 +170,10 @@ export default function BasicInfo({ onNext, formData, updateFormData }: BasicInf
 								: "border-gray-200 focus:ring-[#1d4ea8]/20",
 						)}
 					>
-						<SelectValue
-							placeholder={loadingAgents ? "Loading agents..." : "Select Agent"}
-						/>
+						<SelectValue placeholder={agentPlaceholder} />
 					</SelectTrigger>
 					<SelectContent className="rounded-2xl border-gray-100 shadow-xl">
-						{agents.map((agent) => (
+						{filteredAgents.map((agent) => (
 							<SelectItem
 								key={agent.id || agent._id}
 								value={agent.id || agent._id || ""}

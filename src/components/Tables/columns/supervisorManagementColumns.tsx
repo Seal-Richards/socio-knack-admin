@@ -15,6 +15,7 @@ export interface Supervisor {
 	agentCount: number;
 	isOnline: boolean;
 	profileStatus: string;
+	kycStatus?: string;
 	lastActivity: string;
 	avatar: string;
 }
@@ -95,6 +96,35 @@ export const supervisorManagementColumns: TableColumns<Supervisor> = createColum
 			} else if (status === "suspended") {
 				badgeClass = "border border-gray-150 bg-gray-100 text-gray-600";
 				label = "Suspended";
+			} else if (status === "rejected") {
+				badgeClass = "border border-red-100 bg-red-50 text-red-600";
+				label = "Rejected";
+			}
+
+			return (
+				<div
+					className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${badgeClass}`}
+				>
+					{label}
+				</div>
+			);
+		},
+	},
+	{
+		id: "kycStatus",
+		header: "KYC Status",
+		accessorKey: "kycStatus",
+		cell: ({ getValue }) => {
+			const status = (getValue() as string) || "notStarted";
+			let badgeClass = "border border-gray-150 bg-gray-100 text-gray-600";
+			let label = "Not Started";
+
+			if (status === "approved") {
+				badgeClass = "border border-green-100 bg-green-50 text-green-600";
+				label = "Approved";
+			} else if (status === "pending") {
+				badgeClass = "border border-orange-100 bg-orange-50 text-orange-600";
+				label = "Pending";
 			} else if (status === "rejected") {
 				badgeClass = "border border-red-100 bg-red-50 text-red-600";
 				label = "Rejected";

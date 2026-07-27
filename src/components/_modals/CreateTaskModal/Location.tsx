@@ -2,13 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+
 import { Autocomplete, GoogleMap, MarkerF, PolygonF } from "@react-google-maps/api";
 import { useGetTerritories } from "@/hooks/useTerritory";
 import { toast } from "@/lib/toast";
@@ -58,7 +52,7 @@ function isPointInPolygon(point: { lat: number; lng: number }, vertices: number[
 }
 
 export default function Location({ onNext, formData, updateFormData }: LocationProps) {
-	const { data: territoriesRes, isLoading: loadingZones } = useGetTerritories();
+	const { data: territoriesRes } = useGetTerritories();
 	const zones = useMemo(() => territoriesRes?.data || [], [territoriesRes?.data]);
 
 	const [selectedZone, setSelectedZone] = useState<TerritoryData | null>(null);
@@ -170,26 +164,12 @@ export default function Location({ onNext, formData, updateFormData }: LocationP
 
 	return (
 		<div className="flex flex-col gap-6">
-			{/* Target Zone Selection */}
+			{/* Target Zone (Read-Only) */}
 			<div className="flex flex-col gap-3">
 				<Label className="text-[14px] font-bold text-gray-700">Target Zone</Label>
-				<Select
-					value={formData.territoryId}
-					onValueChange={(val) => updateFormData({ territoryId: val })}
-				>
-					<SelectTrigger className="h-14 rounded-2xl border-gray-200 px-5 text-[14px] focus:ring-[#1d4ea8]/20">
-						<SelectValue
-							placeholder={loadingZones ? "Loading zones..." : "Select Zone"}
-						/>
-					</SelectTrigger>
-					<SelectContent className="rounded-2xl border-gray-100 shadow-xl">
-						{zones.map((zone) => (
-							<SelectItem key={zone._id} value={zone._id}>
-								{zone.name}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+				<div className="flex h-14 items-center rounded-2xl border border-gray-200 bg-gray-50 px-5 text-[14px] font-medium text-gray-500">
+					{selectedZone?.name || "No Zone Selected"}
+				</div>
 			</div>
 
 			{/* Autocomplete Input */}

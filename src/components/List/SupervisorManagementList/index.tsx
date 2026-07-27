@@ -45,6 +45,7 @@ export default function SupervisorManagementList() {
 			agentCount: s.agentCount || 0,
 			isOnline,
 			profileStatus: s.status || "pending",
+			kycStatus: s.kycStatus || "notStarted",
 			lastActivity: lastActivityText,
 			avatar: s.avatar ?? "/assets/images/admin-avatar.png",
 			status: s.status ?? "pending",
