@@ -9,6 +9,7 @@ import { Icon } from "@iconify/react";
 import { supervisorManagementColumns } from "@/components/Tables/columns/supervisorManagementColumns";
 import { TERRITORY_OPTIONS, STATUS_OPTIONS } from "@/constants/supervisorManagement";
 import { useGetSupervisors } from "@/hooks/useTeam";
+import { useGetMe } from "@/hooks/useProfile";
 import Pagination from "@/components/_atoms/Pagination";
 import TableLayoutWrapper from "../TableLayoutWrapper";
 
@@ -21,6 +22,8 @@ export default function SupervisorManagementList() {
 
 	// Fetch real supervisors list from backend using React Query
 	const { data: supervisorsRes, isLoading } = useGetSupervisors();
+	const { data: meRes } = useGetMe();
+	const currentUser = meRes?.data;
 
 	// Map backend data to Table column definitions
 	const supervisors = (supervisorsRes?.data ?? []).map((s) => {
@@ -45,15 +48,22 @@ export default function SupervisorManagementList() {
 			agentCount: s.agentCount || 0,
 			isOnline,
 			profileStatus: s.status || "pending",
-			kycStatus: s.kycStatus || "notStarted",
+			kycStatus: s.kycStatus || "unverified",
 			lastActivity: lastActivityText,
 			avatar: s.avatar ?? "/assets/images/admin-avatar.png",
 			status: s.status ?? "pending",
 		};
 	});
 
+	// Filter list if logged in user is a supervisor/staff
+	const isSupervisorOrStaff =
+		currentUser?.role === "supervisor" || currentUser?.role === "staffs";
+	const displayedSupervisors = isSupervisorOrStaff
+		? supervisors.filter((s) => s.id === currentUser?.id || s.id === currentUser?._id)
+		: supervisors;
+
 	// Perform client-side search & filters
-	const filteredSupervisors = supervisors.filter((s) => {
+	const filteredSupervisors = displayedSupervisors.filter((s) => {
 		const matchesSearch =
 			s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			s.email.toLowerCase().includes(searchQuery.toLowerCase());

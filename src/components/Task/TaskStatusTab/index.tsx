@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import Tabs from "@/components/Tabs";
@@ -42,6 +42,7 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 	const [activeTab, setActiveTab] = useState("Ongoing");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedVisit, setSelectedVisit] = useState<Record<string, unknown> | null>(null);
+	const [mounted, setMounted] = useState(false);
 
 	const ITEMS_PER_PAGE = 5;
 
@@ -51,12 +52,24 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 		setCurrentPage(1);
 	};
 
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
 	const { data: visitsRes } = useGetDashboardVisits();
 	const visits = (visitsRes?.data as unknown as Array<Record<string, unknown>>) || [];
 
 	// Format visits to match TaskItemProps
 	const formattedVisits = visits.map((visit) => {
-		const scheduledDate = (visit.scheduledDate as string) || new Date().toISOString();
+		let displayDateVal = visit.scheduledDate;
+		if (visit.status === "completed") {
+			displayDateVal =
+				visit.checkOutTime || visit.checkInTime || visit.updatedAt || visit.scheduledDate;
+		} else if (visit.status === "inProgress") {
+			displayDateVal = visit.checkInTime || visit.updatedAt || visit.scheduledDate;
+		}
+
+		const scheduledDate = (displayDateVal as string) || new Date().toISOString();
 		const dt = new Date(scheduledDate);
 		const agentId = visit.agentId as AgentData | undefined;
 		const territoryId = visit.territoryId as TerritoryData | undefined;
@@ -66,12 +79,14 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 			id: visit._id as string,
 			agentName: agentId ? `${agentId.firstName} ${agentId.lastName}` : "Unknown Agent",
 			avatar: agentId?.avatar || "",
-			date: dt.toLocaleDateString(),
-			time: dt.toLocaleTimeString("en-US", {
-				hour: "numeric",
-				minute: "2-digit",
-				hour12: true,
-			}),
+			date: mounted ? dt.toLocaleDateString() : "",
+			time: mounted
+				? dt.toLocaleTimeString("en-US", {
+						hour: "numeric",
+						minute: "2-digit",
+						hour12: true,
+					})
+				: "",
 			location: territoryId?.name || "Unknown Zone",
 			subLocation: location?.address || "N/A",
 			distance: (visit.distanceFromAgent as string) || "",

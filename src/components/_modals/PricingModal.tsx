@@ -14,6 +14,7 @@ type PricingModalProps = {
 	isOpen: boolean;
 	onClose: () => void;
 	currentPlan?: string;
+	isSubscriptionActive?: boolean;
 };
 
 type PlanKey = "starter" | "growth" | "business" | "enterprise";
@@ -25,7 +26,12 @@ const planFeatures: Record<PlanKey, string[]> = {
 	enterprise: ["Dedicated account manager", "SLA", "Custom integrations"],
 };
 
-export default function PricingModal({ isOpen, onClose, currentPlan }: PricingModalProps) {
+export default function PricingModal({
+	isOpen,
+	onClose,
+	currentPlan,
+	isSubscriptionActive = false,
+}: PricingModalProps) {
 	const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(null);
 	const [seatCount, setSeatCount] = useState<number>(10);
 
@@ -149,10 +155,16 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 		setupFeeText = "100,000";
 	}
 
-	let submitButtonText = "Upgrade & Pay Now";
+	const getCardCtaText = (planKey: PlanKey) => {
+		if (planKey === "enterprise") return "Contact Sales";
+		if (currentPlan === planKey && isSubscriptionActive) return "Current Plan";
+		return isSubscriptionActive ? "Upgrade" : "Subscribe";
+	};
+
+	let submitButtonText = isSubscriptionActive ? "Upgrade & Pay Now" : "Subscribe & Pay Now";
 	if (isPending) {
 		submitButtonText = "Initializing payment...";
-	} else if (selectedPlan === currentPlan) {
+	} else if (selectedPlan === currentPlan && isSubscriptionActive) {
 		submitButtonText = "Current Plan Active";
 	}
 
@@ -174,9 +186,9 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 						price="₦4,000"
 						setupFee="₦50,000"
 						features={planFeatures.starter}
-						buttonText="Select Starter"
+						buttonText={getCardCtaText("starter")}
 						isSelected={selectedPlan === "starter"}
-						isCurrentPlan={currentPlan === "starter"}
+						isCurrentPlan={currentPlan === "starter" && isSubscriptionActive}
 						onSelect={() => handleSelect("starter")}
 						onAction={() => handleSelect("starter")}
 					/>
@@ -187,9 +199,9 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 						price="₦4,000"
 						setupFee="₦100,000"
 						features={planFeatures.growth}
-						buttonText="Select Growth"
+						buttonText={getCardCtaText("growth")}
 						isSelected={selectedPlan === "growth"}
-						isCurrentPlan={currentPlan === "growth"}
+						isCurrentPlan={currentPlan === "growth" && isSubscriptionActive}
 						onSelect={() => handleSelect("growth")}
 						onAction={() => handleSelect("growth")}
 					/>
@@ -200,9 +212,9 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 						price="₦4,000"
 						setupFee="₦200,000"
 						features={planFeatures.business}
-						buttonText="Select Business"
+						buttonText={getCardCtaText("business")}
 						isSelected={selectedPlan === "business"}
-						isCurrentPlan={currentPlan === "business"}
+						isCurrentPlan={currentPlan === "business" && isSubscriptionActive}
 						onSelect={() => handleSelect("business")}
 						onAction={() => handleSelect("business")}
 					/>
@@ -212,9 +224,9 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 						title="Enterprise Plan"
 						subtitle="200+ employees"
 						features={planFeatures.enterprise}
-						buttonText="Contact Sales"
+						buttonText={getCardCtaText("enterprise")}
 						isSelected={selectedPlan === "enterprise"}
-						isCurrentPlan={currentPlan === "enterprise"}
+						isCurrentPlan={currentPlan === "enterprise" && isSubscriptionActive}
 						onSelect={() => handleSelect("enterprise")}
 						onAction={() => handleSelect("enterprise")}
 					/>
@@ -293,12 +305,16 @@ export default function PricingModal({ isOpen, onClose, currentPlan }: PricingMo
 				{/* Activation Actions */}
 				<div className="mt-8 flex flex-col items-center">
 					<Button
-						disabled={!selectedPlan || selectedPlan === currentPlan || isPending}
+						disabled={
+							!selectedPlan ||
+							(selectedPlan === currentPlan && isSubscriptionActive) ||
+							isPending
+						}
 						onClick={handleCheckout}
 						className={`text-md flex h-14 w-full max-w-md items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-300 ${
 							selectedPlan &&
 							selectedPlan !== "enterprise" &&
-							selectedPlan !== currentPlan
+							!(selectedPlan === currentPlan && isSubscriptionActive)
 								? "bg-[#1d4ea8] text-white hover:scale-[1.01] hover:bg-[#153a82] active:scale-95 disabled:opacity-50"
 								: "cursor-not-allowed bg-gray-300 text-gray-500 shadow-none hover:bg-gray-300"
 						}`}

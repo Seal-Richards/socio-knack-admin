@@ -115,19 +115,22 @@ export const supervisorManagementColumns: TableColumns<Supervisor> = createColum
 		header: "KYC Status",
 		accessorKey: "kycStatus",
 		cell: ({ getValue }) => {
-			const status = (getValue() as string) || "notStarted";
+			const status = (getValue() as string) || "unverified";
 			let badgeClass = "border border-gray-150 bg-gray-100 text-gray-600";
-			let label = "Not Started";
+			let label = "Unverified";
 
 			if (status === "approved") {
 				badgeClass = "border border-green-100 bg-green-50 text-green-600";
 				label = "Approved";
 			} else if (status === "pending") {
 				badgeClass = "border border-orange-100 bg-orange-50 text-orange-600";
-				label = "Pending";
+				label = "Pending Approval";
 			} else if (status === "rejected") {
 				badgeClass = "border border-red-100 bg-red-50 text-red-600";
 				label = "Rejected";
+			} else if (status === "notStarted") {
+				badgeClass = "border border-gray-150 bg-gray-100 text-gray-600";
+				label = "Not Started";
 			}
 
 			return (

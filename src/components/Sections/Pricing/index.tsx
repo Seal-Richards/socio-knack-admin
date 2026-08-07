@@ -140,6 +140,8 @@ const PricingSection = () => {
 		}
 	};
 
+	const isSubscriptionActive = business?.subscriptionStatus === "active";
+
 	const getButtonText = (planKey: PlanKey): string => {
 		if (planKey === "enterprise") {
 			return "Contact Sales";
@@ -147,11 +149,10 @@ const PricingSection = () => {
 		if (!isAuthenticated) {
 			return "Start 14-Day Free Trial";
 		}
-		if (currentPlan === planKey) {
+		if (currentPlan === planKey && isSubscriptionActive) {
 			return "Current Plan";
 		}
-		const label = planKey.charAt(0).toUpperCase() + planKey.slice(1);
-		return `Select ${label}`;
+		return isSubscriptionActive ? "Upgrade" : "Subscribe";
 	};
 
 	const { isPending } = initializeSubscriptionMutation;
@@ -163,10 +164,10 @@ const PricingSection = () => {
 		setupFeeText = "100,000";
 	}
 
-	let submitButtonText = "Upgrade & Pay Now";
+	let submitButtonText = isSubscriptionActive ? "Upgrade & Pay Now" : "Subscribe & Pay Now";
 	if (isPending) {
 		submitButtonText = "Initializing payment...";
-	} else if (selectedPlan === currentPlan) {
+	} else if (selectedPlan === currentPlan && isSubscriptionActive) {
 		submitButtonText = "Current Plan Active";
 	}
 
@@ -208,7 +209,9 @@ const PricingSection = () => {
 							features={planFeatures[plan.key]}
 							buttonText={plan.isCustom ? "Contact Sales" : getButtonText(plan.key)}
 							isSelected={isAuthenticated && selectedPlan === plan.key}
-							isCurrentPlan={isAuthenticated && currentPlan === plan.key}
+							isCurrentPlan={
+								isAuthenticated && currentPlan === plan.key && isSubscriptionActive
+							}
 							onSelect={() => {
 								if (isAuthenticated) setSelectedPlan(plan.key);
 							}}
@@ -305,12 +308,16 @@ const PricingSection = () => {
 						className="mt-8 flex w-full flex-col items-center"
 					>
 						<Button
-							disabled={!selectedPlan || selectedPlan === currentPlan || isPending}
+							disabled={
+								!selectedPlan ||
+								(selectedPlan === currentPlan && isSubscriptionActive) ||
+								isPending
+							}
 							onClick={handleCheckout}
 							className={`text-md flex h-14 w-full max-w-md items-center justify-center gap-2 rounded-xl font-semibold shadow-lg transition-all duration-300 ${
 								selectedPlan &&
 								selectedPlan !== "enterprise" &&
-								selectedPlan !== currentPlan
+								!(selectedPlan === currentPlan && isSubscriptionActive)
 									? "bg-[#1d4ea8] text-white hover:scale-[1.01] hover:bg-[#153a82] active:scale-95 disabled:opacity-50"
 									: "cursor-not-allowed bg-gray-300 text-gray-500 shadow-none hover:bg-gray-300"
 							}`}

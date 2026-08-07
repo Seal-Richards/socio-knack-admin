@@ -67,8 +67,11 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 			return "kyc";
 		}
 
-		// 3. Team Member pending review (cannot access anything except settings and dashboard)
+		// 3. Team Member pending review (cannot access anything except settings, dashboard, supervisor list and details)
 		if (isPendingTeamKyc && pathname !== "/dashboard" && pathname !== "/help") {
+			const userId = user?.id || user?._id;
+			if (userId && pathname === `/supervisor-management/${userId}`) return null;
+			if (pathname === "/supervisor-management") return null;
 			return "pending_team_kyc";
 		}
 
@@ -92,12 +95,12 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 			return {
 				title: "Identity Verification Required",
 				description:
-					"Your team account is currently awaiting verification approval from your Business Owner. You can manage your profile settings in the meantime.",
+					"Your team account is currently awaiting verification approval from your Business Owner. Please complete your KYC compliance list to request activation.",
 				icon: "solar:user-block-bold-duotone",
 				iconColor: "text-amber-500",
 				bgGradient: "from-amber-500/10 to-transparent",
-				ctaLabel: "Manage Profile",
-				ctaHref: "/settings",
+				ctaLabel: "Complete KYC",
+				ctaHref: "/supervisor-management",
 			};
 		}
 		// kyc

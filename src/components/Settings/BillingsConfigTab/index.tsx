@@ -275,7 +275,7 @@ export default function BillingsConfigTab() {
 							onClick={() => setIsPricingModalOpen(true)}
 							className="h-11 rounded-xl border-gray-100 bg-white font-bold text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:text-gray-800 active:scale-95"
 						>
-							Upgrade Plan
+							{isActive ? "Upgrade Plan" : "Subscribe"}
 						</Button>
 					</div>
 				</div>
@@ -550,6 +550,7 @@ export default function BillingsConfigTab() {
 				isOpen={isPricingModalOpen}
 				onClose={() => setIsPricingModalOpen(false)}
 				currentPlan={business?.subscriptionPlan}
+				isSubscriptionActive={isActive}
 			/>
 		</div>
 	);

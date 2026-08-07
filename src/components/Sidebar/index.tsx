@@ -107,8 +107,13 @@ export default function Sidebar({ className }: { className?: string }) {
 
 	const isItemLocked = (href: string) => {
 		if (href === "/dashboard") return false;
-		// Supervisor/staff with pending KYC: only allow dashboard + settings (profile tab only)
-		if (isPendingTeamKyc) return href !== "/settings";
+		// Supervisor/staff with pending KYC: only allow dashboard + settings + supervisor list & details
+		if (isPendingTeamKyc) {
+			const userId = user?.id || user?._id;
+			if (userId && href === `/supervisor-management/${userId}`) return false;
+			if (href === "/supervisor-management") return false;
+			return href !== "/settings";
+		}
 		if (href === "/settings") return false;
 		if (role === "superadmin") return false;
 		// Existing admin/business/subscription lock — unchanged
@@ -117,11 +122,16 @@ export default function Sidebar({ className }: { className?: string }) {
 
 	const handleItemClick = (e: React.MouseEvent<any>, href: string) => {
 		if (href === "/dashboard") return;
-		// Supervisor/staff with pending KYC: block all pages except settings
-		if (isPendingTeamKyc && href !== "/settings") {
-			e.preventDefault();
-			setLockType("pending_team_kyc");
-			return;
+		// Supervisor/staff with pending KYC: block all pages except settings, supervisor list and details
+		if (isPendingTeamKyc) {
+			const userId = user?.id || user?._id;
+			if (userId && href === `/supervisor-management/${userId}`) return;
+			if (href === "/supervisor-management") return;
+			if (href !== "/settings") {
+				e.preventDefault();
+				setLockType("pending_team_kyc");
+				return;
+			}
 		}
 		if (href === "/settings") return;
 		if (role === "superadmin") return;
@@ -172,9 +182,9 @@ export default function Sidebar({ className }: { className?: string }) {
 			return {
 				title: "KYC Approval Required",
 				description:
-					"Your KYC is awaiting approval from your Business Owner. You can update your Profile while you wait.",
-				ctaLabel: "Update Profile Settings",
-				ctaHref: "/settings",
+					"Your KYC is awaiting approval from your Business Owner. Please complete your KYC compliance list.",
+				ctaLabel: "Complete KYC",
+				ctaHref: "/supervisor-management",
 			};
 		}
 		// default: "kyc"

@@ -54,12 +54,14 @@ export default function PlatformActivation({
 		}
 	}, [business, selectedPlan]);
 
+	const isSubscriptionActive = business?.subscriptionStatus === "active";
+
 	const getButtonText = (planKey: PlanKey) => {
-		if (business?.subscriptionPlan === planKey && business?.subscriptionStatus === "active") {
+		if (business?.subscriptionPlan === planKey && isSubscriptionActive) {
 			return "Active";
 		}
 		if (planKey === "enterprise") return "Contact Sales";
-		return `Select ${planKey.charAt(0).toUpperCase() + planKey.slice(1)}`;
+		return isSubscriptionActive ? "Upgrade" : "Subscribe";
 	};
 
 	const isCurrentPlanActive =
@@ -204,8 +206,7 @@ export default function PlatformActivation({
 						buttonText={getButtonText("starter")}
 						isSelected={selectedPlan === "starter"}
 						isCurrentPlan={
-							business?.subscriptionPlan === "starter" &&
-							business?.subscriptionStatus === "active"
+							business?.subscriptionPlan === "starter" && isSubscriptionActive
 						}
 						onSelect={() => handleSelect("starter")}
 						onAction={() => handleSelect("starter")}
@@ -220,8 +221,7 @@ export default function PlatformActivation({
 						buttonText={getButtonText("growth")}
 						isSelected={selectedPlan === "growth"}
 						isCurrentPlan={
-							business?.subscriptionPlan === "growth" &&
-							business?.subscriptionStatus === "active"
+							business?.subscriptionPlan === "growth" && isSubscriptionActive
 						}
 						onSelect={() => handleSelect("growth")}
 						onAction={() => handleSelect("growth")}
@@ -236,8 +236,7 @@ export default function PlatformActivation({
 						buttonText={getButtonText("business")}
 						isSelected={selectedPlan === "business"}
 						isCurrentPlan={
-							business?.subscriptionPlan === "business" &&
-							business?.subscriptionStatus === "active"
+							business?.subscriptionPlan === "business" && isSubscriptionActive
 						}
 						onSelect={() => handleSelect("business")}
 						onAction={() => handleSelect("business")}

@@ -4,6 +4,7 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useGetSupervisorById } from "@/hooks/useTeam";
+import { useGetMe } from "@/hooks/useProfile";
 import ProfileHeader from "./ProfileHeader";
 import ProfileSettings from "./ProfileSettings";
 import TerritoryAndTeam from "./TerritoryAndTeam";
@@ -18,7 +19,9 @@ interface SupervisorDetailsProps {
 
 export default function SupervisorDetails({ id }: SupervisorDetailsProps) {
 	const { data: supervisorRes, isLoading } = useGetSupervisorById(id);
+	const { data: meRes } = useGetMe();
 	const rawSupervisor = supervisorRes?.data;
+	const currentUser = meRes?.data;
 
 	const supervisorData = {
 		id: rawSupervisor?.id || id,
@@ -45,6 +48,14 @@ export default function SupervisorDetails({ id }: SupervisorDetailsProps) {
 		raw: rawSupervisor,
 	};
 
+	const isOwnProfile =
+		currentUser?.id === rawSupervisor?.id ||
+		currentUser?.id === rawSupervisor?._id ||
+		(currentUser?.role === "supervisor" && currentUser?.id === id);
+
+	const isOwnKycPending = isOwnProfile && currentUser?.kycStatus !== "approved";
+	const defaultTab = isOwnKycPending ? "compliance" : "profile-settings";
+
 	if (isLoading) {
 		return (
 			<div className="flex h-60 items-center justify-center rounded-[2.5rem] bg-white">
@@ -57,26 +68,30 @@ export default function SupervisorDetails({ id }: SupervisorDetailsProps) {
 		<div className="flex w-full flex-col gap-6 lg:gap-8">
 			<ProfileHeader supervisor={supervisorData} />
 
-			<Tabs defaultValue="profile-settings" className="w-full">
+			<Tabs defaultValue={defaultTab} className="w-full">
 				<TabsList className="hide-scrollbar mb-6 flex h-auto w-full justify-start gap-2 overflow-x-auto rounded-full bg-gray-50/50 p-1.5 md:w-max">
-					<TabsTrigger
-						value="profile-settings"
-						className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
-					>
-						Profile Settings
-					</TabsTrigger>
-					<TabsTrigger
-						value="territory-team"
-						className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
-					>
-						Territory & Team
-					</TabsTrigger>
-					<TabsTrigger
-						value="performance-metrics"
-						className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
-					>
-						Performance Metrics
-					</TabsTrigger>
+					{!isOwnKycPending && (
+						<>
+							<TabsTrigger
+								value="profile-settings"
+								className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
+							>
+								Profile Settings
+							</TabsTrigger>
+							<TabsTrigger
+								value="territory-team"
+								className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
+							>
+								Territory & Team
+							</TabsTrigger>
+							<TabsTrigger
+								value="performance-metrics"
+								className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
+							>
+								Performance Metrics
+							</TabsTrigger>
+						</>
+					)}
 					<TabsTrigger
 						value="kyc-status"
 						className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
@@ -89,25 +104,31 @@ export default function SupervisorDetails({ id }: SupervisorDetailsProps) {
 					>
 						Compliance
 					</TabsTrigger>
-					<TabsTrigger
-						value="system-access"
-						className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
-					>
-						System Access & Security
-					</TabsTrigger>
+					{!isOwnKycPending && (
+						<TabsTrigger
+							value="system-access"
+							className="rounded-full px-6 py-2.5 text-[14px] font-bold text-gray-500 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm"
+						>
+							System Access & Security
+						</TabsTrigger>
+					)}
 				</TabsList>
 
-				<TabsContent value="profile-settings" className="mt-0 outline-none">
-					<ProfileSettings supervisor={supervisorData} />
-				</TabsContent>
+				{!isOwnKycPending && (
+					<>
+						<TabsContent value="profile-settings" className="mt-0 outline-none">
+							<ProfileSettings supervisor={supervisorData} />
+						</TabsContent>
 
-				<TabsContent value="territory-team" className="mt-0 outline-none">
-					<TerritoryAndTeam supervisor={supervisorData} />
-				</TabsContent>
+						<TabsContent value="territory-team" className="mt-0 outline-none">
+							<TerritoryAndTeam supervisor={supervisorData} />
+						</TabsContent>
 
-				<TabsContent value="performance-metrics" className="mt-0 outline-none">
-					<PerformanceMetrics supervisor={supervisorData} />
-				</TabsContent>
+						<TabsContent value="performance-metrics" className="mt-0 outline-none">
+							<PerformanceMetrics supervisor={supervisorData} />
+						</TabsContent>
+					</>
+				)}
 
 				<TabsContent value="kyc-status" className="mt-0 outline-none">
 					<KycStatus supervisor={supervisorData} />
@@ -117,9 +138,11 @@ export default function SupervisorDetails({ id }: SupervisorDetailsProps) {
 					<Compliance supervisor={supervisorData} />
 				</TabsContent>
 
-				<TabsContent value="system-access" className="mt-0 outline-none">
-					<SystemAccess />
-				</TabsContent>
+				{!isOwnKycPending && (
+					<TabsContent value="system-access" className="mt-0 outline-none">
+						<SystemAccess />
+					</TabsContent>
+				)}
 			</Tabs>
 		</div>
 	);

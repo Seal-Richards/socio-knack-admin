@@ -108,7 +108,7 @@ export default function AgentManagementList() {
 			territory,
 			isOnline: agent.isOnline || false,
 			profileStatus: agent.status || "pending",
-			kycStatus: agent.kycStatus || "notStarted",
+			kycStatus: agent.kycStatus || "unverified",
 			lastActivity,
 			avatar: agent.avatar || "/assets/images/admin-avatar.png",
 		};

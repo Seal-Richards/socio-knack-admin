@@ -12,7 +12,7 @@ import {
 } from "recharts";
 
 type LeadGeneratedRevenueProps = {
-	data?: Array<{ name: string; revenue: number; leads: number }>;
+	data?: Array<{ name: string; revenue: number; leads: number; rawRevenue?: number }>;
 };
 
 export default function LeadGeneratedRevenue({ data = [] }: LeadGeneratedRevenueProps) {
@@ -42,6 +42,21 @@ export default function LeadGeneratedRevenue({ data = [] }: LeadGeneratedRevenue
 								borderRadius: "12px",
 								border: "none",
 								boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+							}}
+							formatter={(
+								value: number | string | (number | string)[],
+								name: string | number,
+								props: { payload?: { rawRevenue?: number } },
+							) => {
+								if (name === "revenue") {
+									const rawVal =
+										props.payload?.rawRevenue ?? Number(value) * 1000;
+									return [`₦${rawVal.toLocaleString()}`, "Revenue"];
+								}
+								if (name === "leads") {
+									return [value, "Leads"];
+								}
+								return [value, name];
 							}}
 						/>
 						<Line
