@@ -81,7 +81,11 @@ export const nextAuthOptions: NextAuthConfig = {
 					) {
 						const response = await axios.post<BackendResponse>(
 							`${env.NEXT_PUBLIC_ADMIN_API_BASE_URL}/auth/verify-email`,
-							{ email: credentials.email, otp: credentials.otp },
+							{
+								email: credentials.email,
+								otp: credentials.otp,
+								isAdminDashboard: true,
+							},
 						);
 						data = response.data;
 					}
@@ -89,7 +93,11 @@ export const nextAuthOptions: NextAuthConfig = {
 					else if (credentials?.email && credentials?.password) {
 						const response = await axios.post<BackendResponse>(
 							`${env.NEXT_PUBLIC_ADMIN_API_BASE_URL}/auth/login`,
-							{ email: credentials.email, password: credentials.password },
+							{
+								email: credentials.email,
+								password: credentials.password,
+								isAdminDashboard: true,
+							},
 						);
 						data = response.data;
 					} else {
