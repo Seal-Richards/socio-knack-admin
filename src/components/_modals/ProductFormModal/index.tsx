@@ -233,12 +233,12 @@ export default function ProductFormModal({
 			avatar,
 			status,
 			quantity: numQuantity,
-			...(isEligible && incentiveValueType === "custom"
-				? {
-						incentiveType: customIncentiveType,
-						incentiveValue: Number(customIncentiveValue) || 0,
-					}
-				: {}),
+			incentiveType:
+				isEligible && incentiveValueType === "custom" ? customIncentiveType : null,
+			incentiveValue:
+				isEligible && incentiveValueType === "custom"
+					? Number(customIncentiveValue) || 0
+					: null,
 		};
 
 		try {

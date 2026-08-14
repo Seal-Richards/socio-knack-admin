@@ -83,9 +83,18 @@ export const reportPayoutColumns: TableColumns<ReportPayout> = createColumns<Rep
 			if (status === "paid" || status === "completed") {
 				badgeClass = "bg-green-50 text-green-600 border border-green-100";
 				statusLabel = "Paid";
+			} else if (status === "approved") {
+				badgeClass = "bg-green-50 text-green-600 border border-green-100";
+				statusLabel = "Approved";
 			} else if (status === "failed") {
 				badgeClass = "bg-red-50 text-red-600 border border-red-100";
 				statusLabel = "Failed";
+			} else if (status === "rejected") {
+				badgeClass = "bg-red-50 text-red-600 border border-red-100";
+				statusLabel = "Rejected";
+			} else if (status === "cancelled") {
+				badgeClass = "bg-gray-50 text-gray-500 border border-gray-150";
+				statusLabel = "Cancelled";
 			}
 
 			return (

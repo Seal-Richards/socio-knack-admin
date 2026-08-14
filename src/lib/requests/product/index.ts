@@ -29,8 +29,8 @@ export type CreateProductPayload = {
 	code?: string;
 	category?: string | null;
 	incentiveEligible: boolean | string;
-	incentiveType?: "flat" | "percentage";
-	incentiveValue?: number;
+	incentiveType?: "flat" | "percentage" | null;
+	incentiveValue?: number | null;
 	status?: "active" | "inactive";
 	avatar?: string;
 	quantity: number;

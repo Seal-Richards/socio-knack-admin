@@ -13,6 +13,7 @@ import CompletedTaskList from "@/components/List/CompletedTaskList";
 import PendingTaskList from "@/components/List/PendingTaskList";
 import OpenTaskList from "@/components/List/OpenTaskList";
 import CancelledTaskList from "@/components/List/CancelledTaskList";
+import RejectedTaskList from "@/components/List/RejectedTaskList";
 import { useGetDashboardVisits } from "@/hooks/useDashboard";
 import VisitDetailsModal from "@/components/_modals/VisitDetailsModal";
 import type { TaskItemProps } from "@/components/Task/TaskListItem";
@@ -109,9 +110,8 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 	const openTasks = formattedVisits.filter((v) => v.status === "open");
 	const completedTasks = formattedVisits.filter((v) => v.status === "completed");
 	const pendingTasks = formattedVisits.filter((v) => v.status === "pending");
-	const cancelledTasks = formattedVisits.filter(
-		(v) => v.status === "cancelled" || v.status === "rejected",
-	);
+	const cancelledTasks = formattedVisits.filter((v) => v.status === "cancelled");
+	const rejectedTasks = formattedVisits.filter((v) => v.status === "rejected");
 
 	const handleViewVisit = (task: Omit<TaskItemProps, "statusColor">) => {
 		if (task.raw) {
@@ -135,6 +135,8 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 				return pendingTasks;
 			case "Cancelled":
 				return cancelledTasks;
+			case "Rejected":
+				return rejectedTasks;
 			default:
 				return ongoingTasks;
 		}
@@ -209,6 +211,9 @@ export default function TaskStatusTab({ isModalView, onSeeMore }: TaskStatusTabP
 				)}
 				{activeTab === "Cancelled" && (
 					<CancelledTaskList tasks={paginatedTasks} onView={handleViewVisit} />
+				)}
+				{activeTab === "Rejected" && (
+					<RejectedTaskList tasks={paginatedTasks} onView={handleViewVisit} />
 				)}
 
 				<Pagination

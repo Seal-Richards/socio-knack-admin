@@ -13,14 +13,30 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { type DateRange } from "react-day-picker";
 
+const PAYOUT_TABS = [
+	{ id: "All", label: "All" },
+	{ id: "Pending", label: "Pending" },
+	{ id: "Paid", label: "Paid" },
+	{ id: "Approved", label: "Approved" },
+	{ id: "Rejected", label: "Rejected" },
+	{ id: "Cancelled", label: "Cancelled" },
+];
+
 export default function ReportPayoutList() {
 	const { data: listRes, isLoading } = useGetReportsPayoutList();
 	const payouts = listRes?.data || [];
 
+	const [activeTab, setActiveTab] = useState("All");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
+
+	const handleTabChange = (tab: string) => {
+		setActiveTab(tab);
+		setCurrentPage(1);
+		setRowSelection({});
+	};
 
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: undefined,
@@ -29,7 +45,7 @@ export default function ReportPayoutList() {
 
 	const selectedCount = Object.keys(rowSelection).filter((key) => rowSelection[key]).length;
 
-	// Filter data by search query and date range
+	// Filter data by search query, date range, and active status tab
 	const filteredData = payouts.filter((item) => {
 		const matchesSearch =
 			item.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -42,7 +58,13 @@ export default function ReportPayoutList() {
 			const itemDate = new Date(item.date);
 			const start = startOfDay(date.from);
 			const end = date.to ? endOfDay(date.to) : endOfDay(date.from);
-			return isWithinInterval(itemDate, { start, end });
+			if (!isWithinInterval(itemDate, { start, end })) return false;
+		}
+
+		if (activeTab !== "All") {
+			if (activeTab.toLowerCase() !== item.status.toLowerCase()) {
+				return false;
+			}
 		}
 
 		return true;
@@ -154,6 +176,26 @@ export default function ReportPayoutList() {
 
 	return (
 		<TableLayoutWrapper title="" filters={filterActions} className="gap-0">
+			<div className="mb-6 flex w-full overflow-hidden rounded-[2rem] bg-gray-50/50 p-2 lg:w-fit">
+				{PAYOUT_TABS.map((tab) => {
+					const isActive = activeTab === tab.id;
+					return (
+						<button
+							key={tab.id}
+							type="button"
+							onClick={() => handleTabChange(tab.id)}
+							className={`flex h-10 min-w-28 items-center justify-center rounded-3xl text-[13px] font-bold transition-all duration-200 ${
+								isActive
+									? "bg-white text-[#1d4ea8] shadow-sm"
+									: "text-gray-400 hover:text-gray-600"
+							}`}
+						>
+							{tab.label}
+						</button>
+					);
+				})}
+			</div>
+
 			<Table
 				columns={reportPayoutColumns as any[]}
 				data={paginatedPayouts}
