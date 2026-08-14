@@ -51,9 +51,12 @@ export default function ReportDetails({ id }: ReportDetailsProps) {
 		} else if (visit.isApproved) {
 			statusBadgeClass = "bg-green-50 text-green-600 border-green-100";
 			statusText = "Paid / Approved";
-		} else if (visit.status === "cancelled") {
+		} else if (visit.status === "rejected") {
 			statusBadgeClass = "bg-red-50 text-red-600 border-red-100";
-			statusText = "Cancelled / Rejected";
+			statusText = "Rejected";
+		} else if (visit.status === "cancelled") {
+			statusBadgeClass = "bg-gray-50 text-gray-500 border-gray-150";
+			statusText = "Cancelled";
 		}
 	}
 
@@ -167,20 +170,23 @@ export default function ReportDetails({ id }: ReportDetailsProps) {
 			</div>
 
 			{/* Rejection reason banner */}
-			{visit.status === "cancelled" && visit.rejectionReason && (
-				<div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/50 p-5">
-					<Icon
-						icon="solar:shield-warning-bold"
-						className="mt-0.5 size-5 shrink-0 text-red-600"
-					/>
-					<div>
-						<h4 className="text-sm font-bold text-red-950">Report Rejection Reason</h4>
-						<p className="mt-1 text-sm leading-relaxed text-red-800">
-							&ldquo;{visit.rejectionReason}&rdquo;
-						</p>
+			{(visit.status === "rejected" || visit.status === "cancelled") &&
+				visit.rejectionReason && (
+					<div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/50 p-5">
+						<Icon
+							icon="solar:shield-warning-bold"
+							className="mt-0.5 size-5 shrink-0 text-red-600"
+						/>
+						<div>
+							<h4 className="text-sm font-bold text-red-950">
+								Report Rejection Reason
+							</h4>
+							<p className="mt-1 text-sm leading-relaxed text-red-800">
+								&ldquo;{visit.rejectionReason}&rdquo;
+							</p>
+						</div>
 					</div>
-				</div>
-			)}
+				)}
 
 			{/* Header Section */}
 			<div className="flex flex-col gap-2">
