@@ -68,8 +68,9 @@ export default function AboutUsPage() {
 							<div className="flex flex-row items-center gap-4">
 								<a
 									href={aboutBanner.appStoreUrl}
-									target="_blank"
-									rel="noopener noreferrer"
+									onClick={(e) => {
+										if (aboutBanner.appStoreUrl === "#") e.preventDefault();
+									}}
 									className="flex h-12 items-center gap-2 rounded-full bg-[#1d4ea8] px-6 text-sm font-bold text-white shadow-md shadow-blue-500/10 transition-all hover:scale-[1.03] hover:bg-[#153a82] hover:shadow-lg active:scale-[0.97]"
 								>
 									<Image
@@ -79,7 +80,10 @@ export default function AboutUsPage() {
 										height={20}
 										className="brightness-[10]"
 									/>
-									App Store
+									<span>App Store</span>
+									<span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white/90">
+										Coming Soon
+									</span>
 								</a>
 								<a
 									href={aboutBanner.playStoreUrl}
@@ -93,7 +97,7 @@ export default function AboutUsPage() {
 										width={20}
 										height={20}
 									/>
-									Play Store
+									Google Play
 								</a>
 							</div>
 						</motion.div>

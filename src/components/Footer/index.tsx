@@ -54,8 +54,9 @@ const Footer = () => {
 						<div className="flex flex-row flex-wrap items-center gap-3">
 							<a
 								href={aboutBanner.appStoreUrl}
-								target="_blank"
-								rel="noopener noreferrer"
+								onClick={(e) => {
+									if (aboutBanner.appStoreUrl === "#") e.preventDefault();
+								}}
 								className="flex h-11 items-center gap-2 rounded-full bg-[#1d4ea8] px-5 text-sm font-bold text-white shadow-md shadow-blue-500/10 transition-all hover:scale-[1.03] hover:bg-[#153a82] hover:shadow-lg active:scale-[0.97]"
 							>
 								<Image
@@ -65,7 +66,10 @@ const Footer = () => {
 									height={18}
 									className="brightness-[10]"
 								/>
-								App Store
+								<span>App Store</span>
+								<span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white/90">
+									Coming Soon
+								</span>
 							</a>
 							<a
 								href={aboutBanner.playStoreUrl}
@@ -79,7 +83,7 @@ const Footer = () => {
 									width={18}
 									height={18}
 								/>
-								Play Store
+								Google Play
 							</a>
 						</div>
 					</div>

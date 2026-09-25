@@ -2,8 +2,8 @@ export const aboutBanner = {
 	title: "ABOUT SOCIOKNACK",
 	subtitle:
 		"Join leading companies already trusting SocioKnack to automate growth. Get the App now.",
-	appStoreUrl: "https://apps.apple.com",
-	playStoreUrl: "https://play.google.com",
+	appStoreUrl: "#",
+	playStoreUrl: "https://play.google.com/store/apps/details?id=com.socioknack.app&pli=1",
 };
 
 export interface AboutSection {
