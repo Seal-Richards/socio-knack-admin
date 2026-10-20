@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Plus_Jakarta_Sans as PlusJakartaSans } from "next/font/google";
 import "../styles/globals.css";
 import cn from "@/lib/utils";
@@ -32,6 +33,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 					{children}
 					<Toaster richColors position="top-right" />
 				</ReactQueryProvider>
+				<Script
+					src="https://sync-bot-server.onrender.com/api/flow/embed/SocioKack%20Limited"
+					strategy="lazyOnload"
+				/>
 			</body>
 		</html>
 	);
