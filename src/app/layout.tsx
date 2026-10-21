@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 					<Toaster richColors position="top-right" />
 				</ReactQueryProvider>
 				<Script
-					src="https://sync-bot-server.onrender.com/api/flow/embed/SocioKack%20Limited"
+					src="https://sync-bot-server.onrender.com/api/flow/embed/SocioKnack%20Limited"
 					strategy="lazyOnload"
 				/>
 			</body>
