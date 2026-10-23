@@ -9,6 +9,8 @@ import { useSocketAgentTracking } from "@/hooks/useDashboard/useSocketAgentTrack
 import DynamicAvatar from "@/components/_atoms/DynamicAvatar";
 import Empty from "@/components/_atoms/Empty";
 import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
+import type { PendingKYCUser } from "@/types/dashboard";
 
 export default function DashboardQuickActions() {
 	const { data: kycRes } = useGetPendingKYC();
@@ -21,6 +23,14 @@ export default function DashboardQuickActions() {
 	const agents = agentsRes?.data || [];
 
 	useSocketAgentTracking();
+
+	const getUserProfileHref = (user: PendingKYCUser) => {
+		const role = user.role?.toLowerCase();
+		if (role === "supervisor") {
+			return ROUTES.SUPERVISOR_DETAILS(user._id);
+		}
+		return ROUTES.AGENT_DETAILS(user._id);
+	};
 
 	return (
 		<div className="flex flex-col gap-6 rounded-3xl border border-gray-50 bg-white p-6 shadow-sm lg:rounded-[2.5rem] lg:p-10">
@@ -51,20 +61,19 @@ export default function DashboardQuickActions() {
 						/>
 					) : (
 						pendingUsers.map((user) => (
-							<div
+							<Link
 								key={user._id}
-								className="flex items-center justify-between rounded-xl border border-gray-100 p-3 hover:bg-gray-50"
+								href={getUserProfileHref(user)}
+								className="group flex items-center justify-between rounded-xl border border-gray-100 p-3 transition-colors hover:bg-gray-50"
 							>
 								<div className="flex items-center gap-3">
-									<Link href={`/dashboard/${user.role}/${user._id}`}>
-										<DynamicAvatar
-											name={`${user.firstName} ${user.lastName}`}
-											image={user.avatar}
-											className="size-10 rounded-full border border-gray-200"
-										/>
-									</Link>
+									<DynamicAvatar
+										name={`${user.firstName} ${user.lastName}`}
+										image={user.avatar}
+										className="size-10 rounded-full border border-gray-200"
+									/>
 									<div>
-										<p className="text-[14px] font-bold text-gray-900">
+										<p className="text-[14px] font-bold text-gray-900 transition-colors group-hover:text-[#1d4ea8]">
 											{user.firstName} {user.lastName}
 										</p>
 										<p className="text-[12px] font-semibold capitalize text-gray-500">
@@ -75,7 +84,7 @@ export default function DashboardQuickActions() {
 								<span className="rounded-full bg-orange-100 px-3 py-1 text-[12px] font-bold text-orange-600">
 									Pending
 								</span>
-							</div>
+							</Link>
 						))
 					)}
 				</div>
